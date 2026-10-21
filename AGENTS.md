@@ -40,7 +40,8 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
   returns an error ("not supported yet: …"); it never panics.
 - **Input-derived numbers are hostile** (command parameters, design files, control-channel
   input): `get()` not `[i]`, finite checks, caps on sizes and loop counts.
-- **Third-party kernel calls are guarded:** everything that calls `truck` goes through
+- **Third-party kernel calls are guarded:** everything that calls the geometry backend (`truck`
+  in `crates/kernel-truck`, OpenCASCADE through `cadrum` in `crates/kernel-cadrum`) goes through
   `solidcraft_kernel::guard`, which turns a panic into `KernelError::Internal`.
 - **Last-resort guard:** `Session::execute` runs every command under `catch_unwind`; an escaped
   panic restores the design and reports `EngineError::Internal`.
@@ -63,11 +64,13 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
 - **No commercial CAD products.** Agents must not drive, script, automate or extract data from
   commercial CAD products (Fusion, SolidWorks, Onshape, …) for this project: no test data,
   measurements, command lists, ids or files produced with them.
-- **Never read, copy or link GPL/LGPL/AGPL code**: OpenCASCADE, FreeCAD (incl. planegcs),
-  SolveSpace, CadQuery/OCP, LibreCAD, QCAD — don't even read their sources. (`tools/freecad-oracle/`
-  runs FreeCAD as a separate program through its public scripting API to compute reference values;
-  nothing from FreeCAD is linked, vendored or shipped.) The sketch solver and the blend
-  operations are our own.
+- **Never read, copy or link GPL/AGPL code**: FreeCAD (incl. planegcs), SolveSpace, CadQuery/OCP,
+  LibreCAD, QCAD — don't even read their sources. (`tools/freecad-oracle/` runs FreeCAD as a
+  separate program through its public scripting API to compute reference values; nothing from
+  FreeCAD is linked, vendored or shipped.) **This fork's one exception is OpenCASCADE** (LGPL-2.1
+  with the OCCT exception), reached only through the `cadrum` crate (MIT, a prebuilt static OCCT)
+  from `crates/kernel-cadrum`: never read or vendor OCCT's own sources, never call it from any
+  other crate. The sketch solver is our own; the truck backend's blend operations are our own.
 - **Assets — absolutely essential.** SolidCraft contains **no iconography, images, fonts or
   artwork from commercial CAD products — ever.** Command icons are the original SVG masters in
   `assets/icons/ui/design/svg/`, compiled through `crates/ui-egui/src/icon_svg.rs`.
@@ -85,7 +88,11 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
   clicks (`ui.start`) start interactive tools and dialogs, which then run commands.
 - **Layering** is enforced by `cargo xtask layers`: L0 `geom` → L1 `sketch`, `kernel`, `render`
   → L2 `doc` → L3 `io` → L4 `engine` → L5 `ui-egui` → apps. Nothing below L5 depends on
-  egui/eframe/winit/wgpu/rfd. **The UI crate is swappable.** Only `crates/kernel` may use `truck`.
+  egui/eframe/winit/wgpu/rfd. **The UI crate is swappable.** **The kernel backend is swappable:**
+  `crates/kernel` is a façade that re-exports one backend by cargo feature (`truck`, the default;
+  `cadrum`); `crates/kernel-core` holds what both share (errors, `guard`, history, face sources,
+  measures). Only `crates/kernel-truck` may use `truck`, only `crates/kernel-cadrum` may use
+  `cadrum`. Build the other backend with `-F solidcraft-kernel/cadrum`.
 - **The UI is thin**: panels read engine state and act through `app.run(id, params)` /
   `app.start(id)`. Colours come from `theme::Tokens`.
 - **One set of camera controls**: every page or canvas with a camera (viewport, Render
@@ -100,15 +107,19 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
   Keep them minimal; `cargo xtask web-offline-test` covers the service worker.
 - **Quality gates** before every commit: `cargo xtask ci` (fmt, clippy -D warnings, tests,
   assets, layers). Commit after every feature arc that builds.
-- **Publishing**: the repository is github.com/tangency-labs/solidcraft. Changes land through
-  **pull requests** and the **merge queue**: push a branch and open a PR. The heavy CI jobs start
-  when a maintainer adds `approved-for-ci` after reviewing the code. Approved PRs go into the queue
-  with `gh pr merge N -R tangency-labs/solidcraft --squash --auto`; the queue runs the full suite
-  on each group before it lands on `main`. Keep each PR to one topic and one issue, and never
-  force-push `main`. Never commit `plan/`, build dirs (`target*/`) or generated reference data;
+- **Publishing**: this checkout is the fork github.com/lzpel/solidcraft-opencascade (of
+  tangency-labs/solidcraft). **Never open pull requests or issues on the upstream repository.**
+  Changes land on the fork through **pull requests**: push a branch and open a PR with
+  `gh pr create -R lzpel/solidcraft-opencascade -B main` (a fork's PR targets the parent unless
+  `-R` says otherwise), merge with `gh pr merge N -R lzpel/solidcraft-opencascade --squash`. The
+  upstream CI runners do not exist here, so the gate is a local `cargo xtask ci`. Gaps found in
+  cadrum go into one tracking issue on lzpel/cadrum, re-edited as they turn up. Keep each PR to
+  one topic, and never force-push `main`. Never commit `plan/`, build dirs (`target*/`) or generated reference data;
   check `git ls-files` before pushing.
 - **Never break wasm**: everything below the apps must build for `wasm32-unknown-unknown`
-  (`cargo xtask wasm`, part of `cargo xtask ci`).
+  (`cargo xtask wasm`, part of `cargo xtask ci`). The OpenCASCADE backend builds for wasm only
+  inside cadrum's Docker image (`ghcr.io/lzpel/cross-wasm32-unknown-unknown`), so the local check
+  skips `crates/kernel-cadrum` until that route is wired.
 
 ## Showing and following through on changes
 
@@ -138,15 +149,15 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
 
 ## Before you start: look at what is already open
 - Work with an authenticated GitHub CLI (`gh auth status`) and `git`; the checks below need both.
-- Pull the whole list, not one search: `gh pr list -R tangency-labs/solidcraft --state open --limit 500`
-  (drafts included) and `gh issue list -R tangency-labs/solidcraft --state open --limit 500`. Look for
+- Pull the whole list, not one search: `gh pr list -R lzpel/solidcraft-opencascade --state open --limit 500`
+  (drafts included) and `gh issue list -R lzpel/solidcraft-opencascade --state open --limit 500`. Look for
   work on the same issue, the same feature under another number, and PRs that change the files
   you are about to change (`gh pr list ... --json number,title,files`).
 - If someone already has it, comment on their PR or issue instead of opening a second one. Two
   PRs for one change can't both land, and one of them is wasted work and CI.
 
 ## Claim = a draft PR
-- Before working on issue #N, check nobody has it: `gh pr list -R tangency-labs/solidcraft --state open --search "#N"`.
+- Before working on issue #N, check nobody has it: `gh pr list -R lzpel/solidcraft-opencascade --state open --search "#N"`.
 - If none, branch from the latest `origin/main`, `git commit --allow-empty -m "claim: #N"`, push,
   and open a **draft** PR titled `<summary> (#N)` right away. **The lowest-numbered open PR for an
   issue wins**; if yours lost, close it. Opening the PR is the claim: the bot assigns you and

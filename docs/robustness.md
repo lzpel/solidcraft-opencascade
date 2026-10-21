@@ -25,7 +25,7 @@ rejected before any jobs or output directories are created. The maximum seed
 - **Checks after every step:** the command succeeds; every body is a sound solid (each shell
   closed and consistently oriented, every face meshes, positive finite volume:
   `Body::validity`); the volume moves the right way (a cut never adds, a join never removes).
-- **Boolean identity** (`crates/kernel/src/fuzz.rs`): for two random primitives on the same
+- **Boolean identity** (`crates/kernel-truck/src/fuzz.rs`): for two random primitives on the same
   grid (boxes, cylinders, spheres, tori), union, intersection and cut each give a sound solid
   and V(A∪B) + V(A∩B) = V(A) + V(B), V(A−B) = V(A) − V(A∩B), within 0.2 %.
 - Each seed runs in its own process with a time limit, so hangs and hard crashes are recorded
@@ -127,7 +127,7 @@ next tolerance, then the ordinary routes. The existing acceptance checks still
 apply to all results.
 
 A join or a cut that needed any retry is then held to what it can do at all
-(`crates/kernel/src/boolean_guard.rs`, #616): the result is closed, a join
+(`crates/kernel-truck/src/boolean_guard.rs`, #616): the result is closed, a join
 never loses volume and a cut never gains any, and outside the tool's box the
 result's surface is the target's and the target's is the result's (a join or
 a cut can only change the target where the tool is). A cut may come out empty

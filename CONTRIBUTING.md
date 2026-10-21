@@ -15,14 +15,14 @@ Before choosing a task, check the [command inventory](docs/features.md) and
 
 Questions, ideas or want to say what you're working on? Join the [Discord](https://discord.gg/FtU4NQNVDH).
 
-## Kernel work is paused
+## This fork: the kernel is moving to OpenCASCADE
 
-We're evaluating a new geometry kernel. Until that's decided, please don't open issues, pull
-requests or discussions about kernel work: booleans, fillets, chamfers, shell, offsets, sweeps and
-lofts, threads and holes, STEP/IGES import and export, tessellation, or anything else that changes
-`crates/kernel/`. The pinned issue on the tracker explains it. New ones get the `kernel-paused`
-label (`.github/workflows/kernel-paused.yml`) and a maintainer answers them. Crashes and data loss
-are still taken as issues, and everything outside the kernel carries on as normal.
+This is `lzpel/solidcraft-opencascade`, a fork whose purpose is to replace the truck geometry
+kernel with OpenCASCADE through the [cadrum](https://github.com/lzpel/cadrum) crate. The work
+lands in numbered phases, one pull request each, on this fork only; nothing here is sent upstream.
+The kernel is split into `crates/kernel-core` (shared), `crates/kernel-truck` (the current
+backend) and `crates/kernel` (a façade selecting the backend by feature); `crates/kernel-cadrum`
+arrives in phase 2.
 
 ## Get it running (about 10 minutes on a fast machine)
 
@@ -85,7 +85,12 @@ The [architecture page](docs/architecture.md) has the layer table. The short ver
 
 - `crates/geom`: vectors, planes, meshes, measures.
 - `crates/sketch`: our own constraint solver, plus profile finding.
-- `crates/kernel`: the B-rep kernel boundary. It wraps [truck](https://github.com/ricosjp/truck),
+- `crates/kernel`: the B-rep kernel boundary, a façade that re-exports one backend by cargo
+  feature (`truck` by default, `cadrum` for OpenCASCADE).
+- `crates/kernel-core`: what every backend shares: `KernelError` and `guard`, the exact face and
+  edge history, face sources and paints, measures, mesh bodies, the STEP Part 21 and IGES text
+  readers, threading and profiling helpers.
+- `crates/kernel-truck`: the truck backend. It wraps [truck](https://github.com/ricosjp/truck),
   and it's the only crate allowed to touch truck. Fillets, chamfers, shell/offset, Delete Face,
   Split Face, STEP/IGES read and write, and face provenance are our own code here. Patched
   copies of three truck crates live in `vendor/` and are excluded from our fmt/clippy rules.
@@ -108,9 +113,11 @@ The [architecture page](docs/architecture.md) has the layer table. The short ver
    and open-source tools. We don't drive, script, automate or extract data from commercial CAD
    products, and we never copy another product's code, icons, artwork, help text, tooltips,
    templates or materials. Command ids are our own (`solid.fillet`).
-2. **No GPL/LGPL/AGPL code, not even reading it.** That rules out OpenCASCADE, FreeCAD
-   (including planegcs), SolveSpace, CadQuery/OCP, LibreCAD and QCAD. SolidCraft is
-   MIT OR Apache-2.0, and its solver and blends are written from the maths. (Running an
+2. **No GPL/AGPL code, not even reading it.** That rules out FreeCAD (including planegcs),
+   SolveSpace, CadQuery/OCP, LibreCAD and QCAD. This fork's one LGPL exception is OpenCASCADE
+   (LGPL-2.1 with the OCCT exception), linked as a prebuilt static library through the `cadrum`
+   crate from `crates/kernel-cadrum` only; its sources are still never read or vendored.
+   SolidCraft is MIT OR Apache-2.0, and its solver is written from the maths. (Running an
    open-source application to get reference values for a test is fine; reading its source is
    not.) Permissive
    dependencies are fine. Note which one you're adding and why in the PR. THIRD-PARTY-LICENSES.txt
@@ -127,7 +134,7 @@ The [architecture page](docs/architecture.md) has the layer table. The short ver
      `crates/threedx-client/src/macos.rs` (the 3Dconnexion driver's client API on macOS), and the
      compiler denies it.
    - An unsupported case returns an error ("not supported yet: …"); it never panics.
-   - Every call into truck goes through `solidcraft_kernel::guard`.
+   - Every call into the geometry backend (truck or cadrum) goes through `solidcraft_kernel::guard`.
    - Every crash fix comes with a regression test.
 5. **Everything is a command, with a test.** A new feature means a `CommandSpec` in
    `crates/engine/src/cmd/`, engine tests that measure the result (volume, area,
