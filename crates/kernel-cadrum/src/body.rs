@@ -25,17 +25,21 @@ pub(crate) fn v3(d: cadrum::DVec3) -> Vec3 {
 const MAX_FACES: usize = 1_000_000;
 
 /// The solids of a body and what was read of them when the body was made.
+///
+/// Faces and edges are addressed by position (lump, place in the lump's traversal), not by
+/// cadrum's id: OpenCASCADE makes a prism's top face by *moving* its bottom face, so both carry
+/// one shape id (lzpel/cadrum#317), and the same goes for the moved edges.
 pub(crate) struct Inner {
     solids: Mutex<Vec<cadrum::Solid>>,
-    /// Face ids in face order: lump by lump, in cadrum's (OpenCASCADE's) traversal order.
-    pub(crate) faces: Vec<u64>,
-    /// The lump each face belongs to.
-    pub(crate) face_lump: Vec<usize>,
-    /// Edge ids in edge order: the order the faces' boundaries first meet them.
-    pub(crate) edges: Vec<u64>,
+    /// Each face in face order: its lump and its place in that lump's face traversal.
+    pub(crate) faces: Vec<(usize, usize)>,
+    /// Each edge in edge order: the lump, the face (in the lump's traversal) and the place in
+    /// that face's edge traversal where it was first met.
+    pub(crate) edges: Vec<(usize, usize, usize)>,
     /// The faces each edge bounds, in edge order.
     pub(crate) edge_faces: Vec<Vec<usize>>,
-    pub(crate) face_index: HashMap<u64, usize>,
+    /// The faces (in face order) each cadrum face id stands for.
+    pub(crate) face_index: HashMap<u64, Vec<usize>>,
     pub(crate) bbox: Aabb3,
     pub(crate) lumps: usize,
     pub(crate) vertices: usize,
@@ -59,38 +63,41 @@ impl Inner {
         guard("read topology", || {
             let lumps = solids.len();
             let mut faces = Vec::new();
-            let mut face_lump = Vec::new();
-            let mut edges: Vec<u64> = Vec::new();
+            let mut edges: Vec<(usize, usize, usize)> = Vec::new();
             let mut edge_faces: Vec<Vec<usize>> = Vec::new();
-            let mut face_index = HashMap::new();
-            let mut edge_index = HashMap::new();
+            let mut face_index: HashMap<u64, Vec<usize>> = HashMap::new();
+            // An edge by its id and its ends: a moved copy of an edge keeps the id but not the ends.
+            let mut edge_index: HashMap<(u64, [i64; 3], [i64; 3]), usize> = HashMap::new();
             let mut bbox = Aabb3::EMPTY;
-            let mut ends: Vec<Vec3> = Vec::new();
-            for (lump, solid) in solids.iter().enumerate() {
+            for solid in solids.iter() {
                 let [lo, hi] = solid.bounding_box();
                 bbox.add(v3(lo));
                 bbox.add(v3(hi));
-                for face in solid.iter_face() {
+            }
+            let span = if bbox.is_empty() { 0.0 } else { bbox.diagonal() };
+            let quantum = (span * 1e-7).max(1e-9);
+            let key = |p: Vec3| [p.x, p.y, p.z].map(|c| if c.is_finite() { (c / quantum).round() as i64 } else { i64::MAX });
+            let mut ends: Vec<Vec3> = Vec::new();
+            for (lump, solid) in solids.iter().enumerate() {
+                for (pos, face) in solid.iter_face().enumerate() {
                     if faces.len() >= MAX_FACES {
                         return Err(KernelError::TooLarge(format!("more than {MAX_FACES} faces")));
                     }
                     let fi = faces.len();
-                    let id = face.id();
-                    if face_index.insert(id, fi).is_some() {
-                        return Err(KernelError::Internal("a face appears twice in its solid".into()));
-                    }
-                    faces.push(id);
-                    face_lump.push(lump);
-                    for edge in face.iter_edge() {
-                        let eid = edge.id();
-                        let ei = match edge_index.get(&eid) {
+                    faces.push((lump, pos));
+                    face_index.entry(face.id()).or_default().push(fi);
+                    for (epos, edge) in face.iter_edge().enumerate() {
+                        let (a, b) = (v3(edge.start_point()), v3(edge.end_point()));
+                        let (ka, kb) = (key(a), key(b));
+                        let ekey = if ka <= kb { (edge.id(), ka, kb) } else { (edge.id(), kb, ka) };
+                        let ei = match edge_index.get(&ekey) {
                             Some(&ei) => ei,
                             None => {
-                                edge_index.insert(eid, edges.len());
-                                edges.push(eid);
+                                edge_index.insert(ekey, edges.len());
+                                edges.push((lump, pos, epos));
                                 edge_faces.push(Vec::new());
-                                ends.push(v3(edge.start_point()));
-                                ends.push(v3(edge.end_point()));
+                                ends.push(a);
+                                ends.push(b);
                                 edges.len() - 1
                             }
                         };
@@ -105,12 +112,10 @@ impl Inner {
             if faces.is_empty() {
                 return Err(KernelError::Failed("empty result".into()));
             }
-            let span = if bbox.is_empty() { 0.0 } else { bbox.diagonal() };
-            let vertices = distinct_points(&ends, (span * 1e-7).max(1e-9));
+            let vertices = distinct_points(&ends, quantum);
             Ok(Inner {
                 solids: Mutex::new(solids),
                 faces,
-                face_lump,
                 edges,
                 edge_faces,
                 face_index,
@@ -157,15 +162,33 @@ impl Inner {
 
     /// Face `index` of the locked solids.
     pub(crate) fn face<'s>(&self, solids: &'s [cadrum::Solid], index: usize) -> Option<&'s cadrum::Face> {
-        let (id, lump) = (*self.faces.get(index)?, *self.face_lump.get(index)?);
-        solids.get(lump)?.iter_face().find(|f| f.id() == id)
+        let (lump, pos) = *self.faces.get(index)?;
+        solids.get(lump)?.iter_face().nth(pos)
     }
 
     /// Edge `index` of the locked solids.
     pub(crate) fn edge<'s>(&self, solids: &'s [cadrum::Solid], index: usize) -> Option<&'s cadrum::Edge> {
-        let id = *self.edges.get(index)?;
-        let lump = *self.edge_faces.get(index)?.first().and_then(|f| self.face_lump.get(*f))?;
-        solids.get(lump)?.iter_edge().find(|e| e.id() == id)
+        let (lump, pos, epos) = *self.edges.get(index)?;
+        solids.get(lump)?.iter_face().nth(pos)?.iter_edge().nth(epos)
+    }
+
+    /// The face (in face order) a mesh triangle with cadrum face id `id` and centroid `at`
+    /// belongs to: the one of the id's faces nearest the point.
+    pub(crate) fn face_of(&self, solids: &[cadrum::Solid], id: u64, at: Vec3) -> Option<usize> {
+        let candidates = self.face_index.get(&id)?;
+        match candidates.as_slice() {
+            [one] => Some(*one),
+            many => many
+                .iter()
+                .filter_map(|&fi| {
+                    let face = self.face(solids, fi)?;
+                    let (q, _) = face.project(dv(at));
+                    let d = (v3(q) - at).len();
+                    d.is_finite().then_some((fi, d))
+                })
+                .min_by(|a, b| a.1.total_cmp(&b.1))
+                .map(|(fi, _)| fi),
+        }
     }
 
     /// A mesh made before at exactly this tolerance and angle.

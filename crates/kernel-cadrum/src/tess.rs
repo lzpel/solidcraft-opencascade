@@ -55,21 +55,20 @@ pub(crate) fn mesh(body: &Body, tol: f64, angle: f64) -> Result<Arc<Mesh>> {
             if a >= n || b >= n || c >= n {
                 continue;
             }
-            let Some(face) = m.face_ids.get(k).and_then(|id| inner.face_index.get(id)) else { continue };
-            let (Ok(a), Ok(b), Ok(c), Ok(f)) = (u32::try_from(a), u32::try_from(b), u32::try_from(c), u32::try_from(*face)) else { continue };
+            let centroid = match (out.positions.get(a), out.positions.get(b), out.positions.get(c)) {
+                (Some(p), Some(q), Some(r)) => (*p + *q + *r) * (1.0 / 3.0),
+                _ => continue,
+            };
+            let Some(face) = m.face_ids.get(k).and_then(|id| inner.face_of(solids, *id, centroid)) else { continue };
+            let (Ok(a), Ok(b), Ok(c), Ok(f)) = (u32::try_from(a), u32::try_from(b), u32::try_from(c), u32::try_from(face)) else { continue };
             out.triangles.push([a, b, c]);
             out.tri_face.push(f);
         }
         // Edges in the kernel's edge order, each as its own polyline.
-        let mut by_id = std::collections::HashMap::new();
-        for s in solids {
-            for e in s.iter_edge() {
-                by_id.insert(e.id(), e);
-            }
-        }
         let edge_tess = tessellation(tol, angle);
-        for id in &inner.edges {
-            let points: Vec<Vec3> = by_id.get(id).map(|e| e.approximation_segments(edge_tess).into_iter().map(v3).collect()).unwrap_or_default();
+        for ei in 0..inner.edges.len() {
+            let points: Vec<Vec3> =
+                inner.edge(solids, ei).map(|e| e.approximation_segments(edge_tess).into_iter().map(v3).collect()).unwrap_or_default();
             out.edges.push(points);
         }
         out.edge_faces = inner.edge_faces.iter().map(|fs| fs.iter().filter_map(|f| u32::try_from(*f).ok()).collect()).collect();
