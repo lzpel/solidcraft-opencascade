@@ -401,7 +401,7 @@ completed drawings publish atomically. The browser still exports synchronously.
   containment shortcut. Spheres are built from six pole-free patches.
 - Mass properties come from fine tessellation (curved faces within ~1e-4 relative); triangles
   that cut through curved faces (trimmed faces after booleans) are split onto the surface first.
-- STEP import (our own reader, crates/kernel/src/step_in) reads solids (B-rep with analytic and B-spline geometry), units,
+- STEP import (our own reader, crates/kernel-truck/src/step_in) reads solids (B-rep with analytic and B-spline geometry), units,
   product names, colours and assemblies; analytic offsets on planes, cylinders, cones, spheres
   and regular tori are read exactly (signed/nested distances, units and face sense). Freeform
   offset surfaces and pcurve-only edges are not read yet,

@@ -15,7 +15,7 @@ centres can swap order, and a fillet or a sketch quietly re-attaches to a differ
 tells the user, which is the worst thing a CAD tool can do.
 
 The kernel now reports, for every operation, what each face and edge of its result came from
-(`crates/kernel/src/history.rs`: a face's origins and how it changed, an edge's origin edge or
+(`crates/kernel-core/src/history.rs`: a face's origins and how it changed, an edge's origin edge or
 the faces whose meeting made it). Names follow that history, so they are exact and deterministic,
 and when a reference can no longer be found exactly the feature says so instead of guessing.
 

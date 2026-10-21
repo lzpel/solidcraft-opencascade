@@ -28,14 +28,14 @@ the black-box suites would miss once the kernel is swapped.
 ```
 cargo install cargo-mutants --locked
 CARGO_TARGET_DIR=$PWD/target cargo mutants --in-place \
-  -f crates/kernel/src/measure.rs \
+  -f crates/kernel-truck/src/measure.rs \
   --test-package solidcraft-cli --test-package solidcraft-engine \
   --baseline skip --timeout 900 --build-timeout 900
 ```
 
 - Use a worktree you don't otherwise touch: `--in-place` writes each mutant into the source tree
   and restores it afterwards.
-- `--shard 0/200 --sharding round-robin` with `-d crates/kernel` takes an even sample (every 200th
+- `--shard 0/200 --sharding round-robin` with `-d crates/kernel-truck` takes an even sample (every 200th
   mutant) of the whole crate.
 - The `mutants` profile in `Cargo.toml` is the `ci` profile with incremental builds. It cuts the
   rebuild after a kernel change from about 3 minutes to about 15 seconds.
@@ -56,7 +56,7 @@ Two problems with cargo-mutants 27.1 are behind the flags above:
 
 | Sample | Mutants that build | Caught by the black-box suites |
 |---|---:|---:|
-| `crates/kernel/src/measure.rs`, every mutant | 85 | 85% |
+| `crates/kernel-truck/src/measure.rs`, every mutant | 85 | 85% |
 | Whole kernel, every 200th mutant | 173 | 15% (95% interval 10–21%) |
 
 Out of 49 of the kernel sample's survivors, the kernel's own unit tests caught 21 (43%) and

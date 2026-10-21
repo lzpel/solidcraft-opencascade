@@ -4305,12 +4305,34 @@ dependencies = [
 name = "solidcraft-kernel"
 version = "0.18.4"
 dependencies = [
+ "solidcraft-kernel-core",
+ "solidcraft-kernel-truck",
+]
+
+[[package]]
+name = "solidcraft-kernel-core"
+version = "0.18.4"
+dependencies = [
+ "log",
+ "rayon",
+ "serde",
+ "serde_json",
+ "solidcraft-geom",
+ "thiserror 2.0.21",
+ "web-time",
+]
+
+[[package]]
+name = "solidcraft-kernel-truck"
+version = "0.18.4"
+dependencies = [
  "log",
  "proptest",
  "rayon",
  "serde",
  "serde_json",
  "solidcraft-geom",
+ "solidcraft-kernel-core",
  "spade",
  "thiserror 2.0.21",
  "truck-meshalgo",

@@ -288,7 +288,7 @@ make a legacy face sketch there).
 | 2 |  | A helix edge projected along its axis is a point (expected) | `edge.project` 2 | 1 | oracle/50-sweep-tight-bend `Bend/F3:side:c1#1\|F3:side:c1#2~2` |
 | 1 | #566 | Shell after the edit round: a corner whose faces don't meet the same way after the move | `face.shell+edit` 1 | 1 | demo/pi-case `Body1/F4:inner:F2:start#[…]#[F6:side:c2@F7.2]` |
 
-Where the face history stands (`crates/kernel/src/history.rs`, [face attachments](face-attachments.md)):
+Where the face history stands (`crates/kernel-core/src/history.rs`, [face attachments](face-attachments.md)):
 a flat face takes an attached sketch when the body carries an exact source certificate for it
 (extrude caps and sides, boxes, shells' inner walls, STEP faces, sheet metal panels), or else
 when its persistent name follows exact history (a `lineage` certificate): cut walls and floors,

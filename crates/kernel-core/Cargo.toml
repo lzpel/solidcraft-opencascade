@@ -1,0 +1,20 @@
+[package]
+name = "solidcraft-kernel-core"
+description = "SolidCraft kernel boundary shared by every geometry backend: errors and the panic guard, face and edge history, face sources, measures, meshes without a B-rep, the STEP Part 21 and IGES readers' text stages, threading and profiling helpers"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+solidcraft-geom = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+web-time = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rayon = { workspace = true }

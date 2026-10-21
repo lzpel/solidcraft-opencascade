@@ -1,10 +1,15 @@
-# The kernel boundary and truck
+# The kernel boundary and its backends
 
-`crates/kernel` is SolidCraft's B-rep kernel. It wraps
+`crates/kernel` is SolidCraft's B-rep kernel boundary: a façade that re-exports one geometry
+backend, chosen by cargo feature. `truck` (the default) is `crates/kernel-truck`, which wraps
 [truck](https://github.com/ricosjp/truck) (Apache-2.0) for topology, NURBS geometry, booleans,
-tessellation and STEP parsing, and it is the only crate allowed to use truck. Callers get
-SolidCraft types (`Body`, face and edge indices, meshes, measures) and a
-`KernelError` instead of truck types and panics.
+tessellation and STEP writing, and is the only crate allowed to use truck. `cadrum` will be
+`crates/kernel-cadrum`, OpenCASCADE through the [cadrum](https://github.com/lzpel/cadrum) crate
+(this fork's migration, in phases). What both share lives in `crates/kernel-core`: `KernelError`
+and `guard`, the exact face and edge history, face sources and paints, measures, mesh bodies, the
+Part 21 and IGES text readers. Callers get SolidCraft types (`Body`, face and edge indices,
+meshes, measures) and a `KernelError` instead of backend types and panics, whichever backend is
+built (`solidcraft_kernel::BACKEND` names it).
 
 ## `guard`
 
