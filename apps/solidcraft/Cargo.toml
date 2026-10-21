@@ -20,6 +20,10 @@ too_many_arguments = "allow"
 type_complexity = "allow"
 neg_cmp_op_on_partial_ord = "allow"
 
+[features]
+# The OpenCASCADE kernel backend: `cargo run -p <this> -F cadrum`.
+cadrum = ["solidcraft-engine/cadrum"]
+
 [dependencies]
 solidcraft-engine = { workspace = true }
 solidcraft-ui-egui = { workspace = true }

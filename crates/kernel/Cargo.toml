@@ -14,8 +14,9 @@ default = ["truck"]
 truck = ["dep:solidcraft-kernel-truck"]
 # The OpenCASCADE backend through cadrum (crates/kernel-cadrum). Wins when both are enabled, so
 # feature unification across the workspace cannot pick truck by accident.
-cadrum = []
+cadrum = ["dep:solidcraft-kernel-cadrum"]
 
 [dependencies]
 solidcraft-kernel-core = { workspace = true }
 solidcraft-kernel-truck = { workspace = true, optional = true }
+solidcraft-kernel-cadrum = { workspace = true, optional = true }

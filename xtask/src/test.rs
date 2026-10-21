@@ -2,11 +2,16 @@
 //! time. `cargo test` runs them one after another, so one slow binary held up all the others;
 //! the doc tests and any other `side` jobs run alongside on their own thread.
 
+use std::collections::HashSet;
 use std::process::{Command, Stdio};
 use std::sync::mpsc;
 use std::time::Instant;
 
-use crate::{cargo, root};
+use crate::{Backend, cargo, root};
+
+/// Tests the OpenCASCADE backend is expected to fail, one libtest path per line (`#` comments);
+/// `cargo xtask test --backend cadrum` skips them and fails on any of them that passes.
+pub const CADRUM_ALLOWLIST: &str = "tests/cadrum-allowlist.txt";
 
 /// A test executable from `cargo test --no-run`.
 struct TestBin {
@@ -17,12 +22,20 @@ struct TestBin {
 
 /// Build the tests with `cargo_args` (e.g. `--locked`), run each binary with `test_args`, and run
 /// the `side` jobs one after another meanwhile. Each prints a line when it ends; a failure prints
-/// its whole output.
-pub fn run(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, Command)>) -> Result<(), String> {
+/// its whole output. With the cadrum backend the tests listed in [`CADRUM_ALLOWLIST`] may fail
+/// (a binary whose failures are all listed counts as passing), and one of them that passes fails
+/// the run until its line goes: the list only ever shrinks.
+pub fn run_backend(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, Command)>, backend: Backend) -> Result<(), String> {
+    let allow = match backend {
+        Backend::Truck => HashSet::new(),
+        Backend::Cadrum => allowlist()?,
+    };
     let bins = build(cargo_args)?;
     let start = Instant::now();
     let (tx, rx) = mpsc::channel::<(String, Result<String, String>, f64)>();
     let mut failed = Vec::new();
+    let mut stale = Vec::new();
+    let mut allowed = 0usize;
     std::thread::scope(|scope| {
         for b in &bins {
             let tx = tx.clone();
@@ -43,27 +56,81 @@ pub fn run(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, Command)>
         drop(tx);
         for (label, result, secs) in rx {
             match result {
-                Ok(summary) => println!("ok    {label:<44} {secs:6.1}s  {summary}"),
+                Ok(output) => {
+                    let (passed, _) = outcomes(&output);
+                    stale.extend(passed.iter().filter(|t| allow.contains(&key(&label, t))).map(|t| format!("{label} :: {t}")));
+                    println!("ok    {label:<44} {secs:6.1}s  {}", summary(&output));
+                }
                 Err(output) => {
-                    println!("FAIL  {label:<44} {secs:6.1}s\n{output}");
-                    failed.push(label);
+                    let (passed, failures) = outcomes(&output);
+                    let unexpected: Vec<&String> = failures.iter().filter(|t| !allow.contains(&key(&label, t))).collect();
+                    stale.extend(passed.iter().filter(|t| allow.contains(&key(&label, t))).map(|t| format!("{label} :: {t}")));
+                    if !allow.is_empty() && unexpected.is_empty() && !failures.is_empty() {
+                        allowed += failures.len();
+                        println!("ok    {label:<44} {secs:6.1}s  {} ({} allowlisted failure(s))", summary(&output), failures.len());
+                    } else {
+                        println!("FAIL  {label:<44} {secs:6.1}s\n{output}");
+                        if !unexpected.is_empty() {
+                            println!(
+                                "FAIL  {label}: not in {CADRUM_ALLOWLIST}: {}",
+                                unexpected.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")
+                            );
+                        }
+                        failed.push(label);
+                    }
                 }
             }
         }
     });
     println!("test: {} binaries in {:.1}s", bins.len(), start.elapsed().as_secs_f64());
-    if failed.is_empty() { Ok(()) } else { Err(format!("failed: {}", failed.join(", "))) }
+    if allowed > 0 {
+        println!("allowlist: {allowed} failure(s) allowed by {CADRUM_ALLOWLIST}");
+    }
+    if !failed.is_empty() {
+        return Err(format!("failed: {}", failed.join(", ")));
+    }
+    if !stale.is_empty() {
+        return Err(format!("now passing, remove from {CADRUM_ALLOWLIST}:\n{}", stale.join("\n")));
+    }
+    Ok(())
 }
 
-/// Run to the end: the last `test result:` line on success, all output on failure.
+/// The allowlist's entries, `<binary label> :: <test path>` each.
+fn allowlist() -> Result<HashSet<String>, String> {
+    let path = root().join(CADRUM_ALLOWLIST);
+    let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    Ok(text.lines().map(|l| l.split('#').next().unwrap_or("").trim().to_string()).filter(|l| !l.is_empty()).collect())
+}
+
+fn key(label: &str, test: &str) -> String {
+    format!("{label} :: {test}")
+}
+
+/// The tests a binary's output reports as passed and as failed.
+fn outcomes(output: &str) -> (Vec<String>, Vec<String>) {
+    let (mut passed, mut failed) = (Vec::new(), Vec::new());
+    for line in output.lines() {
+        if let Some(rest) = line.strip_prefix("test ") {
+            if let Some(name) = rest.strip_suffix(" ... ok") {
+                passed.push(name.trim().to_string());
+            } else if let Some(name) = rest.strip_suffix(" ... FAILED") {
+                failed.push(name.trim().to_string());
+            }
+        }
+    }
+    (passed, failed)
+}
+
+/// The last `test result:` line of a binary's output.
+fn summary(output: &str) -> String {
+    output.lines().rev().find(|l| l.starts_with("test result:")).unwrap_or("").trim_start_matches("test result: ").to_string()
+}
+
+/// Run to the end: the output on success, the output and the exit status on failure.
 fn finish(mut c: Command) -> Result<String, String> {
     let out = c.stdin(Stdio::null()).output().map_err(|e| format!("failed to spawn: {e}"))?;
     let stdout = String::from_utf8_lossy(&out.stdout);
-    if out.status.success() {
-        Ok(stdout.lines().rev().find(|l| l.starts_with("test result:")).unwrap_or("").trim_start_matches("test result: ").to_string())
-    } else {
-        Err(format!("{stdout}{}\n({})", String::from_utf8_lossy(&out.stderr), out.status))
-    }
+    if out.status.success() { Ok(stdout.into_owned()) } else { Err(format!("{stdout}{}\n({})", String::from_utf8_lossy(&out.stderr), out.status)) }
 }
 
 /// `cargo test --workspace --profile ci --no-run`, and the executables it built.

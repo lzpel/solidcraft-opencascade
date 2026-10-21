@@ -19,6 +19,10 @@ path = "src/main.rs"
 name = "solvecraft-cli"
 path = "src/alias.rs"
 
+[features]
+# The OpenCASCADE kernel backend: `cargo run -p <this> -F cadrum`.
+cadrum = ["solidcraft-engine/cadrum"]
+
 [dependencies]
 solidcraft-engine = { workspace = true }
 solidcraft-gpu = { workspace = true }

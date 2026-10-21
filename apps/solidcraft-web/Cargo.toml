@@ -13,6 +13,10 @@ workspace = true
 name = "solidcraft-web"
 path = "src/main.rs"
 
+[features]
+# The OpenCASCADE kernel backend: `cargo run -p <this> -F cadrum`.
+cadrum = ["solidcraft-engine/cadrum"]
+
 [dependencies]
 solidcraft-engine = { workspace = true }
 solidcraft-ui-egui = { workspace = true }

@@ -9,6 +9,8 @@ license.workspace = true
 workspace = true
 
 [features]
+# The OpenCASCADE kernel backend (forwards to the kernel façade's feature).
+cadrum = ["solidcraft-kernel/cadrum"]
 # Turns on the parameter-contract audit recorder (`SOLIDCRAFT_PARAM_AUDIT`, see
 # `src/schema/record.rs`), for checking a new contract against the whole test suite.
 param-audit = []

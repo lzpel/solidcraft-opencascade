@@ -92,7 +92,10 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
   `crates/kernel` is a façade that re-exports one backend by cargo feature (`truck`, the default;
   `cadrum`); `crates/kernel-core` holds what both share (errors, `guard`, history, face sources,
   measures). Only `crates/kernel-truck` may use `truck`, only `crates/kernel-cadrum` may use
-  `cadrum`. Build the other backend with `-F solidcraft-kernel/cadrum`.
+  `cadrum`. Build the other backend with `-F solidcraft-kernel/cadrum` on workspace commands, or
+  `-F cadrum` on one app (`cargo run -p solidcraft-cli -F cadrum`); `cargo xtask ci --backend cadrum`
+  (also `test`, `oracle`) runs the gate with it: the tests listed in `tests/cadrum-allowlist.txt`
+  may fail, and any listed test that passes fails the run until its line is removed.
 - **The UI is thin**: panels read engine state and act through `app.run(id, params)` /
   `app.start(id)`. Colours come from `theme::Tokens`.
 - **One set of camera controls**: every page or canvas with a camera (viewport, Render
