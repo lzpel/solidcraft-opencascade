@@ -142,9 +142,6 @@ doc lib solidcraft_doc :: tests::box_fillet_cut_timeline
 engine test shell_opening_regressions :: open_face_flush_with_the_back_keeps_the_wall_past_its_concave_edge
 engine test shell_opening_regressions :: open_face_inside_the_footprint_keeps_the_wall_past_its_concave_edge
 
-# solidcraft-cli test straight_edges_after_cuts: 1
-solidcraft-cli test straight_edges_after_cuts :: straight_edges_are_one_edge_after_many_cuts
-
 # solidcraft-cli test rebuild_topology: 2
 solidcraft-cli test rebuild_topology :: a_parameter_edit_rebuilds_like_a_fresh_build_and_reverts_exactly
 solidcraft-cli test rebuild_topology :: pi_case_faces_per_step_at_both_heights
@@ -194,14 +191,13 @@ solidcraft-cli test run_strict :: allow_errors_writes_anyway_and_a_saved_design_
 # solidcraft-cli test json_out: 1
 solidcraft-cli test json_out :: run_json_out_is_not_written_when_a_feature_fails
 
-# solidcraft-cli test action_matrix: 17
+# solidcraft-cli test action_matrix: 15
 solidcraft-cli test action_matrix :: a_fillet_or_chamfer_on_one_edge_ending_at_a_cylinder
 solidcraft-cli test action_matrix :: a_hair_thin_hole_on_a_ledge_beside_a_loft_cut
 solidcraft-cli test action_matrix :: a_hole_drilled_into_a_sheet_metal_rim
 solidcraft-cli test action_matrix :: a_hole_square_to_a_45_degree_flange
 solidcraft-cli test action_matrix :: a_hole_through_a_sheet_metal_base
 solidcraft-cli test action_matrix :: a_round_on_a_knuckle_cap_circle
-solidcraft-cli test action_matrix :: a_sketch_on_a_patterned_boss_top
 solidcraft-cli test action_matrix :: a_sketch_on_the_rim_a_shell_leaves
 solidcraft-cli test action_matrix :: a_small_hole_through_the_wall_of_a_plastic_rest
 solidcraft-cli test action_matrix :: a_through_hole_into_a_shelled_box_rim
@@ -209,7 +205,6 @@ solidcraft-cli test action_matrix :: action_matrix_sample
 solidcraft-cli test action_matrix :: an_axis_through_a_corner_round_that_a_parameter_moves
 solidcraft-cli test action_matrix :: press_pull_on_the_pi_case_floor
 solidcraft-cli test action_matrix :: sketches_after_a_draft_and_on_a_tapered_extrude
-solidcraft-cli test action_matrix :: sketches_after_split_body_and_intersect
 solidcraft-cli test action_matrix :: sketches_on_loft_and_sweep_faces
 solidcraft-cli test action_matrix :: the_ribbed_lid_builds_the_same_body_every_time
 
@@ -235,7 +230,7 @@ ui-egui test scenarios :: s41_type_value_after_picking
 ui-egui test scenarios :: s49_sheet_metal_flange_per_edge
 ui-egui test scenarios :: s51_sheet_metal_corner_relief
 
-# ui-egui lib solidcraft_ui_egui: 177
+# ui-egui lib solidcraft_ui_egui: 176
 ui-egui lib solidcraft_ui_egui :: blend_dialog_tests::edges_at_each_end_make_a_blend_and_come_back_in_an_edit
 ui-egui lib solidcraft_ui_egui :: boundary_dialog_tests::a_loop_of_sketch_curves_is_the_loop_patch
 ui-egui lib solidcraft_ui_egui :: boundary_dialog_tests::curves_that_meet_are_one_chain
@@ -371,7 +366,6 @@ ui-egui lib solidcraft_ui_egui :: primitive_units_tests::primitive_dialogs_show_
 ui-egui lib solidcraft_ui_egui :: shell_face_sketch_ui_tests::pending_create_sketch_accepts_an_actual_shell_wall_patch_click
 ui-egui lib solidcraft_ui_egui :: shell_face_sketch_ui_tests::rounded_shell_corner_is_one_physical_face_above_and_below_the_floor
 ui-egui lib solidcraft_ui_egui :: shell_face_sketch_ui_tests::selected_shell_wall_patch_still_creates_a_certified_sketch
-ui-egui lib solidcraft_ui_egui :: sketch_attachment_ui_tests::picked_top_face_of_a_stacked_join_extrude_takes_a_sketch
 ui-egui lib solidcraft_ui_egui :: sketch_attachment_ui_tests::unsupported_modified_face_offers_explicit_fixed_plane_without_live_links
 ui-egui lib solidcraft_ui_egui :: sketch_edit_tests::edit_sketch_rolls_back_and_finish_restores
 ui-egui lib solidcraft_ui_egui :: sketch_edit_tests::edit_sketch_rolls_forward_from_before_it_and_finish_restores
@@ -414,7 +408,7 @@ ui-egui lib solidcraft_ui_egui :: workspace::tests::contextual_tabs_follow_the_a
 ui-egui lib solidcraft_ui_egui :: workspace::tests::insert_design_is_on_the_assemble_panel_and_inserts_a_saved_part
 ui-egui lib solidcraft_ui_egui :: workspace::tests::new_sketch_starts_from_the_sheet_metal_tab
 
-# engine lib solidcraft_engine: 716
+# engine lib solidcraft_engine: 695
 engine lib solidcraft_engine :: boolean_regression_tests::box_intersect_splits_the_end_off_a_raked_wedge_after_its_end_rounds
 engine lib solidcraft_engine :: boolean_regression_tests::closed_sweep_redefines_to_a_half_turn_torus_cut
 engine lib solidcraft_engine :: boolean_regression_tests::cut_beside_a_sealed_void_keeps_the_body
@@ -497,10 +491,6 @@ engine lib solidcraft_engine :: cmd::face::join_tests::face_join_of_a_step_impor
 engine lib solidcraft_engine :: cmd::face::join_tests::face_join_respects_explicit_targets_and_participants
 engine lib solidcraft_engine :: cmd::face::join_tests::join_of_a_profile_sketched_on_a_face_leaves_a_neighbour_it_lies_on
 engine lib solidcraft_engine :: cmd::face::tests::blind_cut_inside_a_cylinder_keeps_only_planes_and_cylinders
-engine lib solidcraft_engine :: cmd::face::tests::crossed_cylinder_primitives_keep_their_caps_attachable
-engine lib solidcraft_engine :: cmd::face::tests::generated_face_profiles_keep_exact_links_live_after_edit_and_reopen
-engine lib solidcraft_engine :: cmd::face::tests::join_gives_a_face_merged_from_both_operands_its_history_name
-engine lib solidcraft_engine :: cmd::face::tests::join_keeps_exact_face_attachments_from_both_operands
 engine lib solidcraft_engine :: cmd::face::tests::legacy_internal_capture_refuses_an_uncaptured_source_in_another_component
 engine lib solidcraft_engine :: cmd::face::tests::shelled_cylinder_floor_keeps_its_cap_identity
 engine lib solidcraft_engine :: cmd::face::tests::tangent_hole_contacts_split_no_faces
@@ -513,22 +503,15 @@ engine lib solidcraft_engine :: cmd::features::lineage_face_tests::a_cut_wall_an
 engine lib solidcraft_engine :: cmd::features::lineage_face_tests::a_piece_of_a_face_split_on_purpose_still_needs_a_fixed_plane
 engine lib solidcraft_engine :: cmd::features::lineage_face_tests::a_raised_piece_of_a_split_top_takes_a_sketch_by_its_own_name
 engine lib solidcraft_engine :: cmd::features::lineage_face_tests::counterbore_floors_and_their_pattern_copies_take_a_sketch
-engine lib solidcraft_engine :: cmd::features::lineage_face_tests::each_patterned_copy_takes_its_own_sketch
-engine lib solidcraft_engine :: cmd::features::lineage_face_tests::every_flat_face_of_a_block_and_a_flush_step_takes_a_sketch
-engine lib solidcraft_engine :: cmd::features::lineage_face_tests::every_flat_face_of_an_elbow_up_and_an_elbow_down_takes_a_sketch
 engine lib solidcraft_engine :: cmd::features::lineage_face_tests::faces_after_a_boss_take_a_sketch_that_follows_it
 engine lib solidcraft_engine :: cmd::features::lineage_face_tests::the_face_a_split_cuts_takes_a_sketch_and_an_offset_plane_that_follow_the_plane
-engine lib solidcraft_engine :: cmd::features::lineage_face_tests::the_pieces_of_a_split_top_take_a_sketch
 engine lib solidcraft_engine :: cmd::features::loft_rails_tests::a_rail_turns_a_loft_into_its_solid_of_revolution_and_stretching_is_an_edit
 engine lib solidcraft_engine :: cmd::features::loft_rails_tests::a_surface_loft_follows_its_rail
 engine lib solidcraft_engine :: cmd::features::patterns_tests::copies_of_a_join_that_merged_its_targets_join_the_merged_body
-engine lib solidcraft_engine :: cmd::features::patterns_tests::one_extrude_of_many_sketch_circles_scales_linearly
 engine lib solidcraft_engine :: cmd::features::patterns_tests::pattern_of_cuts_beside_a_round_needs_no_retries
 engine lib solidcraft_engine :: cmd::features::prism_local_tests::a_ring_cut_round_a_counterbored_hole_in_a_chamfered_disc
 engine lib solidcraft_engine :: cmd::features::prism_local_tests::a_round_pocket_made_deeper_beside_a_chamfer_or_a_round
 engine lib solidcraft_engine :: cmd::features::single_hole_tests::a_far_body_does_not_change_a_countersunk_hole
-engine lib solidcraft_engine :: cmd::features::stacked_face_tests::sketch_and_offset_plane_on_the_top_face_of_a_face_sketched_extrude
-engine lib solidcraft_engine :: cmd::features::stacked_face_tests::three_stacked_extrudes_follow_an_edit_of_the_first
 engine lib solidcraft_engine :: cmd::features::sweep_options_tests::orientations
 engine lib solidcraft_engine :: cmd::features::sweep_options_tests::scaled_sweep_is_a_frustum
 engine lib solidcraft_engine :: cmd::features::sweep_options_tests::twisted_sweep_faces_follow_the_profile_curves
@@ -571,12 +554,9 @@ engine lib solidcraft_engine :: cmd::file::tests::save_uses_only_warm_meshes_and
 engine lib solidcraft_engine :: cmd::file::tests::saved_model_needs_no_meshes_and_is_adopted_only_for_its_document
 engine lib solidcraft_engine :: cmd::file::urdf_tests::urdf_collision_skips_open_bodies
 engine lib solidcraft_engine :: cmd::file::urdf_tests::urdf_open_only_component_is_drawn
-engine lib solidcraft_engine :: cmd::joints::face_tests::a_round_origin_keeps_its_end_when_the_face_it_opens_onto_gets_other_neighbours
 engine lib solidcraft_engine :: cmd::joints::tests::interference_lists_a_pair_it_could_not_check
 engine lib solidcraft_engine :: cmd::joints::tests::interference_of_a_headed_pin_a_hair_off_a_bush_of_its_heads_radius
 engine lib solidcraft_engine :: cmd::joints::tests::interference_of_a_pin_a_hair_off_its_hole
-engine lib solidcraft_engine :: cmd::joints::turn_tests::an_angle_typed_as_an_expression_is_not_replaced_by_the_kept_turn
-engine lib solidcraft_engine :: cmd::joints::turn_tests::joining_two_faces_that_already_meet_leaves_the_part_where_it_is
 engine lib solidcraft_engine :: cmd::kernel_heal_tests::offset_cone_and_sphere_faces
 engine lib solidcraft_engine :: cmd::kernel_heal_tests::offset_torus_face
 engine lib solidcraft_engine :: cmd::kernel_heal_tests::shell_a_box_with_a_drilled_hole
@@ -782,7 +762,6 @@ engine lib solidcraft_engine :: cmd::sheet::tests::tray_shrunk_by_a_parameter_un
 engine lib solidcraft_engine :: cmd::sheet::tests::unfold_cut_refold_and_convert
 engine lib solidcraft_engine :: cmd::sheet::tests::unrelated_box_cut_preserves_logical_ring_sheet_compound
 engine lib solidcraft_engine :: cmd::sheet::tests::unsupported_sheet_machining_is_atomic_but_true_no_change_is_allowed
-engine lib solidcraft_engine :: cmd::sketch::face::tests::every_flat_face_of_one_sketch_extruded_up_and_down_takes_an_attached_sketch
 engine lib solidcraft_engine :: cmd::sketch::face::tests::freezing_rebuilt_arc_borders_keeps_authored_dimension_entity_indices
 engine lib solidcraft_engine :: cmd::sketch::face::tests::offset_rectangle_pocket_has_one_logical_outer_wall_and_closed_face_projection
 engine lib solidcraft_engine :: cmd::sketch::face::tests::rounded_enclosure_shell_side_and_floor_attach_through_width_wall_and_reopen
@@ -852,7 +831,6 @@ engine lib solidcraft_engine :: derived_units_tests::coil_pitch_and_revolutions_
 engine lib solidcraft_engine :: derived_units_tests::press_pull_keeps_its_distance_when_the_units_change
 engine lib solidcraft_engine :: display_mesh_tests::a_large_sheet_shows_its_small_bends_and_holes_round
 engine lib solidcraft_engine :: display_mesh_tests::what_reads_the_display_mesh_of_a_large_sheet_answers_as_before
-engine lib solidcraft_engine :: extent_tests::extrude_to_a_planar_face_boundary_follows_it_after_reload
 engine lib solidcraft_engine :: extent_tests::shell_outside_and_both_on_a_cylinder
 engine lib solidcraft_engine :: face_name_tests::convert_to_sheet_metal_takes_the_plates_face_by_name
 engine lib solidcraft_engine :: face_name_tests::delete_face_takes_the_faces_of_the_hole_by_name
@@ -865,7 +843,6 @@ engine lib solidcraft_engine :: face_name_tests::shell_takes_the_face_to_open_by
 engine lib solidcraft_engine :: face_name_tests::split_face_takes_the_face_to_split_by_name
 engine lib solidcraft_engine :: frames::tests::moving_bodies_between_components_keeps_their_place
 engine lib solidcraft_engine :: frames::tests::picks_on_an_instance_map_through_its_placement
-engine lib solidcraft_engine :: frames::tests::root_picks_on_a_moved_component_build_where_it_is_shown
 engine lib solidcraft_engine :: frames::tests::world_picks_map_into_the_component
 engine lib solidcraft_engine :: fuzz::tests::a_patterned_bore_preserves_the_analytic_surfaces
 engine lib solidcraft_engine :: hole_matrix_tests::hole_matrix
@@ -880,7 +857,6 @@ engine lib solidcraft_engine :: naming_history_tests::a_shell_fillet_does_not_fo
 engine lib solidcraft_engine :: naming_history_tests::a_sketch_on_a_certified_face_survives_a_fillet_and_a_cut_upstream_of_it
 engine lib solidcraft_engine :: naming_history_tests::a_sketch_on_a_replaced_face_follows_it
 engine lib solidcraft_engine :: naming_history_tests::an_upstream_cut_that_splits_a_face_keeps_the_edge_that_bounded_it
-engine lib solidcraft_engine :: naming_history_tests::faces_built_from_a_profile_are_named_exactly
 engine lib solidcraft_engine :: naming_history_tests::mirrored_twins_keep_their_own_edges
 engine lib solidcraft_engine :: naming_history_tests::pieces_of_a_cut_body_keep_their_body_names_when_the_cut_moves
 engine lib solidcraft_engine :: naming_history_tests::split_pieces_keep_their_numbers_across_evaluations
@@ -897,14 +873,12 @@ engine lib solidcraft_engine :: split_face_tests::split_a_face_by_a_plane
 engine lib solidcraft_engine :: split_face_tests::split_a_face_by_another_bodys_face
 engine lib solidcraft_engine :: split_face_tests::split_a_face_by_sketch_curves
 engine lib solidcraft_engine :: split_face_tests::split_pieces_count_and_move_apart
-engine lib solidcraft_engine :: tests::a_body_cut_in_pieces_twice_gets_pieces_of_their_own_names
 engine lib solidcraft_engine :: tests::a_checkpoint_survives_file_new
 engine lib solidcraft_engine :: tests::a_pattern_of_a_reduced_fillet_rounds_each_copy_alike
 engine lib solidcraft_engine :: tests::a_pattern_repeats_a_fillet_on_the_edges_it_found
 engine lib solidcraft_engine :: tests::a_sketch_on_one_piece_stays_attached_when_the_side_joins
 engine lib solidcraft_engine :: tests::a_tapered_side_drawn_in_two_collinear_pieces_is_one_face
 engine lib solidcraft_engine :: tests::appearances_survive_later_features
-engine lib solidcraft_engine :: tests::auto_extrude_joins_side_contact_elbow_and_keeps_new_body_explicit
 engine lib solidcraft_engine :: tests::bare_lengths_take_the_design_units
 engine lib solidcraft_engine :: tests::blend_fit::chamfer_that_fits_still_builds
 engine lib solidcraft_engine :: tests::blend_fit::chamfer_through_the_openings_is_refused
@@ -960,7 +934,6 @@ engine lib solidcraft_engine :: tests::mesh_convert::mesh_conversion_is_parametr
 engine lib solidcraft_engine :: tests::mesh_convert::stl_export_is_closed_where_faces_meet
 engine lib solidcraft_engine :: tests::naming::a_removed_segment_warns
 engine lib solidcraft_engine :: tests::naming::a_resize_keeps_the_edge
-engine lib solidcraft_engine :: tests::naming::a_sketch_on_a_face_stays_on_that_face
 engine lib solidcraft_engine :: tests::naming::a_split_edge_warns_and_takes_the_nearest_piece
 engine lib solidcraft_engine :: tests::naming::faces_and_edges_are_named_from_their_history
 engine lib solidcraft_engine :: tests::naming::shell_and_hole_faces_follow_by_name
