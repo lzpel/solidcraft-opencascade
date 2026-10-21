@@ -236,3 +236,175 @@ fn unsupported_operations_say_so() {
     assert!(matches!(&e, Err(KernelError::TooLarge(m)) if m.contains("OpenCASCADE")), "{e:?}");
     assert!(crate::extrude(&solidcraft_geom::Plane::XY, &[], 0.0, 1.0).is_err());
 }
+
+mod sweeps {
+    use std::f64::consts::{PI, TAU};
+
+    use solidcraft_geom::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
+    use solidcraft_kernel_core::history::{EdgeOrigin, FaceOrigin};
+
+    use crate::{FaceSource, KernelError, Result, extrude, extrude_whole_sides, measure, revolve};
+
+    fn rect(w: f64, h: f64) -> Region2 {
+        Region2 { outer: Loop2::polygon(&[Vec2::ZERO, Vec2::new(w, 0.0), Vec2::new(w, h), Vec2::new(0.0, h)]), holes: Vec::new() }
+    }
+
+    fn one(bodies: Vec<crate::Body>) -> Result<crate::Body> {
+        bodies.into_iter().next().ok_or_else(|| KernelError::Failed("no body".into()))
+    }
+
+    #[test]
+    fn a_rectangle_extrudes_to_a_box_with_sources_and_history() -> Result<()> {
+        let b = one(extrude(&Plane::XY, &[rect(40.0, 30.0)], 0.0, 20.0)?)?;
+        let m = measure(&b)?;
+        assert!((m.volume - 24_000.0).abs() < 1e-6 && m.faces == 6, "{m:?}");
+        let sources = b.face_sources().ok_or(KernelError::Failed("no sources".into()))?;
+        let caps: Vec<bool> = sources
+            .iter()
+            .filter_map(|s| match s {
+                Some(FaceSource::ExtrudeCap { high, .. }) => Some(*high),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(caps.len(), 2);
+        assert!(caps.contains(&true) && caps.contains(&false));
+        let sides = sources.iter().filter(|s| matches!(s, Some(FaceSource::ExtrudeSide { plane: Some(_), .. }))).count();
+        assert_eq!(sides, 4);
+        let h = b.history().ok_or(KernelError::Failed("no history".into()))?;
+        assert_eq!(h.faces.len(), 6);
+        let mut segments: Vec<usize> = h
+            .faces
+            .iter()
+            .flat_map(|f| f.origins.iter())
+            .filter_map(|o| match o {
+                FaceOrigin::Profile { segment } => Some(*segment),
+                _ => None,
+            })
+            .collect();
+        segments.sort_unstable();
+        assert_eq!(segments, vec![0, 1, 2, 3]);
+        assert_eq!(h.edges.len(), 12);
+        assert!(h.edges.iter().all(|e| e.faces.len() == 2 && matches!(e.origins.as_slice(), [EdgeOrigin::Meet { .. }])), "{:?}", h.edges);
+        let low = sources
+            .iter()
+            .find_map(|s| match s {
+                Some(FaceSource::ExtrudeCap { high: false, plane, .. }) => Some(*plane),
+                _ => None,
+            })
+            .ok_or(KernelError::Failed("low cap".into()))?;
+        assert!(low.normal().z < 0.0, "the start cap's plane faces out");
+        Ok(())
+    }
+
+    #[test]
+    fn offsets_and_holes_are_honoured() -> Result<()> {
+        let region = Region2 {
+            outer: Loop2::polygon(&[Vec2::ZERO, Vec2::new(40.0, 0.0), Vec2::new(40.0, 30.0), Vec2::new(0.0, 30.0)]),
+            holes: vec![Loop2::circle(Vec2::new(20.0, 15.0), 5.0)],
+        };
+        let b = one(extrude(&Plane::XY, &[region], 5.0, 15.0)?)?;
+        let m = measure(&b)?;
+        assert!((m.volume - (12_000.0 - PI * 25.0 * 10.0)).abs() < 1e-6, "{}", m.volume);
+        assert!((m.bbox.min.z - 5.0).abs() < 1e-6 && (m.bbox.max.z - 15.0).abs() < 1e-6, "{:?}", m.bbox);
+        assert_eq!(m.faces, 8, "4 sides, 2 half walls of the hole, 2 caps: {m:?}");
+        assert_eq!(m.merged.faces, 7, "the two half walls count as one: {:?}", m.merged);
+        let sources = b.face_sources().ok_or(KernelError::Failed("no sources".into()))?;
+        let arcs = sources
+            .iter()
+            .filter(|s| matches!(s, Some(FaceSource::ExtrudeSide { segment: Seg2::Arc { .. }, plane: None, coalesced: false })))
+            .count();
+        assert_eq!(arcs, 2, "each arc of the circle sweeps its own half wall");
+        let h = b.history().ok_or(KernelError::Failed("no history".into()))?;
+        let walls: Vec<usize> = h
+            .faces
+            .iter()
+            .flat_map(|f| f.origins.iter())
+            .filter_map(|o| match o {
+                FaceOrigin::Profile { segment } => Some(*segment),
+                _ => None,
+            })
+            .filter(|s| *s >= 4)
+            .collect();
+        let mut walls = walls;
+        walls.sort_unstable();
+        assert_eq!(walls, vec![4, 5], "the hole's segments are numbered after the outer loop's");
+        Ok(())
+    }
+
+    #[test]
+    fn whole_sides_merge_collinear_lines() -> Result<()> {
+        let region = Region2 {
+            outer: Loop2::polygon(&[Vec2::ZERO, Vec2::new(20.0, 0.0), Vec2::new(40.0, 0.0), Vec2::new(40.0, 30.0), Vec2::new(0.0, 30.0)]),
+            holes: Vec::new(),
+        };
+        let split = one(extrude(&Plane::XY, std::slice::from_ref(&region), 0.0, 10.0)?)?;
+        assert_eq!(split.face_count(), 7);
+        let whole = one(extrude_whole_sides(&Plane::XY, &[region], 0.0, 10.0)?)?;
+        assert_eq!(whole.face_count(), 6);
+        let h = whole.history().ok_or(KernelError::Failed("no history".into()))?;
+        assert!(h.faces.iter().any(|f| f.origins.len() == 2), "the merged side comes from both segments: {:?}", h.faces);
+        Ok(())
+    }
+
+    #[test]
+    fn a_rectangle_revolves_into_a_tube() -> Result<()> {
+        // In XZ, x is the radius and y (world z) the height: 5..10 by 0..3 about the sketch's y axis.
+        let plane = Plane::new(Vec3::ZERO, Vec3::X, Vec3::Z).ok_or(KernelError::Failed("plane".into()))?;
+        let region = Region2 {
+            outer: Loop2::polygon(&[Vec2::new(5.0, 0.0), Vec2::new(10.0, 0.0), Vec2::new(10.0, 3.0), Vec2::new(5.0, 3.0)]),
+            holes: Vec::new(),
+        };
+        let full = one(revolve(&plane, std::slice::from_ref(&region), Vec2::ZERO, Vec2::new(0.0, 1.0), TAU)?)?;
+        let m = measure(&full)?;
+        assert!((m.volume - PI * (100.0 - 25.0) * 3.0).abs() < 1e-6, "{}", m.volume);
+        assert_eq!(m.faces, 4, "{m:?}");
+        let h = full.history().ok_or(KernelError::Failed("no history".into()))?;
+        assert!(h.faces.iter().all(|f| matches!(f.origins.as_slice(), [FaceOrigin::Profile { .. }])), "{:?}", h.faces);
+        let quarter = one(revolve(&plane, &[region], Vec2::ZERO, Vec2::new(0.0, 1.0), PI / 2.0)?)?;
+        let q = measure(&quarter)?;
+        assert!((q.volume - PI * 75.0 * 3.0 / 4.0).abs() < 1e-6, "{}", q.volume);
+        assert_eq!(q.faces, 6);
+        let caps = quarter.history().map(|h| h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Cap { .. }])).count());
+        assert_eq!(caps, Some(2));
+        Ok(())
+    }
+
+    #[test]
+    fn a_whole_circle_as_one_arc_extrudes_to_a_cylinder() -> Result<()> {
+        let region = Region2 {
+            outer: Loop2 { segs: vec![Seg2::Arc { center: Vec2::new(10.0, 10.0), radius: 2.0, start: 0.0, sweep: TAU }] },
+            holes: Vec::new(),
+        };
+        let b = one(extrude(&Plane::XY, &[region], 0.0, 5.0)?)?;
+        let m = measure(&b)?;
+        assert!((m.volume - PI * 4.0 * 5.0).abs() < 1e-6, "{}", m.volume);
+        assert_eq!(m.faces, 3);
+        Ok(())
+    }
+
+    #[test]
+    fn merged_counts_fuse_pieces_of_one_surface() -> Result<()> {
+        let circle = Region2 { outer: Loop2::circle(Vec2::new(10.0, 10.0), 15.0), holes: Vec::new() };
+        let c = one(extrude(&Plane::XY, &[circle], 0.0, 50.0)?)?;
+        let m = measure(&c)?;
+        assert_eq!((m.faces, m.merged.faces), (4, 3), "{:?}", m.merged);
+        assert_eq!(m.merged.edges, 2, "two rims: {:?}", m.merged);
+        assert_eq!(m.merged.vertices, 0, "no vertex is left on a whole circle: {:?}", m.merged);
+        Ok(())
+    }
+
+    #[test]
+    fn bad_profiles_are_refused() {
+        let empty = Region2 { outer: Loop2 { segs: Vec::new() }, holes: Vec::new() };
+        assert!(extrude(&Plane::XY, &[empty], 0.0, 1.0).is_err());
+        assert!(extrude(&Plane::XY, &[rect(1.0, 1.0)], 0.0, 0.0).is_err());
+        assert!(extrude(&Plane::XY, &[rect(1.0, 1.0)], 0.0, f64::NAN).is_err());
+        assert!(extrude(&Plane::XY, &[], 0.0, 1.0).is_err());
+        let crossing = Region2 {
+            outer: Loop2::polygon(&[Vec2::new(-1.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(1.0, 1.0), Vec2::new(-1.0, 1.0)]),
+            holes: Vec::new(),
+        };
+        assert!(revolve(&Plane::XY, &[crossing], Vec2::ZERO, Vec2::new(0.0, 1.0), TAU).is_err());
+        assert!(revolve(&Plane::XY, &[rect(1.0, 1.0)], Vec2::ZERO, Vec2::ZERO, TAU).is_err());
+    }
+}

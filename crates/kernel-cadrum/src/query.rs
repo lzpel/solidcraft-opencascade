@@ -146,10 +146,114 @@ pub fn cylinder_end_at(_b: &Body, _p: Vec3) -> Option<CylinderFace> {
     None
 }
 
-/// Topology counts comparable with kernels that use periodic faces: this backend's raw counts
-/// already are.
+/// Topology counts after merging pieces of one surface or curve (comparable with the truck
+/// backend's `merged` counts, and with files that keep periodic faces whole).
 pub fn merged_topology(b: &Body, _mesh: &Mesh) -> Result<TopoCounts> {
     Ok(crate::measure(b)?.merged)
+}
+
+/// The merged counts of `b`'s topology: faces on one elementary surface that touch count as
+/// one, the edges between them vanish, edges on one circle or line that continue one another
+/// within a merged face's boundary count as one, and the vertices those joins used go.
+pub(crate) fn merged_counts(b: &Body) -> TopoCounts {
+    let Ok(inner) = b.inner() else {
+        return TopoCounts { faces: b.face_count(), edges: b.edge_count(), vertices: b.vertex_count(), face_types: Default::default() };
+    };
+    let nf = inner.faces.len();
+    let tol = (b.size() * 1e-6).max(1e-9);
+    let surfaces: Vec<Option<FaceSurface>> = (0..nf).map(|i| face_surface(b, i)).collect();
+    // Faces: union by edges whose two faces lie on one surface.
+    let mut face_group: Vec<usize> = (0..nf).collect();
+    for fs in &inner.edge_faces {
+        if let [f, g] = fs.as_slice()
+            && f != g
+            && let (Some(Some(s)), Some(Some(t))) = (surfaces.get(*f), surfaces.get(*g))
+            && same_surface(s, t, tol)
+        {
+            unite(&mut face_group, *f, *g);
+        }
+    }
+    let face_groups = (0..nf).filter(|i| find(&mut face_group, *i) == *i).count();
+    // Edges: those left between different groups, united along one curve through a shared end.
+    let circles: Vec<Option<EdgeCircle>> = (0..inner.edges.len()).map(|e| edge_circle(b, e)).collect();
+    let ends: Vec<Option<(Vec3, Vec3)>> = inner
+        .with("edge ends", |solids| {
+            Ok((0..inner.edges.len()).map(|e| inner.edge(solids, e).map(|edge| (v3(edge.start_point()), v3(edge.end_point())))).collect())
+        })
+        .unwrap_or_default();
+    let kept: Vec<usize> = (0..inner.edges.len())
+        .filter(|&e| {
+            let groups: std::collections::BTreeSet<usize> =
+                inner.edge_faces.get(e).map(|fs| fs.iter().map(|f| find(&mut face_group, *f)).collect()).unwrap_or_default();
+            groups.len() != 1
+        })
+        .collect();
+    let mut edge_group: Vec<usize> = (0..inner.edges.len()).collect();
+    let bounds = |e: usize| -> std::collections::BTreeSet<usize> {
+        let mut fg = face_group.clone();
+        inner.edge_faces.get(e).map(|fs| fs.iter().map(|f| find(&mut fg, *f)).collect()).unwrap_or_default()
+    };
+    for (k, &e) in kept.iter().enumerate() {
+        for &d in kept.iter().skip(k + 1) {
+            let (Some(Some(pe)), Some(Some(pd))) = (ends.get(e), ends.get(d)) else { continue };
+            let touch = [pe.0, pe.1].iter().any(|a| [pd.0, pd.1].iter().any(|c| (*a - *c).len() < tol));
+            if !touch || bounds(e) != bounds(d) {
+                continue;
+            }
+            let same_curve = match (circles.get(e), circles.get(d)) {
+                (Some(Some(ce)), Some(Some(cd))) => {
+                    (ce.center - cd.center).len() < tol && (ce.radius - cd.radius).abs() < tol && ce.axis.vec().dot(cd.axis.vec()).abs() > 1.0 - 1e-9
+                }
+                (Some(None), Some(None)) => {
+                    let (u, w) = (pe.1 - pe.0, pd.1 - pd.0);
+                    u.cross(w).len() < 1e-9 * u.len().max(1.0) * w.len().max(1.0) && (pd.0 - pe.0).cross(u).len() < tol * u.len().max(1.0)
+                }
+                _ => false,
+            };
+            if same_curve {
+                unite(&mut edge_group, e, d);
+            }
+        }
+    }
+    let merged_edges = kept.iter().filter(|&&e| find(&mut edge_group, e) == e).count();
+    // Vertices: the ends of the kept edges, less those that only join two edges merged into one.
+    let mut points: Vec<(Vec3, usize, std::collections::BTreeSet<usize>)> = Vec::new();
+    for &e in &kept {
+        let Some(Some((a, c))) = ends.get(e) else { continue };
+        let g = find(&mut edge_group, e);
+        for p in [*a, *c] {
+            match points.iter_mut().find(|(q, _, _)| (*q - p).len() < tol) {
+                Some(slot) => {
+                    slot.1 += 1;
+                    slot.2.insert(g);
+                }
+                None => points.push((p, 1, [g].into_iter().collect())),
+            }
+        }
+    }
+    let vertices = points.iter().filter(|(_, n, groups)| !(*n == 2 && groups.len() == 1)).count();
+    TopoCounts { faces: face_groups, edges: merged_edges, vertices, face_types: Default::default() }
+}
+
+fn find(parent: &mut [usize], i: usize) -> usize {
+    let mut r = i;
+    while parent.get(r).is_some_and(|p| *p != r) {
+        r = parent[r];
+    }
+    let mut c = i;
+    while parent.get(c).is_some_and(|p| *p != r) {
+        let next = parent[c];
+        parent[c] = r;
+        c = next;
+    }
+    r
+}
+
+fn unite(parent: &mut [usize], a: usize, b: usize) {
+    let (ra, rb) = (find(parent, a), find(parent, b));
+    if ra != rb && rb < parent.len() {
+        parent[rb] = ra;
+    }
 }
 
 /// Per edge: is it a seam of one face?
