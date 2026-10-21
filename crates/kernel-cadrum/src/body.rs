@@ -140,23 +140,23 @@ impl Inner {
         })
     }
 
-    /// Run `f` over the solids of two bodies, locking in a fixed order (one lock when they are
-    /// the same body).
-    pub(crate) fn with2<R>(a: &Arc<Inner>, b: &Arc<Inner>, what: &str, f: impl FnOnce(&[cadrum::Solid], &[cadrum::Solid]) -> Result<R>) -> Result<R> {
+    /// Run `f` over the solids of several bodies (one slice per entry of `inners`, in order),
+    /// locking each distinct body once, in a fixed order.
+    pub(crate) fn with_many<R>(inners: &[&Arc<Inner>], what: &str, f: impl FnOnce(&[&[cadrum::Solid]]) -> Result<R>) -> Result<R> {
         guard(what, || {
-            if Arc::ptr_eq(a, b) {
-                let s = a.lock();
-                return f(&s, &s);
+            let mut distinct: Vec<&Arc<Inner>> = Vec::new();
+            for i in inners {
+                if !distinct.iter().any(|d| Arc::ptr_eq(d, i)) {
+                    distinct.push(i);
+                }
             }
-            if Arc::as_ptr(a) < Arc::as_ptr(b) {
-                let sa = a.lock();
-                let sb = b.lock();
-                f(&sa, &sb)
-            } else {
-                let sb = b.lock();
-                let sa = a.lock();
-                f(&sa, &sb)
-            }
+            distinct.sort_by_key(|i| Arc::as_ptr(i) as usize);
+            let guards: Vec<std::sync::MutexGuard<'_, Vec<cadrum::Solid>>> = distinct.iter().map(|i| i.lock()).collect();
+            let slices: Vec<&[cadrum::Solid]> = inners
+                .iter()
+                .map(|i| distinct.iter().position(|d| Arc::ptr_eq(d, i)).and_then(|k| guards.get(k)).map(|g| g.as_slice()).unwrap_or(&[]))
+                .collect();
+            f(&slices)
         })
     }
 
@@ -290,6 +290,23 @@ impl Body {
             history: None,
             display_of: None,
         })
+    }
+
+    /// A body of an already read snapshot.
+    pub(crate) fn from_inner(inner: Inner) -> Body {
+        let size = if inner.bbox.is_empty() { 0.0 } else { inner.bbox.diagonal() };
+        Body {
+            shape: Shape::Solid(Arc::new(inner)),
+            size: if size.is_finite() && size > 0.0 { size } else { 0.0 },
+            boundary_tol: None,
+            color: None,
+            paint: None,
+            splits: None,
+            face_sources: None,
+            regularization_protected: false,
+            history: None,
+            display_of: None,
+        }
     }
 
     pub(crate) fn from_mesh(mesh: TriMesh) -> Body {
@@ -765,7 +782,17 @@ impl Body {
             return Ok(vec![self.clone()]);
         }
         let pieces: Vec<Vec<cadrum::Solid>> = inner.with("lumps", |solids| Ok(solids.iter().map(|s| vec![cadrum_handle(s)]).collect()))?;
-        pieces.into_iter().map(Body::from_solids).collect()
+        let histories = crate::record::lump_histories(inner);
+        pieces
+            .into_iter()
+            .zip(histories)
+            .map(|(solids, h)| {
+                let piece = Body::from_solids(solids)?;
+                let sources = self.face_sources.as_ref().map(|_| h.face_sources(&[self]));
+                let piece = piece.with_face_sources(sources.filter(|s| s.iter().any(Option::is_some)).map(Arc::new));
+                Ok(crate::record::with_history_or_log(piece, Ok(h), &[self]))
+            })
+            .collect()
     }
 
     pub fn meets(&self, other: &Body) -> Result<bool> {
