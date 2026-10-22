@@ -21,6 +21,7 @@ mod measure;
 mod meshbody;
 mod ops;
 mod query;
+mod sketch_profile;
 mod step;
 mod stubs;
 mod tess;

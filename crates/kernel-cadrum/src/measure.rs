@@ -12,17 +12,17 @@ use crate::{BodyMeasure, KernelError, MassMeasure, Result, TopoCounts};
 
 /// Measure a body.
 pub fn measure(b: &Body) -> Result<BodyMeasure> {
-    let (mass, counts) = mass(b)?;
+    let (mass, raw, merged) = mass(b)?;
     Ok(BodyMeasure {
         volume: mass.volume,
         area: mass.area,
         centroid: mass.centroid,
         bbox: mass.bbox,
-        faces: counts.faces,
-        edges: counts.edges,
-        vertices: counts.vertices,
+        faces: raw.0,
+        edges: raw.1,
+        vertices: raw.2,
         shells: b.shell_count(),
-        merged: counts,
+        merged,
     })
 }
 
@@ -31,7 +31,8 @@ pub fn measure_mass(b: &Body) -> Result<MassMeasure> {
     Ok(mass(b)?.0)
 }
 
-fn mass(b: &Body) -> Result<(MassMeasure, TopoCounts)> {
+/// The mass measure, the raw (faces, edges, vertices) counts and the merged counts.
+fn mass(b: &Body) -> Result<(MassMeasure, (usize, usize, usize), TopoCounts)> {
     match &b.shape {
         Shape::Mesh(m) => {
             let mesh = m.to_mesh();
@@ -56,7 +57,7 @@ fn mass(b: &Body) -> Result<(MassMeasure, TopoCounts)> {
                 vertices: m.positions.len(),
                 face_types: [("mesh".to_string(), mesh.triangles.len())].into_iter().collect(),
             };
-            Ok((MassMeasure { volume: volume.abs(), area, centroid, bbox }, counts))
+            Ok((MassMeasure { volume: volume.abs(), area, centroid, bbox }, (counts.faces, counts.edges, counts.vertices), counts))
         }
         Shape::Solid(inner) => {
             let (volume, area, centroid, kinds) = inner.with("measure", |solids| {
@@ -86,8 +87,9 @@ fn mass(b: &Body) -> Result<(MassMeasure, TopoCounts)> {
                 return Err(KernelError::Failed("the measure is not finite".into()));
             }
             let _ = inner.volume.set(volume);
-            let counts = TopoCounts { faces: inner.faces.len(), edges: inner.edges.len(), vertices: inner.vertices, face_types: kinds };
-            Ok((MassMeasure { volume, area, centroid, bbox: inner.bbox }, counts))
+            let mut counts = crate::query::merged_counts(b);
+            counts.face_types = kinds;
+            Ok((MassMeasure { volume, area, centroid, bbox: inner.bbox }, (inner.faces.len(), inner.edges.len(), inner.vertices), counts))
         }
     }
 }
