@@ -114,12 +114,6 @@ solidcraft-cli test design_corpus :: every_flat_face_of_every_corpus_design_take
 solidcraft-cli test design_corpus :: names_saved_before_exact_history_find_the_faces_they_named
 solidcraft-cli test design_corpus :: old_designs_open_and_evaluate_as_saved
 
-# gpu lib solidcraft_gpu: 4
-gpu lib solidcraft_gpu :: tests::a_pipeline_the_device_rejects_is_an_error_not_a_crash
-gpu lib solidcraft_gpu :: tests::a_resident_mesh_matches_the_cpu
-gpu lib solidcraft_gpu :: tests::a_scene_in_one_dispatch_matches_each_body_on_the_cpu
-gpu lib solidcraft_gpu :: tests::gpu_evaluation_matches_the_cpu
-
 # io lib solidcraft_io: 2
 io lib solidcraft_io :: tests::exports_write_design_properties
 io lib solidcraft_io :: tests::stl_quirks_read_cleanly
