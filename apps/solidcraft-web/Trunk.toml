@@ -1,4 +1,4 @@
-# Build with: trunk build --release   (from apps/solidcraft-web)
+# Build with: sh packaging/web/build-cadrum.sh (docker: the kernel's wasm build needs cadrum's image)
 [build]
 target = "index.html"
 dist = "../../dist/web"

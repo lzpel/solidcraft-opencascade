@@ -106,15 +106,16 @@ and other Chromium browsers it shows the browser's install prompt, and once Soli
 installed the item is gone. Safari has no such prompt, so the item shows its steps instead:
 Share › Add to Home Screen on iPhone and iPad, File › Add to Dock on a Mac (Safari 17 or later).
 
-To build it yourself:
+To build it yourself (docker; the geometry kernel's wasm build needs the toolchain of cadrum's
+image):
 
 ```sh
-rustup target add wasm32-unknown-unknown
-cd apps/solidcraft-web && trunk serve --release --no-autoreload
+sh packaging/web/build-cadrum.sh
+python3 -m http.server 8080 --directory dist/web
 ```
 
-Offline use needs `--no-autoreload`: Trunk's live reload changes the page as it serves it, so it
-no longer matches the build the browser would keep. Debug builds (`trunk serve`) never keep a copy.
+A release build like this keeps itself for offline use; a `trunk serve` development build never
+keeps a copy, and its live reload would change the page as it serves it.
 
 ### Self-hosting with Docker
 

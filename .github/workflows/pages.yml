@@ -57,8 +57,8 @@ jobs:
           SOLIDCRAFT_GPU: software
         run: cargo xtask book
       - name: Build the web app
-        working-directory: apps/solidcraft-web
-        run: trunk build --release --public-url ./
+        # Inside cadrum's cross-compilation image: OpenCASCADE's wasm build needs its toolchain.
+        run: sh packaging/web/build-cadrum.sh
       - name: Test the web app offline and across an update (headless Chrome)
         run: cargo xtask web-offline-test --site dist/web
       - name: Assemble the site
