@@ -25,7 +25,7 @@ rejected before any jobs or output directories are created. The maximum seed
 - **Checks after every step:** the command succeeds; every body is a sound solid (each shell
   closed and consistently oriented, every face meshes, positive finite volume:
   `Body::validity`); the volume moves the right way (a cut never adds, a join never removes).
-- **Boolean identity** (`crates/kernel-truck/src/fuzz.rs`): for two random primitives on the same
+- **Boolean identity** (`crates/kernel-cadrum/src/fuzz.rs`): for two random primitives on the same
   grid (boxes, cylinders, spheres, tori), union, intersection and cut each give a sound solid
   and V(A∪B) + V(A∩B) = V(A) + V(B), V(A−B) = V(A) − V(A∩B), within 0.2 %.
 - Each seed runs in its own process with a time limit, so hangs and hard crashes are recorded
@@ -38,7 +38,7 @@ rejected before any jobs or output directories are created. The maximum seed
 
 ## Seeded goldens
 
-`tests/robustness/goldens.json` records what each of seeds 0–95 builds (eight steps at most) on the OpenCASCADE backend (the default); `goldens-truck.json` what they build on the truck backend (`cargo xtask test --backend truck`), blessed the same way with `-F truck`:
+`tests/robustness/goldens.json` records what each of seeds 0–95 builds (eight steps at most):
 its steps, how it ended (ok, or the kind and the start of the error it was refused with), and
 for the design it left the bodies' total volume and area (within a relative 1e-6) and their
 face, edge and shell counts (exact). `tests::robustness_goldens` fails on any change, better or
@@ -126,14 +126,13 @@ the volume, membership and spatial checks; a rejected candidate continues to the
 next tolerance, then the ordinary routes. The existing acceptance checks still
 apply to all results.
 
-A join or a cut that needed any retry is then held to what it can do at all
-(`crates/kernel-truck/src/boolean_guard.rs`, #616): the result is closed, a join
-never loses volume and a cut never gains any, and outside the tool's box the
-result's surface is the target's and the target's is the result's (a join or
-a cut can only change the target where the tool is). A cut may come out empty
-only when the tool covers the target. A result that fails is refused with an
-error naming what was wrong and where, rather than returned: a wrong result
-that looks right is worse than an error.
+A join or a cut is held to what it can do at all (`crates/kernel-cadrum/src/ops.rs`,
+#616): the result is a sound solid, a join never loses volume and a cut never
+gains any. A cut may come out empty only when the tool covers the target. A
+result that fails is refused with an error naming what was wrong, rather than
+returned: a wrong result that looks right is worse than an error. (The shifted
+retries and the surface checks outside the tool's box above were the previous
+backend's; OpenCASCADE's booleans run once, with fuzzy tolerances of their own.)
 
 Reports belong to the evaluated feature and survive cached rebuilds and
 undo/redo. Cold reopening regenerates them from the embedded design. Failed or
@@ -233,6 +232,6 @@ Found by QA on new users' first steps, each with an engine test against the anal
 
 - Partial unions of a cap and a face (a cylinder's end lying partly on a box face): pushing
   one face into the other adds material where they don't overlap.
-- Shells of partial annuli (a half ring) whose cavity truck's boolean rejects although the
+- Shells of partial annuli (a half ring) whose cavity the boolean rejects although the
   same cavity built another way cuts cleanly.
 - Very slow booleans on bodies with many patterned features.

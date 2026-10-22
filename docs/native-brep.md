@@ -4,11 +4,12 @@ This is SolidCraft's geometry data model in `solidcraft_geom::brep`. It has no
 modelling-backend dependency. It is the body encoding of a design's model cache
 ([the container format](design-container.md#model-cache)); it is not a STEP
 replacement for external interchange. The container reader, binary codec and
-kernel adapters are separate layers. The truck adapter writes it exactly: a body
-decoded by the producer that encoded it is that body, number for number. The
-cadrum adapter (OpenCASCADE, the default backend) keeps the same metadata
-envelope and stores the lumps as OpenCASCADE's own BRep stream, under a producer
-tag of its own, so a cache one backend wrote is a miss for the other.
+kernel adapters are separate layers. The cadrum adapter (OpenCASCADE) keeps the
+metadata envelope described here and stores the lumps as OpenCASCADE's own BRep
+stream (`SCBREP05`), under a producer tag of its own, so a cache another producer
+wrote is a miss, never misread. The truck adapter, which wrote the geometry
+records below exactly, left with that backend; the records stay in the wire
+schema for the next adapter that writes them.
 
 ## Geometry and topology
 
@@ -116,7 +117,7 @@ boundaries, face-source certificates, operation history and boundary protection.
 Plane, region and segment records are also owned by the wire schema. Exhaustive
 manual adapter conversions separate these from runtime FaceSource, History,
 FaceProv, EdgeProv, Paint, Seg2, Region2 and Plane types. Their serde derives or
-internal refactors cannot silently redefine the saved fields. No truck serde
+internal refactors cannot silently redefine the saved fields. No kernel serde
 struct, pointer, tessellation or STEP string is written. Changing field semantics
 requires a format version change, even if a Rust type keeps its name.
 
@@ -128,7 +129,7 @@ keys, unknown tags, non-finite numbers and trailing bytes. Limits per body are
 256 MiB, 20,000,000 values, depth 48, 1,000,000 entries per collection and 1 MiB per
 string; a design's cache bounds the total (see the container format).
 
-The truck adapter writes every curve and surface as truck holds it: lines,
+The truck adapter (removed with that backend) wrote every curve and surface as truck held it: lines,
 B-spline and NURBS coefficients, the three points of a plane, a revolution's
 profile, axis, matrix and orientation, and an intersection's two surfaces, leader
 and tolerance. Decoding builds the same structures without the constructors that

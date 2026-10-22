@@ -64,7 +64,7 @@ PCB / Package, Render, Animation, Simulation, Manufacture/CAM, Drawings.
 | M12 | Release: cross-platform packages, verification and deliberate publication implemented; original current-UI demo refreshed. Trusted distribution signing and broader performance work remain | in progress | 16 |
 | M14 | Configurations: a table of rows (parameter expressions and feature suppressions per row) switched with config.activate (undoable, all or nothing), kept through parameter renames and feature deletes (config.configure, config.table, config.column/row/activate). Per-row body materials and appearances (library looks, custom colour/opacity and clearing overrides), undoable activation and save/reopen: done. Ordered typed configuration rules, atomic validation and structured rule editing: done. Component appearance and certified semantic face style columns, atomic preview/apply and independent-copy remapping: done. Exact constructed sketch-side and immutable imported-face lineage now preserve legacy names and reject retargeting. Left: ambiguous shifted/two-sided caps | in progress | 4 |
 | M13 | Never lose work: atomic saves (temporary file, flush, rename; a crash at any moment leaves the old file or the new one) with the replaced version kept as `<file>.bak`; autosave of unsaved changes to the recovery folder every 5 minutes (preference) and after big operations, only when something changed; "Recover unsaved design?" on the next launch (`doc.recovery_list`, `doc.recover`, `doc.recovery_discard`); a kill-mid-save test (process killed while saving a 0.5 MB design 25 times). File format: `"format": "solidcraft/12"`, older formats upgraded step by step (`doc::format`), newer ones refused with a message, out-of-range numbers and broken placements refused; a corpus of designs saved by M0, components-era, joints-era and current builds (apps/solidcraft-cli/tests/corpus) that must open and evaluate as saved; damaged and hostile variants (truncation, bit flips, hostile values, removed keys, repeated features, deep nesting) never panic | done | 6 |
-| M15 | Kernel migration to OpenCASCADE (this fork): `crates/kernel-cadrum` behind the kernel façade, phases 1–8 landed (crate split, primitives and measures, extrude/revolve, booleans with exact history, blends/shell/sweep/loft, STEP and the native cache, gap audit, wasm and the web app through cadrum's Docker image); phase 9 makes it the default backend (this PR); phase 10 removes truck. Gaps in cadrum itself: lzpel/cadrum#317. | in progress | — |
+| M15 | Kernel migration to OpenCASCADE (this fork): `crates/kernel-cadrum` behind the kernel façade, phases 1–8 landed (crate split, primitives and measures, extrude/revolve, booleans with exact history, blends/shell/sweep/loft, STEP and the native cache, gap audit, wasm and the web app through cadrum's Docker image); phase 9 made it the default backend, phase 10 removed truck and the vendored truck crates. Gaps in cadrum itself: lzpel/cadrum#317. | done | — |
 
 M6 navigation preferences include **Touchpad**: Shift + pointer movement pans, Alt/Option +
 pointer movement orbits without a mouse button, and vertical scrolling zooms. Other presets
@@ -402,7 +402,7 @@ completed drawings publish atomically. The browser still exports synchronously.
   containment shortcut. Spheres are built from six pole-free patches.
 - Mass properties come from fine tessellation (curved faces within ~1e-4 relative); triangles
   that cut through curved faces (trimmed faces after booleans) are split onto the surface first.
-- STEP import (our own reader, crates/kernel-truck/src/step_in) reads solids (B-rep with analytic and B-spline geometry), units,
+- STEP import (our own product-structure reader, crates/kernel-cadrum/src/step_in, over OpenCASCADE's) reads solids (B-rep with analytic and B-spline geometry), units,
   product names, colours and assemblies; analytic offsets on planes, cylinders, cones, spheres
   and regular tori are read exactly (signed/nested distances, units and face sense). Freeform
   offset surfaces and pcurve-only edges are not read yet,
@@ -598,7 +598,7 @@ and reference-object placement remain separate work, as do loft rails and center
   a seekable reader defers original blobs until after provisional display.
   See [container format](docs/design-container.md) and [performance measurements](docs/perf.md).
 - Warm saves with explicit `cache: true` can include a versioned native B-rep cache through SolidCraft-owned topology
-  and geometry records, with a separate truck adapter and bounded binary reader. Exact
+  and geometry records, with a separate kernel adapter and bounded binary reader. Exact
   face-source certificates and operation history survive codec round trips. A provisional
   picture can be generated before original blobs are read; editing and measurement wait
   for authoritative reconstruction. Cached metadata binds preview and reconstruction to
@@ -648,6 +648,5 @@ and reference-object placement remain separate work, as do loft rails and center
   cover stepped stock, STEP round trips and saved projections from removed pieces.
 
 OpenCASCADE (LGPL-2.1 with the OCCT exception, prebuilt and statically linked through the
-`cadrum` crate) behind our own `kernel` crate, with the truck backend (Apache-2.0, our own
-blend operation and boolean retry/validation) kept as an alternative until the migration
-removes it; see `plan/adr/0001-geometry-kernel.md` (local) — summary in README.
+`cadrum` crate) behind our own `kernel` crate; the truck backend (Apache-2.0) it replaced was
+removed in October 2026; see `plan/adr/0001-geometry-kernel.md` (local) — summary in README.

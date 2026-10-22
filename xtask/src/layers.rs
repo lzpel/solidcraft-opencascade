@@ -45,7 +45,6 @@ pub const TABLE: &[(&str, Class)] = &[
     ("sketch", Class::Layer(1)),
     // the kernel: the shared boundary, the backends, and the facade that selects one by feature
     ("kernel-core", Class::Layer(1)),
-    ("kernel-truck", Class::Layer(1)),
     ("kernel-cadrum", Class::Layer(1)),
     ("kernel", Class::Layer(1)),
     ("render", Class::Layer(1)),
@@ -67,7 +66,7 @@ pub const TABLE: &[(&str, Class)] = &[
 /// The viewport draws display plans the GPU crate evaluates and draws with its pipelines; the MCP
 /// server's tests draw screenshots with them.
 /// The kernel facade re-exports one backend, and every backend builds on the shared core.
-pub const INTRA_LAYER_ORDER: &[&[&str]] = &[&["gpu", "ui-egui"], &["gpu", "mcp"], &["kernel-core", "kernel-truck", "kernel-cadrum", "kernel"]];
+pub const INTRA_LAYER_ORDER: &[&[&str]] = &[&["gpu", "ui-egui"], &["gpu", "mcp"], &["kernel-core", "kernel-cadrum", "kernel"]];
 
 fn intra_layer_allowed(from: &str, to: &str) -> bool {
     let (from, to) = (short_name(from), short_name(to));

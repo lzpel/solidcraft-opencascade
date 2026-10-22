@@ -19,12 +19,6 @@ path = "src/main.rs"
 name = "solvecraft-cli"
 path = "src/alias.rs"
 
-[features]
-# The kernel backends: OpenCASCADE through cadrum is the default (`cadrum` is kept for
-# scripts that name it); `cargo run -p <this> -F truck` builds the pure-Rust truck backend.
-cadrum = ["solidcraft-engine/cadrum"]
-truck = ["solidcraft-engine/truck"]
-
 [dependencies]
 solidcraft-engine = { workspace = true }
 solidcraft-gpu = { workspace = true }

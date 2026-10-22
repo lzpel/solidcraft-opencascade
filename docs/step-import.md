@@ -1,6 +1,6 @@
 # STEP import
 
-SolidCraft reads STEP (ISO 10303-21; AP203, AP214 and AP242 geometry) with its own reader in `crates/kernel-truck/src/step_in` (the Part 21 parser is `crates/kernel-core/src/p21.rs`) (written from the public standards; no third-party STEP code). A STEP file becomes an **Import** base feature on the timeline: it holds the file's B-rep (the STEP text is kept in the design, so the design reopens without the file) and later features — fillets, holes, cuts sketched on its faces, shells — build on its bodies.
+SolidCraft reads STEP (ISO 10303-21; AP203, AP214 and AP242 geometry) with its own product-structure reader in `crates/kernel-cadrum/src/step_in` (the Part 21 parser is `crates/kernel-core/src/p21.rs`; written from the public standards), which hands each solid's entities to OpenCASCADE's STEP reader. A STEP file becomes an **Import** base feature on the timeline: it holds the file's B-rep (the STEP text is kept in the design, so the design reopens without the file) and later features — fillets, holes, cuts sketched on its faces, shells — build on its bodies.
 
 - **Open**: File → Open (`doc.open`) accepts `.step`/`.stp` in any case and starts a new design; `solidcraft part.step`; `solidcraft-cli eval part.step`, `solidcraft-cli run script.json --in part.step`; the MCP `open` tool.
 - **Insert** into the current design: File → Insert STEP… or SOLID → INSERT (`file.insert_step {path}`).

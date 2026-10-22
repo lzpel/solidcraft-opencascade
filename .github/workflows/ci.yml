@@ -177,13 +177,13 @@ jobs:
             # Compare both old and new paths of renames; unknown paths run native checks.
             git diff --no-renames --name-only -z "$BASE_SHA...$HEAD_SHA" > "$RUNNER_TEMP/ci-paths"
             while IFS= read -r -d '' path; do
-              case "$path" in crates/kernel*/*|vendor/truck-*) kernel=true ;; esac
-              # What a pull request re-checks the goldens for: the kernel, truck and the goldens
+              case "$path" in crates/kernel*/*) kernel=true ;; esac
+              # What a pull request re-checks the goldens for: the kernel and the goldens
               # themselves (a re-record is checked before it is queued). The goldens are frozen, so
               # on any other change they would only re-check unchanged results; the merge queue,
               # main and the nightly run every seed before anything lands.
               case "$path" in
-                crates/kernel*/*|vendor/truck-*|tests/robustness/*) goldens=true ;;
+                crates/kernel*/*|tests/robustness/*) goldens=true ;;
               esac
               # What the Windows D3D12 jobs exercise: the GPU crate and its shaders, the app and
               # its startup, the viewport's wgpu glue, the vendored egui-wgpu, their scripts.
@@ -290,8 +290,8 @@ jobs:
         run: python3 -I scripts/ci/test_affected.py
       - name: Merge-of-main detection self-test
         run: python3 -I scripts/ci/test_main_merge.py
-      - name: Claim, triage and kernel-paused bot tests
-        run: node --test scripts/claim/*.test.js scripts/triage/*.test.js scripts/kernel-paused/*.test.js
+      - name: Claim and triage bot tests
+        run: node --test scripts/claim/*.test.js scripts/triage/*.test.js
 
   # Fast feedback for a pull request that has not been approved for the full CI yet.
   quick-compile:

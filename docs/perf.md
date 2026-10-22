@@ -1,6 +1,6 @@
 # Design loading
 
-## Edges made by booleans: each point evaluated once (2026-10-16)
+## Edges made by booleans: each point evaluated once (2026-10-16; the truck backend, since removed)
 
 A boolean meshes both operands with truck-meshalgo, which first divides every edge into a
 polyline (`bounded_polyline`, vendored). An edge that an earlier boolean made is an
@@ -176,7 +176,7 @@ and 444 MB either way, so two runs each do not resolve it: there the conversion 
 dominates the per-item copy. An item that keeps every conversion - an assembly, or a file over the
 work budget - is unchanged.
 
-## Display tessellation plans (#303, 2026-10-12)
+## Display tessellation plans (#303, 2026-10-12; the truck backend's planner, since removed: OpenCASCADE's plans are mesh-only)
 
 `Body::display_mesh` meshes from a `TessPlan` (`crates/kernel-truck/src/tess`): every edge is
 sampled once and both faces use those nodes exactly (watertight by construction); planar

@@ -17,12 +17,12 @@ Questions, ideas or want to say what you're working on? Join the [Discord](https
 
 ## This fork: the kernel is moving to OpenCASCADE
 
-This is `lzpel/solidcraft-opencascade`, a fork whose purpose is to replace the truck geometry
+This is `lzpel/solidcraft-opencascade`, a fork whose purpose was to replace the truck geometry
 kernel with OpenCASCADE through the [cadrum](https://github.com/lzpel/cadrum) crate. The work
-lands in numbered phases, one pull request each, on this fork only; nothing here is sent upstream.
-The kernel is split into `crates/kernel-core` (shared), `crates/kernel-cadrum` (OpenCASCADE,
-the default backend), `crates/kernel-truck` (the previous backend, kept until the migration
-ends) and `crates/kernel` (a façade selecting the backend by feature).
+landed in ten numbered phases, one pull request each, on this fork only; nothing here is sent
+upstream. The kernel is `crates/kernel-core` (what needs no geometry library),
+`crates/kernel-cadrum` (the OpenCASCADE backend) and `crates/kernel` (the façade the rest of the
+workspace uses).
 
 ## Get it running (about 10 minutes on a fast machine)
 
@@ -86,8 +86,7 @@ The [architecture page](docs/architecture.md) has the layer table. The short ver
 
 - `crates/geom`: vectors, planes, meshes, measures.
 - `crates/sketch`: our own constraint solver, plus profile finding.
-- `crates/kernel`: the B-rep kernel boundary, a façade that re-exports one backend by cargo
-  feature (`cadrum`, OpenCASCADE, by default; `truck` for the pure-Rust backend).
+- `crates/kernel`: the B-rep kernel boundary, a façade that re-exports the backend.
 - `crates/kernel-core`: what every backend shares: `KernelError` and `guard`, the exact face and
   edge history, face sources and paints, measures, mesh bodies, the STEP Part 21 and IGES text
   readers, threading and profiling helpers.
@@ -95,10 +94,6 @@ The [architecture page](docs/architecture.md) has the layer table. The short ver
   crate, the only crate allowed to touch it: booleans, blends, shell and offset, sweeps and
   lofts, STEP and the native cache are OpenCASCADE's, behind SolidCraft's exact face and edge
   history.
-- `crates/kernel-truck`: the truck backend. It wraps [truck](https://github.com/ricosjp/truck),
-  and it's the only crate allowed to touch truck. Fillets, chamfers, shell/offset, Delete Face,
-  Split Face, STEP/IGES read and write, and face provenance are our own code here. Patched
-  copies of three truck crates live in `vendor/` and are excluded from our fmt/clippy rules.
 - `crates/doc`: the document. It holds parameters and expressions, the feature timeline and its
   incremental rebuild, components and occurrences, joints, appearances, and persistent naming.
 - `crates/io`: design files and mesh formats (3MF, STL, OBJ).
@@ -139,7 +134,7 @@ The [architecture page](docs/architecture.md) has the layer table. The short ver
      `crates/threedx-client/src/macos.rs` (the 3Dconnexion driver's client API on macOS), and the
      compiler denies it.
    - An unsupported case returns an error ("not supported yet: …"); it never panics.
-   - Every call into the geometry backend (truck or cadrum) goes through `solidcraft_kernel::guard`.
+   - Every call into the geometry backend (OpenCASCADE through cadrum) goes through `solidcraft_kernel::guard`.
    - Every crash fix comes with a regression test.
 5. **Everything is a command, with a test.** A new feature means a `CommandSpec` in
    `crates/engine/src/cmd/`, engine tests that measure the result (volume, area,
@@ -194,7 +189,7 @@ Either include the fix in the same PR, or mark the test `#[ignore = "fails until
 (it can then merge right away), and remove that line in the PR that fixes the bug.
 
 **Use the `ci` profile.** CI runs the tests with `--profile ci`: light optimisation, line tables,
-no LTO, and debug assertions off (truck has debug-only assertions that reject valid geometry). It
+no LTO, and debug assertions off. It
 builds several times faster than `--release`. If a test fails only in a plain debug build, say so
 in the PR. `cargo xtask test` builds the tests with it and then runs every test binary at once
 (`cargo test` runs them one after another); arguments after `--` go to each binary, e.g.
@@ -220,7 +215,7 @@ Check that validation after merging. They are listed in
 `.config/nextest.toml` and the [testing page](docs/book/src/dev/testing.md):
 
 - `solidcraft-engine`: `tests::hostile_params_never_panic`, everything in `tests::robustness` and
-  the seeds of `tests::robustness_goldens` (`seed_00` … `seed_95`; pull requests that change the kernel, truck or the goldens run all but the slowest, `SLOW_SEEDS` in `ci.yml`),
+  the seeds of `tests::robustness_goldens` (`seed_00` … `seed_95`; pull requests that change the kernel or the goldens run all but the slowest, `SLOW_SEEDS` in `ci.yml`),
   `pattern_suppress_tests::enclosure_arc_extinction_keeps_a_real_sharp_inner_lip_after_resize_and_reopen`,
   `pattern_suppress_tests::enclosure_datums_follow_wall_height_and_board_depth_with_material_proofs`,
   `cmd::plastic::tests::enclosure_snap_fit_follows_resized_front_wall`, the `atomic_commands` contract tests
@@ -381,10 +376,10 @@ See the [`help wanted`](https://github.com/tangency-labs/solidcraft/labels/help%
 [`good first issue`](https://github.com/tangency-labs/solidcraft/labels/good%20first%20issue) labels.
 In order of how much they'd help users:
 
-1. **Fillet and blend robustness.** Fillets are our own code (truck has no fillet operation).
-   Constant, variable-radius and chord fillets work, and so do corners where fillets of
-   different radii meet, including three rounds meeting at a vertex. Next are setback corners, fillets along curved edges between curved
-   faces, and fillets that consume neighbouring faces.
+1. **Fillet and blend coverage.** Constant-radius fillets and chamfers come from OpenCASCADE's
+   builders. Variable-radius, chord and tapered fillets, G2 blends and corner patches are not
+   available on this backend yet (their tests are `#[ignore = "needs OpenCASCADE: …"]`); they
+   wait on [lzpel/cadrum#317](https://github.com/lzpel/cadrum/issues/317).
 2. **Boolean robustness.** A random-design fuzzer currently gets about half of its designs
    through without a kernel error. Each failing seed is a reproducible bug.
 3. **Drawings, CAM and mesh tools.** These are out of scope for now (see

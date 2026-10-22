@@ -147,7 +147,7 @@ a STEP assembly) records the part and its matrix, so it shows that part's displa
 again instead of being meshed on its own.
 
 `cache/model.json` records `solidcraft-model-cache/2`, the producer revision
-`solidcraft-truck-adapter/3`, the application version, the build (source commit,
+`solidcraft-cadrum-adapter/1`, the application version, the build (source commit,
 CPU architecture and OS), the SHA-256 of the exact `document.json` (whose blob
 references pin every STEP, mesh and image payload) and of `cache/bodies.bin`, the
 slices, each kernel body's slice and display share, and the model's records. A
@@ -204,7 +204,7 @@ phase-one container PR (#327):
    loops, geometric domains, analytic/spline curve and surface definitions, units,
    tolerances and orientation must have explicit semantics. Preserve face-source
    certificates, persistent names and history using SolidCraft-owned identities.
-   No truck serialized structs, memory layouts, pointers or opaque kernel blobs
+   No kernel-specific serialized structs, memory layouts or pointers
    form part of the persisted contract. No evaluated STEP round trip is a substitute.
 3. Separate adapters between the neutral schema and supported kernels. Unsupported
    geometry or provenance is a cache miss. Explicitly fitted intersection splines

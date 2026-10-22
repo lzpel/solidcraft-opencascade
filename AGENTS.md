@@ -42,8 +42,8 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
   returns an error ("not supported yet: …"); it never panics.
 - **Input-derived numbers are hostile** (command parameters, design files, control-channel
   input): `get()` not `[i]`, finite checks, caps on sizes and loop counts.
-- **Third-party kernel calls are guarded:** everything that calls the geometry backend (`truck`
-  in `crates/kernel-truck`, OpenCASCADE through `cadrum` in `crates/kernel-cadrum`) goes through
+- **Third-party kernel calls are guarded:** everything that calls the geometry backend
+  (OpenCASCADE through `cadrum` in `crates/kernel-cadrum`) goes through
   `solidcraft_kernel::guard`, which turns a panic into `KernelError::Internal`.
 - **Last-resort guard:** `Session::execute` runs every command under `catch_unwind`; an escaped
   panic restores the design and reports `EngineError::Internal`.
@@ -72,7 +72,7 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
   FreeCAD is linked, vendored or shipped.) **This fork's one exception is OpenCASCADE** (LGPL-2.1
   with the OCCT exception), reached only through the `cadrum` crate (MIT, a prebuilt static OCCT)
   from `crates/kernel-cadrum`: never read or vendor OCCT's own sources, never call it from any
-  other crate. The sketch solver is our own; the truck backend's blend operations are our own.
+  other crate. The sketch solver is our own.
 - **Assets — absolutely essential.** SolidCraft contains **no iconography, images, fonts or
   artwork from commercial CAD products — ever.** Command icons are the original SVG masters in
   `assets/icons/ui/design/svg/`, compiled through `crates/ui-egui/src/icon_svg.rs`.
@@ -91,13 +91,10 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
 - **Layering** is enforced by `cargo xtask layers`: L0 `geom` → L1 `sketch`, `kernel`, `render`
   → L2 `doc` → L3 `io` → L4 `engine` → L5 `ui-egui` → apps. Nothing below L5 depends on
   egui/eframe/winit/wgpu/rfd. **The UI crate is swappable.** **The kernel backend is swappable:**
-  `crates/kernel` is a façade that re-exports one backend by cargo feature (`cadrum`, OpenCASCADE,
-  the default; `truck`); `crates/kernel-core` holds what both share (errors, `guard`, history,
-  face sources, measures). Only `crates/kernel-truck` may use `truck`, only `crates/kernel-cadrum`
-  may use `cadrum`. Build the truck backend with `-F solidcraft-kernel/truck` on workspace
-  commands, or `-F truck` on one app (`cargo run -p solidcraft-cli -F truck`); `cargo xtask ci
-  --backend truck` (also `test`, `oracle`) runs the gate with it. The default gate knows the
-  backend's gaps: a test of a feature OpenCASCADE does not give us is `#[ignore = "needs
+  `crates/kernel` is a façade that re-exports the backend (`crates/kernel-cadrum`, OpenCASCADE
+  through `cadrum`); `crates/kernel-core` holds what needs no geometry library (errors, `guard`,
+  history, face sources, measures). Only `crates/kernel-cadrum` may use `cadrum`. The gate knows
+  the backend's gaps: a test of a feature OpenCASCADE does not give us is `#[ignore = "needs
   OpenCASCADE: …"]` (remove the attribute when the feature lands); a test that fails for another
   reason (a measurement or a name that comes out differently) is listed in
   `tests/cadrum-allowlist.txt`, may fail, and fails the run once it passes until its line is

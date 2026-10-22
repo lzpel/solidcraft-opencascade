@@ -7,12 +7,12 @@ Third-party material
 
 Software dependencies are listed in Cargo.lock; their licences are in THIRD-PARTY-LICENSES.txt
 (`cargo xtask licences`), which the programs also carry (Help > About > Licences,
-`solidcraft-cli licences`). The geometry kernel builds on the truck crates
-(truck-modeling, truck-shapeops, truck-meshalgo, truck-stepio, truck-topology and their
-dependencies, https://github.com/ricosjp/truck), licensed under the Apache License 2.0 and used
-as libraries. truck-shapeops 0.4.0 is vendored in vendor/truck-shapeops with SolidCraft
-modifications (listed in vendor/README.md and marked in the source); its licence is in
-vendor/truck-shapeops/LICENSE. Copyright (c) RICOS Co. Ltd.
+`solidcraft-cli licences`). The geometry kernel is OpenCASCADE Technology
+(https://dev.opencascade.org, Copyright (c) Open Cascade SAS), licensed under the GNU Lesser
+General Public License version 2.1 with the Open CASCADE exception, linked as a prebuilt static
+library through the cadrum crate (MIT, https://github.com/lzpel/cadrum); the licence texts are
+in THIRD-PARTY-LICENSES.txt. Until October 2026 the kernel built on the truck crates
+(https://github.com/ricosjp/truck, Apache License 2.0, Copyright (c) RICOS Co. Ltd.).
 
 Some code is adapted from sibling projects in the storytold family (CADCraft, GridCraft), which are
 licensed MIT OR Apache-2.0; ATTRIBUTION.md lists the files.
