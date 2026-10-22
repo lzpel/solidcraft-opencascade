@@ -89,7 +89,31 @@ fn mass(b: &Body) -> Result<(MassMeasure, (usize, usize, usize), TopoCounts)> {
             let _ = inner.volume.set(volume);
             let mut counts = crate::query::merged_counts(b);
             counts.face_types = kinds;
-            Ok((MassMeasure { volume, area, centroid, bbox: inner.bbox }, (inner.faces.len(), inner.edges.len(), inner.vertices), counts))
+            // OpenCASCADE's box around a curved face is loose (a trimmed quadric's reaches to its
+            // full extent, a free-form face's to its control points): a body with one is
+            // measured by its fine tessellation, when that fits the mesh budget.
+            let curved = counts.face_types.iter().any(|(kind, n)| kind != "plane" && *n > 0);
+            let bbox = if curved { tight_bbox(b, inner).unwrap_or(inner.bbox) } else { inner.bbox };
+            Ok((MassMeasure { volume, area, centroid, bbox }, (inner.faces.len(), inner.edges.len(), inner.vertices), counts))
         }
     }
+}
+
+/// The body's box, each side OpenCASCADE's where that is tight (an untrimmed quadric's is
+/// exact) and the fine tessellation's where OpenCASCADE's reaches beyond it (a trimmed
+/// quadric's to its full extent, a free-form face's to its control points).
+fn tight_bbox(b: &Body, inner: &crate::body::Inner) -> Result<Aabb3> {
+    let size = if inner.bbox.is_empty() { 1.0 } else { inner.bbox.diagonal().max(1e-9) };
+    let deflection = size * 1e-4;
+    let m = crate::tess::mesh(b, deflection, crate::DISPLAY_ANGLE)?;
+    let mut mesh = Aabb3::EMPTY;
+    for p in &m.positions {
+        mesh.add(*p);
+    }
+    if mesh.is_empty() {
+        return Ok(inner.bbox);
+    }
+    let pick = |bnd: f64, tess: f64| if (bnd - tess).abs() <= 4.0 * deflection { bnd } else { tess };
+    let side = |bnd: Vec3, tess: Vec3| Vec3::new(pick(bnd.x, tess.x), pick(bnd.y, tess.y), pick(bnd.z, tess.z));
+    Ok(Aabb3 { min: side(inner.bbox.min, mesh.min), max: side(inner.bbox.max, mesh.max) })
 }

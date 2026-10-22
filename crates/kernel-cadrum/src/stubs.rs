@@ -9,32 +9,12 @@ use crate::{Result, unsupported};
 
 // ---- blends (phase 5: constant-radius fillets and chamfers; the rest need cadrum work) ----
 
-pub fn fillet(_body: &Body, _edges: &[Vec3], _radius: f64) -> Result<Body> {
-    Err(unsupported("fillet"))
-}
-
-pub fn fillet_each(_body: &Body, _edges: &[Vec3], _radii: &[f64]) -> Result<Body> {
-    Err(unsupported("fillet"))
-}
-
 pub fn fillet_g2(_body: &Body, _edges: &[Vec3], _radius: f64) -> Result<Body> {
     Err(unsupported("a G2 fillet"))
 }
 
 pub fn fillet_g2_corners(_body: &Body, _edges: &[Vec3], _radius: f64) -> Result<Body> {
     Err(unsupported("a G2 fillet"))
-}
-
-pub fn fillet_max(_body: &Body, _edges: &[Vec3], _radius: f64) -> Option<(f64, Body)> {
-    None
-}
-
-pub fn fillet_max_each(_body: &Body, _edges: &[Vec3], _radius: f64) -> Option<(Vec<f64>, Body)> {
-    None
-}
-
-pub fn fillet_radii(_body: &Body, _edges: &[(Vec3, f64)]) -> Result<Body> {
-    Err(unsupported("fillets of several radii"))
 }
 
 pub fn fillet_chord(_body: &Body, _edges: &[Vec3], _chord: f64) -> Result<Body> {
@@ -61,23 +41,11 @@ pub fn taper(_body: &Body, _edge_at: Vec3, _radius: f64) -> Result<Taper> {
     Err(unsupported("a tapered fillet"))
 }
 
-pub fn chamfer(_body: &Body, _edges: &[Vec3], _distance: f64) -> Result<Body> {
-    Err(unsupported("chamfer"))
-}
-
 pub fn chamfer_sides(_body: &Body, _edges: &[Vec3], _d1: f64, _side: ChamferSide, _flip: bool) -> Result<Body> {
     Err(unsupported("an asymmetric chamfer"))
 }
 
 // ---- shell, offset, draft, split, sew, delete (phases 5 and 7) ----
-
-pub fn shell(_b: &Body, _open: &[Vec3], _thickness: f64) -> Result<Body> {
-    Err(unsupported("shell"))
-}
-
-pub fn offset_faces(_b: &Body, _at: &[Vec3], _distance: f64) -> Result<Body> {
-    Err(unsupported("offsetting faces"))
-}
 
 pub fn draft(_b: &Body, _faces: &[Vec3], _neutral: &Plane, _pull: Vec3, _angle: f64) -> Result<Body> {
     Err(unsupported("draft"))
