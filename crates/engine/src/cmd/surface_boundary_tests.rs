@@ -40,6 +40,7 @@ fn areas(s: &mut Session, body: &str) -> (f64, f64) {
 /// Three and four sketch curves in loop order: the flat patch of the loop. A triangle and a square
 /// of lines, and a square whose top is a half circle bulging out, each measure their own area.
 #[test]
+#[ignore = "needs OpenCASCADE: a boundary surface (lzpel/cadrum#317)"]
 fn three_and_four_curve_loops_are_flat_patches() {
     use std::f64::consts::PI;
     let cases: Vec<(Vec<[[f64; 2]; 2]>, f64, f64)> = vec![
@@ -99,6 +100,7 @@ fn simpson2(f: impl Fn(f64, f64) -> f64, a: f64, n: usize) -> f64 {
 /// square: the network's Coons patch is that surface (every vertex of its mesh on it), and its
 /// area is the paraboloid's, ∫∫ √(1 + (x/10)² + (y/10)²).
 #[test]
+#[ignore = "needs OpenCASCADE: a boundary surface (lzpel/cadrum#317)"]
 fn a_network_of_3d_lines_is_a_hyperbolic_paraboloid() {
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane": "XY"}));
@@ -125,6 +127,7 @@ fn a_network_of_3d_lines_is_a_hyperbolic_paraboloid() {
 /// Curves of two planar sketches, one picked by a bare id in the sketch being edited: the loft
 /// between a line on the ground and one 10 mm across and 5 mm up is the flat strip between them.
 #[test]
+#[ignore = "needs OpenCASCADE: a boundary surface (lzpel/cadrum#317)"]
 fn a_network_takes_curves_from_several_sketches() {
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Low"}));
@@ -165,6 +168,7 @@ fn seam(s: &mut Session, body: &str) -> (f64, f64) {
 /// into the cylinder. Across the shared edge the normals agree within 0.1° for G1 and G2; the
 /// curvature jumps by much of the cylinder's 1/R with G1 and by under 1% of it with G2.
 #[test]
+#[ignore = "needs OpenCASCADE: a surface extrude (lzpel/cadrum#317)"]
 fn g1_and_g2_networks_meet_a_body_across_its_edge() {
     let mut jumps = Vec::new();
     for g in ["g1", "g2"] {
@@ -190,6 +194,7 @@ fn g1_and_g2_networks_meet_a_body_across_its_edge() {
 /// Networks that cannot be built are refused with a reason — by the command's own checks or by the
 /// kernel — and leave nothing behind; none of them panics.
 #[test]
+#[ignore = "needs OpenCASCADE: a surface extrude (lzpel/cadrum#317)"]
 fn hostile_networks_are_refused() {
     let mut s = Session::default();
     let (sheet, top) = cylinder_and_line(&mut s);
@@ -246,6 +251,7 @@ fn hostile_networks_are_refused() {
 /// An edit (`timeline.redefine`) may turn a loop of sketch curves into the network of the same
 /// curves and back: the feature keeps its place and its name, and the surface its area.
 #[test]
+#[ignore = "needs OpenCASCADE: a boundary surface (lzpel/cadrum#317)"]
 fn an_edit_turns_a_loop_into_a_network_and_back() {
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Square"}));

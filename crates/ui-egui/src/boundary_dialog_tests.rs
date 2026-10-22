@@ -23,6 +23,7 @@ fn ok(h: &mut Harness) {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a boundary surface (lzpel/cadrum#317)"]
 fn a_loop_of_sketch_curves_is_the_loop_patch() {
     let mut h = Harness::new();
     h.app.run("sketch.create", json!({"plane":"XY","name":"Loop"})).unwrap();
@@ -59,6 +60,7 @@ fn cylinder_and_line(h: &mut Harness) -> String {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a surface extrude (lzpel/cadrum#317)"]
 fn edges_and_curves_make_a_network_and_come_back_in_an_edit() {
     let mut h = Harness::new();
     let top = cylinder_and_line(&mut h);
@@ -102,6 +104,7 @@ fn edges_and_curves_make_a_network_and_come_back_in_an_edit() {
 /// Picks that meet end to end in one sketch are one curve of the network; a pick elsewhere is
 /// another.
 #[test]
+#[ignore = "needs OpenCASCADE: a boundary surface (lzpel/cadrum#317)"]
 fn curves_that_meet_are_one_chain() {
     let mut h = Harness::new();
     h.app.run("sketch.create", json!({"plane":"XY","name":"Net"})).unwrap();

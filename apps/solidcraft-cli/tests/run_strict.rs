@@ -59,6 +59,7 @@ fn a_failing_feature_fails_the_run_and_writes_nothing() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: fillet (lzpel/cadrum#317)"]
 fn allow_errors_writes_anyway_and_a_saved_design_keeps_failing() {
     let dir = Scratch::new();
     let (step, saved) = (dir.0.join("part.step"), dir.0.join("part.solidcraft"));

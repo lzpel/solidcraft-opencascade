@@ -118,6 +118,7 @@ fn bracket(s: &mut Session, name: &str, x: f64) {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_hole_moved_2_mm_leaves_two_crescents() {
     let mut s = Session::default();
     bracket(&mut s, "Before", 50.0);

@@ -6952,6 +6952,7 @@ mod coplanar_growth_tests {
     /// as its edges. A post standing 0.1 off one corner's arc, between the points the samples
     /// look at, would lose a sliver to the grown arc: there the loop stays as drawn.
     #[test]
+    #[ignore = "needs OpenCASCADE: extrude (lzpel/cadrum#317)"]
     fn arcs_grow_only_where_they_gain_nothing() {
         let face = rounded(0.0, 0.0, 40.0, 40.0, 8.0);
         let block = kernel::extrude(&Plane::XY, std::slice::from_ref(&face), 0.0, 20.0).unwrap().remove(0);

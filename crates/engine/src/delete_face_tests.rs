@@ -16,6 +16,7 @@ fn volume(s: &mut Session, b: &str) -> f64 {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: delete face (lzpel/cadrum#317)"]
 fn delete_a_fillet_face() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 20, "body_name": "B"}));
@@ -34,6 +35,7 @@ fn delete_a_fillet_face() {
 /// A through hole picked in the Delete selection: both halves of its wall go, and the plate
 /// closes up.
 #[test]
+#[ignore = "needs OpenCASCADE: delete face (lzpel/cadrum#317)"]
 fn delete_a_hole_through_the_selection() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 50, "width": 30, "height": 10, "body_name": "Plate"}));
@@ -47,6 +49,7 @@ fn delete_a_hole_through_the_selection() {
 
 /// A face whose neighbours can't close the gap is refused, and the design is unchanged.
 #[test]
+#[ignore = "needs OpenCASCADE: delete face (lzpel/cadrum#317)"]
 fn a_box_face_cannot_be_deleted() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "B"}));

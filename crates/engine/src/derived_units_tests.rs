@@ -121,6 +121,7 @@ fn extent(s: &Session, body: &str) -> f64 {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: helical sweep (lzpel/cadrum#317)"]
 fn coil_pitch_and_revolutions_keep_their_size_when_the_units_change() {
     use std::f64::consts::TAU;
     let mut s = Session::default();

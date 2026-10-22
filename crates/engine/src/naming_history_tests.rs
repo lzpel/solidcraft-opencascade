@@ -406,6 +406,7 @@ fn a_cut_through_one_of_two_bosses_names_only_its_own_walls() {
 /// pieces the kernel returns in a different order on each evaluation. The pieces are numbered by
 /// where they lie, so every fresh evaluation gives each piece the same name.
 #[test]
+#[ignore = "needs OpenCASCADE: sweep options (orientation, twist, scale, rails) (lzpel/cadrum#317)"]
 fn split_pieces_keep_their_numbers_across_evaluations() {
     let script: Value = serde_json::from_str(include_str!("../../../examples/regressions/closed_sweep_torus_cut.json")).unwrap();
     let mut s = Session::default();

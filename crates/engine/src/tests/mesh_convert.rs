@@ -23,6 +23,7 @@ fn imported_box() -> Session {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: converting a mesh body to a B-rep (lzpel/cadrum#317)"]
 fn mesh_conversion_is_parametric_undoable_and_editable_after_cold_reopen() {
     let mut s = imported_box();
     run(&mut s, "parameters.add", json!({"name":"size","expression":"1","unit":""}));
@@ -71,6 +72,7 @@ fn failed_mesh_conversions_leave_the_design_unchanged() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: converting a mesh body to a B-rep (lzpel/cadrum#317)"]
 fn convert_uses_the_selected_mesh_body_when_body_is_omitted() {
     let mut s = imported_box();
     s.selection = vec![crate::Sel::Body { name: "Mesh".into() }];
@@ -91,6 +93,7 @@ fn convert_without_body_or_selection_is_refused() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: converting a mesh body to a B-rep (lzpel/cadrum#317)"]
 fn an_explicit_body_wins_over_the_selection() {
     let mut s = imported_box();
     s.selection = vec![crate::Sel::Body { name: "Missing".into() }];
@@ -99,6 +102,7 @@ fn an_explicit_body_wins_over_the_selection() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: converting a mesh body to a B-rep (lzpel/cadrum#317)"]
 fn exported_binary_stl_with_a_bore_reconstructs_analytic_faces() {
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane":"XY","name":"Section"}));

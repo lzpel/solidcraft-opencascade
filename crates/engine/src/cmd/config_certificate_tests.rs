@@ -170,6 +170,7 @@ fn certified_side_refuses_reused_body_name_from_a_new_producer() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn legacy_v9_annulus_outer_side_emboss_keeps_its_original_heuristic_anchor() {
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane":"XY"}));

@@ -62,6 +62,7 @@ fn steps_around(m: &Mesh, face: usize, origin: Vec3, axis: Vec3) -> (usize, f64)
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_large_sheet_shows_its_small_bends_and_holes_round() {
     let s = large_sheet();
     let st = s.world_state();
@@ -104,6 +105,7 @@ fn a_large_sheet_shows_its_small_bends_and_holes_round() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn what_reads_the_display_mesh_of_a_large_sheet_answers_as_before() {
     let s = large_sheet();
     let st = s.world_state();

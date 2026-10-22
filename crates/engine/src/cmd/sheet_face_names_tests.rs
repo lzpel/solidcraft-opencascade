@@ -55,6 +55,7 @@ fn point(s: &Session, name: &str) -> Vec3 {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_trays_faces_have_readable_sheet_names_that_follow_its_size() {
     let mut s = Session::default();
     let (width, fb, sd) = tray(&mut s, 320.0);
@@ -99,6 +100,7 @@ fn a_trays_faces_have_readable_sheet_names_that_follow_its_size() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_flanges_sheet_names_hold_when_another_flange_goes() {
     let mut s = Session::default();
     let (_, fb, sd) = tray(&mut s, 320.0);

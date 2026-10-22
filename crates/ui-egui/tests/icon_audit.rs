@@ -130,6 +130,7 @@ fn context_rows(h: &mut Harness, prefix: &str, requested: &mut BTreeMap<String, 
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: extrude (lzpel/cadrum#317)"]
 fn requested_menu_icons_have_artwork_and_match_manifest() {
     let evidence = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../target/icon-audit/surfaces.txt");
     if evidence.exists() {

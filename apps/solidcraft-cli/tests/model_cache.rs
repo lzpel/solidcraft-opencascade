@@ -122,6 +122,7 @@ fn corpus_designs_open_from_their_model_as_evaluated() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: extrude (lzpel/cadrum#317)"]
 fn sample_designs_open_from_their_model_as_evaluated() {
     for sample in solidcraft_engine::sample::samples() {
         let mut s = Session::default();
@@ -133,6 +134,7 @@ fn sample_designs_open_from_their_model_as_evaluated() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: STEP export (lzpel/cadrum#317)"]
 fn imported_assemblies_open_from_their_model_as_evaluated() {
     // A STEP assembly of the hinge sample: parts placed several times.
     let mut source = Session::default();

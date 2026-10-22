@@ -20,6 +20,7 @@ fn plate(mode: crate::shell::LayoutMode) -> SolveApp {
 /// The picks decide the flange: a profile makes the base, edges then edge flanges with the
 /// dialog's height, angle and bend position; Edit Feature brings the edges back.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn flange_follows_the_picks() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         let mut app = plate(mode);
@@ -71,6 +72,7 @@ fn flange_follows_the_picks() {
 
 /// Hem takes edges and an optional gap; rules make and pick a rule with its expressions.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn hem_and_rules() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         let mut app = plate(mode);
@@ -109,6 +111,7 @@ fn hem_and_rules() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn flat_exports_use_the_save_picker() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         use std::sync::{Arc, Mutex};
@@ -133,6 +136,7 @@ fn flat_exports_use_the_save_picker() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn shallow_pocket_overlay_labels_depth_without_drawing_a_through_void() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         let mut app = plate(mode);
@@ -172,6 +176,7 @@ fn shallow_pocket_overlay_labels_depth_without_drawing_a_through_void() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn flat_pattern_islands_fit_before_the_actual_command_panel() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         let mut app = plate(mode);
@@ -244,6 +249,7 @@ fn flat_pattern_islands_fit_before_the_actual_command_panel() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn coincident_top_and_bottom_pocket_depths_share_a_readable_annotation() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         let mut app = plate(mode);
@@ -276,6 +282,7 @@ fn coincident_top_and_bottom_pocket_depths_share_a_readable_annotation() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn pocket_export_button_uses_the_picker_and_preserves_depth_layers() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         let mut h = crate::scenario::Harness::new();
@@ -312,6 +319,7 @@ fn pocket_export_button_uses_the_picker_and_preserves_depth_layers() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 #[cfg(not(target_arch = "wasm32"))]
 fn bend_table_picker_writes_the_current_body() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
@@ -341,6 +349,7 @@ fn bend_table_picker_writes_the_current_body() {
 /// The rule manager's shape selector: picked in the dialog, the shape reaches the rule and the part
 /// made with it, and the dialog shows it the next time.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn rules_dialog_picks_the_corner_relief_shape() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         let mut h = crate::scenario::Harness::new();
@@ -394,6 +403,7 @@ fn rules_dialog_picks_the_corner_relief_shape() {
 /// The rule manager's rectangular relief, on a base whose corners are not square: the shape and
 /// the size the dialog shows reach the part, the bends and the flat pattern.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn the_rule_manager_relieves_a_corner_that_is_not_square() {
     let mut h = crate::scenario::Harness::new();
     h.app
@@ -453,6 +463,7 @@ fn the_rule_manager_relieves_a_corner_that_is_not_square() {
 /// The Flange dialog's relief rows: Rule (the default) and an empty size leave the relief to the rule,
 /// a shape and a size reach the feature, Edit Feature shows them again, and Rule takes them back.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn flange_dialog_picks_a_corner_relief_of_its_own() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         let mut h = crate::scenario::Harness::new();
@@ -542,6 +553,7 @@ fn pocket_depth_labels_follow_inches_without_changing_flat_data() {
 /// become `{point, angle?, height?}` edges while the others stay plain points; Edit Feature
 /// brings them back and rebuilds the same flanges.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn edge_flanges_can_have_an_angle_and_a_height_of_their_own() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         let mut app = plate(mode);
@@ -605,6 +617,7 @@ fn edge_flanges_can_have_an_angle_and_a_height_of_their_own() {
 /// Convert takes a fixed face and, for a solid or shelled body, its bend edges; Edit Feature
 /// brings both back.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn convert_takes_the_fixed_face_and_the_bend_edges() {
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length": 100, "width": 60, "height": 30, "body_name": "Tray"})).unwrap();
@@ -681,6 +694,7 @@ fn frame(app: &mut SolveApp, ctx: &egui::Context, time: &mut f64, mods: egui::Mo
 /// viewport's camera, under every navigation preset, with and without reverse zoom and zoom to the
 /// cursor. The flat view never orbits.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn flat_pattern_pans_and_zooms_like_the_design_viewport() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         use egui::{Event, Modifiers, PointerButton};
@@ -781,6 +795,7 @@ impl IntoNav for egui::PointerButton {
 /// Input over the flat pattern, including orbit bindings, wheel and pinch, leaves the Design
 /// camera and selection alone.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn design_camera_is_unchanged_while_the_flat_pattern_has_focus() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         use egui::{Event, Modifiers, PointerButton};
@@ -817,6 +832,7 @@ fn design_camera_is_unchanged_while_the_flat_pattern_has_focus() {
 
 /// Fit and Home frame the flat pattern (not the model), and leave the Design camera alone.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn fit_and_home_frame_the_flat_pattern() {
     for mode in [crate::shell::LayoutMode::Floating, crate::shell::LayoutMode::Docked] {
         let ctx = crate::fonts::test_context();

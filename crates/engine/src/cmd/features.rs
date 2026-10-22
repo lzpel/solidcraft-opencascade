@@ -2349,6 +2349,7 @@ mod corner_tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a G2 fillet (lzpel/cadrum#317)"]
     fn the_default_corner_is_the_rolling_ball_and_g2_refuses_clearly() {
         let (default, reply) = cornered(None);
         assert_eq!(reply["warning"], json!(null), "{reply}");

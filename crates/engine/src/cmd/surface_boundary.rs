@@ -275,6 +275,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boundary surface (lzpel/cadrum#317)"]
     fn a_boundary_patch_between_two_sketch_curves_is_the_sheet_they_span() {
         for continuity in [json!("g0"), json!("g1"), json!("g2"), json!(["g1", "g2"])] {
             let mut s = new_sketch();

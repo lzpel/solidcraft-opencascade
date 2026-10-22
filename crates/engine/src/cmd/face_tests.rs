@@ -145,6 +145,7 @@ fn raised_half(s: &mut Session, body: &str) {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn legacy_internal_capture_refuses_an_uncaptured_source_in_another_component() {
     let mut s = Session::default();
     let component = run(&mut s, "component.create", json!({"name":"Source"}));

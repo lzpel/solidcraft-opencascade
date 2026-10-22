@@ -363,6 +363,7 @@ fn browser_folds_are_kept_in_the_preferences() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: delete face (lzpel/cadrum#317)"]
 fn delete_key_handles_every_kind_and_asks_about_dependents() {
     use solidcraft_engine::Sel;
     let mut app = sample_app();

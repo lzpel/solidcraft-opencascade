@@ -1124,6 +1124,7 @@ fn step_box_file(tag: &str) -> std::path::PathBuf {
 
 /// File → Open of a STEP file gives an Import base feature, and features work on its faces.
 #[test]
+#[ignore = "needs OpenCASCADE: STEP export (lzpel/cadrum#317)"]
 fn step_open_then_model_on_it() {
     let p = step_box_file("open");
     let mut s = Session::default();
@@ -2031,6 +2032,7 @@ fn face_colours_and_opacity_export() {
 /// IGES: a design exports as IGES and the file opens again as an Import feature with the same
 /// bodies, names and colours.
 #[test]
+#[ignore = "needs OpenCASCADE: IGES export (lzpel/cadrum#317)"]
 fn iges_export_and_open() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 5, "body_name": "Plate"}));
@@ -2054,6 +2056,7 @@ fn iges_export_and_open() {
 /// Split Body by a face of another body (its surface extended): a box cut by a cylinder's
 /// side into the core and the rest; volumes add up exactly.
 #[test]
+#[ignore = "needs OpenCASCADE: split body (lzpel/cadrum#317)"]
 fn split_body_by_a_face() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 20, "height": 30, "body_name": "Block"}));
@@ -2112,6 +2115,7 @@ fn split_body_by_a_sketch_line() {
 /// Fillet types: chord length (radius from the face angle) and a radius varying along the
 /// edge; volumes from the removed material.
 #[test]
+#[ignore = "needs OpenCASCADE: a chord fillet (lzpel/cadrum#317)"]
 fn chord_and_variable_fillets() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 20, "height": 30, "body_name": "B"}));
@@ -2726,6 +2730,7 @@ fn chamfer_sloped_basin_rim_recomputes() {
 
 /// Chamfers with two distances or a distance and an angle.
 #[test]
+#[ignore = "needs OpenCASCADE: an asymmetric chamfer (lzpel/cadrum#317)"]
 fn unequal_chamfers() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 20}));
@@ -2742,6 +2747,7 @@ fn unequal_chamfers() {
 /// Unequal chamfers of a cylinder's circular rims: each cross-section is a right triangle
 /// revolved about the axis (Pappus: area × the path of its centroid).
 #[test]
+#[ignore = "needs OpenCASCADE: an asymmetric chamfer (lzpel/cadrum#317)"]
 fn unequal_chamfers_on_circular_rims() {
     use std::f64::consts::PI;
     let ring = |r: [f64; 3], legs: (f64, f64)| 2.0 * PI * (r[0] + r[1] + r[2]) / 3.0 * 0.5 * legs.0 * legs.1;
@@ -3434,6 +3440,7 @@ fn renaming_the_first_imported_duplicate_keeps_the_numbers_of_the_others() {
 
 /// Parameters that work are listed in the command's params doc, which is all agents see (#271).
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn params_docs_list_working_parameters() {
     let mut s = Session::default();
     let cmds = run(&mut s, "engine.commands", json!({}));
@@ -3649,6 +3656,7 @@ fn fillet_fit_taper_follows_the_room_along_the_edge() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a tapered fillet (lzpel/cadrum#317)"]
 fn spline_fillet_takes_over_a_taper() {
     // A tapered fillet keeps each edge's radius spline; given back as a `spline` fillet it makes
     // the same part, and its control radii are then the user's to change.
@@ -3774,6 +3782,7 @@ fn feature_replies_list_the_bodies_they_changed_and_removed() {
 /// Drafting a cylinder's side face 5° from the base plane makes a cone frustum (#547): radius 10
 /// at the base, 10 − 20 · tan 5° at the top.
 #[test]
+#[ignore = "needs OpenCASCADE: draft (lzpel/cadrum#317)"]
 fn draft_on_a_cylinder_side_makes_a_frustum() {
     let mut s = Session::default();
     run(&mut s, "solid.cylinder", json!({"radius": 10, "height": 20}));

@@ -32,6 +32,7 @@ fn volume(h: &Harness) -> f64 {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a tapered fillet (lzpel/cadrum#317)"]
 fn dragging_a_taper_handle_makes_the_fillet_a_spline() {
     let mut h = fixture();
     let tapered = volume(&h);
@@ -121,6 +122,7 @@ fn into_box(u: f64, y: f64, r: f64) -> Value {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a variable-radius fillet (lzpel/cadrum#317)"]
 fn every_edge_of_a_spline_fillet_has_handles_for_its_one_spline() {
     let mut h = spline_fixture();
     let law = dialog_spline(&h);
@@ -142,6 +144,7 @@ fn every_edge_of_a_spline_fillet_has_handles_for_its_one_spline() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a variable-radius fillet (lzpel/cadrum#317)"]
 fn double_clicks_add_and_remove_control_radii() {
     let mut h = spline_fixture();
     let law = dialog_spline(&h);
@@ -172,6 +175,7 @@ fn double_clicks_add_and_remove_control_radii() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a tapered fillet (lzpel/cadrum#317)"]
 fn a_taper_over_several_edges_keeps_the_radius_arrow() {
     let mut h = Harness::new();
     h.app.run("sketch.create", json!({"plane": "XY"})).unwrap();

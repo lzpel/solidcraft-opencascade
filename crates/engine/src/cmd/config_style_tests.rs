@@ -93,6 +93,7 @@ fn strict_face_rows_resize_rename_preview_suppress_and_roundtrip() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn strict_face_split_pieces_share_lineage_without_index_targets() {
     let mut s = Session::default();
     let body = block(&mut s);

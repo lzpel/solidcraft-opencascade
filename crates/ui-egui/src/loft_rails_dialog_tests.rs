@@ -29,6 +29,7 @@ fn ok(h: &mut Harness) {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a loft with rails (lzpel/cadrum#317)"]
 fn a_rail_picked_in_the_loft_dialog_is_kept_through_an_edit() {
     let mut h = Harness::new();
     let (base, top, rail_sketch) = setup(&mut h);
@@ -59,6 +60,7 @@ fn a_rail_picked_in_the_loft_dialog_is_kept_through_an_edit() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a surface loft (lzpel/cadrum#317)"]
 fn a_rail_picked_in_the_surface_loft_dialog_is_kept_through_an_edit() {
     let mut h = Harness::new();
     let (base, top, rail_sketch) = setup(&mut h);

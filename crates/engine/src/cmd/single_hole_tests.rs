@@ -126,6 +126,7 @@ fn lid_with_far_body(far_size: [f64; 3]) -> (f64, Value) {
 /// model is: a large body far away leaves the countersink, the volume removed and the bodies
 /// changed as they are with a 1 mm cube there.
 #[test]
+#[ignore = "needs OpenCASCADE: tapered extrude (draft) (lzpel/cadrum#317)"]
 fn a_far_body_does_not_change_a_countersunk_hole() {
     let (small, small_changed) = lid_with_far_body([1.0, 1.0, 1.0]);
     let (large, large_changed) = lid_with_far_body([178.0, 160.0, 12.5]);

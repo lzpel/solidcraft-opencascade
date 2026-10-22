@@ -214,6 +214,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: STEP export (lzpel/cadrum#317)"]
     fn exports_carry_the_properties_and_never_other_tools_keys() {
         // `file.export` hands the design's properties to the writers; the mapping itself is
         // tested in solidcraft-io.

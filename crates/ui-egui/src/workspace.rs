@@ -644,6 +644,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
     fn contextual_tabs_follow_the_active_body_and_allow_other_tabs() {
         let mut h = crate::scenario::Harness::new();
         let mut fresh = TABS.to_vec();
@@ -935,6 +936,7 @@ mod tests {
     /// New Sketch is on the SHEET METAL tab, as it was before the ribbon redesign, and a sketch
     /// started there stays on its tab until it opens.
     #[test]
+    #[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
     fn new_sketch_starts_from_the_sheet_metal_tab() {
         let mut h = crate::scenario::Harness::new();
         h.app.run("sketch.create", json!({"plane": "XY"})).unwrap();

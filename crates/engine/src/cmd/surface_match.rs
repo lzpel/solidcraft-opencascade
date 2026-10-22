@@ -119,6 +119,7 @@ mod tests {
     /// and redo move it back and forth, a cold reopen gives the same seam, and what cannot be
     /// matched is refused.
     #[test]
+    #[ignore = "needs OpenCASCADE: a surface extrude (lzpel/cadrum#317)"]
     fn surface_match_rebuilds_a_skirt_onto_a_cylinder() {
         let mut s = Session::default();
         boss_and_skirt(&mut s);

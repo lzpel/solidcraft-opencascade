@@ -144,6 +144,7 @@ fn attachment_drafts_leave_on_document_replacement_but_survive_failed_open() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn unsupported_modified_face_offers_explicit_fixed_plane_without_live_links() {
     let mut h = Harness::new();
     h.app.ui.show_origin = false;

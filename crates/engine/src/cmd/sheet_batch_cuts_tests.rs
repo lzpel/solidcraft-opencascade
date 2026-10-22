@@ -120,6 +120,7 @@ fn hole_grid(n: usize, columns: usize, at: [f64; 2], pitch: f64) -> Vec<[f64; 2]
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_hole_feature_drills_a_sheet_in_one_pass_like_holes_one_by_one() {
     let points = hole_grid(12, 6, [15.0, 20.0], 15.0);
     let (mut once, mut each) = (Session::default(), Session::default());
@@ -139,6 +140,7 @@ fn a_hole_feature_drills_a_sheet_in_one_pass_like_holes_one_by_one() {
 /// pattern: the 3D test whether their tools met the sheet came out empty against the sheet
 /// rebuilt with the letters' cut-outs.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_cut_after_a_text_cut_still_cuts() {
     let mut s = Session::default();
     tray(&mut s, 120.0, 80.0);
@@ -159,6 +161,7 @@ fn a_cut_after_a_text_cut_still_cuts() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn labels_in_one_sketch_and_holes_in_one_feature_match_cutting_them_one_by_one() {
     let labels: Vec<(String, [f64; 2])> = (0..3).map(|i| (format!("A{i}"), [15.0 + 30.0 * i as f64, 55.0])).collect();
     let points = hole_grid(6, 6, [15.0, 20.0], 15.0);

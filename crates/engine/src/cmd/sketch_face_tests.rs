@@ -73,6 +73,7 @@ fn explicit_rebind_preserves_geometry_dimensions_context_and_one_undo() {
     assert!((reopened.model.state().sketch(id).unwrap().plane.origin.z - 30.).abs() < 1e-6);
 }
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn unsupported_face_has_explicit_fixed_alternative_and_no_live_projection() {
     let mut s = Session::default();
     // A top half Offset Face raised: no construction certificate and no exact history name yet.
@@ -516,6 +517,7 @@ fn rounded_enclosure_shell_side_and_floor_attach_through_width_wall_and_reopen()
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: STEP export (lzpel/cadrum#317)"]
 fn offset_rectangle_pocket_has_one_logical_outer_wall_and_closed_face_projection() {
     let mut s = Session::default();
     let base = run(&mut s, "sketch.create", json!({"plane":"XY"}))["sketch"].as_u64().unwrap();
