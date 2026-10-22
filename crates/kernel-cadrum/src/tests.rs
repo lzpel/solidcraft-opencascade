@@ -232,7 +232,7 @@ fn edges_and_faces_are_read_by_index() -> Result<()> {
 #[test]
 fn unsupported_operations_say_so() {
     let b = box_solid(Vec3::ZERO, Vec3::new(1.0, 1.0, 1.0)).unwrap_or_else(|_| mesh_fallback());
-    let e = crate::fillet(&b, &[Vec3::ZERO], 0.1);
+    let e = crate::fillet_g2(&b, &[Vec3::ZERO], 0.1);
     assert!(matches!(&e, Err(KernelError::TooLarge(m)) if m.contains("OpenCASCADE")), "{e:?}");
     assert!(crate::extrude(&solidcraft_geom::Plane::XY, &[], 0.0, 1.0).is_err());
 }
@@ -491,6 +491,170 @@ mod booleans {
         assert_eq!(pieces.len(), 2);
         let total: f64 = pieces.iter().map(|p| measure(p).map(|m| m.volume).unwrap_or(0.0)).sum();
         assert!((total - PI * 25.0 * 10.0).abs() < 1e-6);
+        Ok(())
+    }
+}
+
+mod blends {
+    use std::f64::consts::PI;
+
+    use solidcraft_geom::Vec3;
+    use solidcraft_kernel_core::history::{Change, FaceOrigin};
+
+    use crate::{FaceSource, KernelError, Result, box_solid, chamfer, fillet, fillet_each, fillet_max, measure, offset_faces, shell};
+
+    fn block() -> Result<crate::Body> {
+        box_solid(Vec3::ZERO, Vec3::new(40.0, 30.0, 20.0))
+    }
+
+    #[test]
+    fn a_fillet_takes_the_edge_it_rounds_as_its_origin() -> Result<()> {
+        let b = block()?;
+        // The edge along +X at y = 0, z = 20 (the top front edge).
+        let r = fillet(&b, &[Vec3::new(20.0, 0.0, 20.0)], 5.0)?;
+        let m = measure(&r)?;
+        let removed = (1.0 - PI / 4.0) * 25.0 * 40.0;
+        assert!((m.volume - (24_000.0 - removed)).abs() < 1e-6 && m.faces == 7, "{m:?}");
+        let h = r.history().ok_or(KernelError::Failed("no history".into()))?;
+        assert_eq!((h.operands, h.faces.len(), h.edges.len()), (1, 7, r.edge_count()));
+        let blends: Vec<_> = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Edge { operand: 0, .. }])).collect();
+        assert_eq!(blends.len(), 1, "{:?}", h.faces);
+        assert_eq!(blends[0].change, Change::Generated);
+        // The two faces along the edge and the two ends it ran into are trimmed; the rest stay.
+        assert_eq!(h.faces.iter().filter(|f| f.change == Change::Kept).count(), 2, "{:?}", h.faces);
+        assert_eq!(h.faces.iter().filter(|f| f.change == Change::Modified).count(), 4, "{:?}", h.faces);
+        let sources = r.face_sources().ok_or(KernelError::Failed("no sources".into()))?;
+        assert_eq!(sources.iter().filter(|s| matches!(s, Some(FaceSource::Box { .. }))).count(), 6, "the block's sources follow its faces");
+        assert!(h.edges.iter().all(|e| !e.origins.is_empty()), "every edge is placed: {:?}", h.edges);
+        Ok(())
+    }
+
+    #[test]
+    fn a_chamfer_cuts_the_corner_off() -> Result<()> {
+        let r = chamfer(&block()?, &[Vec3::new(20.0, 0.0, 20.0)], 4.0)?;
+        let m = measure(&r)?;
+        assert!((m.volume - (24_000.0 - 8.0 * 40.0)).abs() < 1e-6 && m.faces == 7, "{m:?}");
+        Ok(())
+    }
+
+    #[test]
+    fn a_radius_too_large_is_refused_and_the_largest_that_fits_is_found() -> Result<()> {
+        let b = block()?;
+        let edges = [Vec3::new(20.0, 0.0, 20.0), Vec3::new(20.0, 30.0, 20.0)];
+        assert!(matches!(fillet(&b, &edges, 16.0), Err(KernelError::TooLarge(_))), "two rounds of 16 mm overlap on a 30 mm face");
+        let (r, body) = fillet_max(&b, &edges, 16.0).ok_or(KernelError::Failed("no fitting radius".into()))?;
+        assert!(r > 10.0 && r < 16.0, "{r}");
+        assert_eq!(measure(&body)?.faces, 8);
+        Ok(())
+    }
+
+    #[test]
+    fn fillets_of_two_radii_compose_their_history_over_the_input() -> Result<()> {
+        let b = block()?;
+        let r = fillet_each(&b, &[Vec3::new(20.0, 0.0, 20.0), Vec3::new(20.0, 30.0, 20.0)], &[5.0, 3.0])?;
+        let m = measure(&r)?;
+        let removed = (1.0 - PI / 4.0) * (25.0 + 9.0) * 40.0;
+        assert!((m.volume - (24_000.0 - removed)).abs() < 1e-6 && m.faces == 8, "{m:?}");
+        let h = r.history().ok_or(KernelError::Failed("no history".into()))?;
+        assert_eq!(h.operands, 1);
+        let blends = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Edge { operand: 0, .. }])).count();
+        assert_eq!((blends, h.faces.iter().filter(|f| f.change == Change::Kept).count()), (2, 1), "{:?}", h.faces);
+        Ok(())
+    }
+
+    #[test]
+    fn a_shell_lines_its_faces_with_offsets_and_keeps_the_rim_on_the_open_face() -> Result<()> {
+        let b = block()?;
+        let s = shell(&b, &[Vec3::new(20.0, 15.0, 20.0)], 2.0)?;
+        let m = measure(&s)?;
+        assert!((m.volume - (24_000.0 - 36.0 * 26.0 * 18.0)).abs() < 1e-6 && m.faces == 11, "{m:?}");
+        let h = s.history().ok_or(KernelError::Failed("no history".into()))?;
+        let offsets = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Offset { operand: 0, .. }])).count();
+        let rim =
+            h.faces.iter().filter(|f| f.change == Change::Modified && matches!(f.origins.as_slice(), [FaceOrigin::Face { operand: 0, .. }])).count();
+        let kept = h.faces.iter().filter(|f| f.change == Change::Kept).count();
+        assert_eq!((offsets, rim, kept), (5, 1, 5), "{:?}", h.faces);
+        let sources = s.face_sources().ok_or(KernelError::Failed("no sources".into()))?;
+        let inner = sources.iter().filter(|s| matches!(s, Some(FaceSource::ShellPlanar { inner: true, .. }))).count();
+        let outer = sources.iter().filter(|s| matches!(s, Some(FaceSource::Box { .. }))).count();
+        assert_eq!((inner, outer), (5, 6), "{sources:?}");
+        Ok(())
+    }
+
+    #[test]
+    fn offsetting_a_face_moves_it_and_its_source_plane() -> Result<()> {
+        let b = block()?;
+        let r = offset_faces(&b, &[Vec3::new(20.0, 15.0, 20.0)], 5.0)?;
+        let m = measure(&r)?;
+        assert!((m.volume - 30_000.0).abs() < 1e-6 && m.faces == 6, "{m:?}");
+        let top =
+            (0..6).find(|&i| r.face_plane(i).is_some_and(|p| (p.origin.z - 25.0).abs() < 1e-9)).ok_or(KernelError::Failed("no top at 25".into()))?;
+        assert!(matches!(r.face_sources().and_then(|s| s.get(top)), Some(Some(FaceSource::Box { .. }))));
+        Ok(())
+    }
+}
+
+mod paths {
+    use std::f64::consts::{PI, TAU};
+
+    use solidcraft_geom::{Loop2, Plane, Region2, Vec2, Vec3};
+    use solidcraft_kernel_core::history::FaceOrigin;
+
+    use crate::{KernelError, PathSeg, Result, loft, measure, sweep, sweep_helix, sweep_path};
+
+    fn square(s: f64) -> Region2 {
+        let h = s * 0.5;
+        Region2 { outer: Loop2::polygon(&[Vec2::new(-h, -h), Vec2::new(h, -h), Vec2::new(h, h), Vec2::new(-h, h)]), holes: Vec::new() }
+    }
+
+    #[test]
+    fn a_sweep_along_a_line_is_the_extrude() -> Result<()> {
+        let b = sweep(&Plane::XY, &square(10.0), &[PathSeg::Line { a: Vec3::ZERO, b: Vec3::new(0.0, 0.0, 20.0) }])?;
+        let m = measure(&b)?;
+        assert!((m.volume - 2000.0).abs() < 1e-6 && m.faces == 6, "{m:?}");
+        let h = b.history().ok_or(KernelError::Failed("no history".into()))?;
+        let caps = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Cap { .. }])).count();
+        let sides = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Profile { .. }])).count();
+        assert_eq!((caps, sides), (2, 4), "{:?}", h.faces);
+        Ok(())
+    }
+
+    #[test]
+    fn a_sweep_round_a_quarter_arc_follows_pappus() -> Result<()> {
+        let path = [PathSeg::Arc { a: Vec3::ZERO, center: Vec3::new(30.0, 0.0, 0.0), axis: Vec3::Y, angle: PI / 2.0 }];
+        let b = sweep(&Plane::XY, &square(10.0), &path)?;
+        let m = measure(&b)?;
+        assert!((m.volume - 100.0 * 30.0 * PI / 2.0).abs() < 1e-3 * 4712.0 && m.faces == 6, "{m:?}");
+        let h = b.history().ok_or(KernelError::Failed("no history".into()))?;
+        let caps = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Cap { .. }])).count();
+        assert_eq!(caps, 2, "{:?}", h.faces);
+        Ok(())
+    }
+
+    #[test]
+    fn a_polyline_sweep_with_a_corner_and_a_helix_build() -> Result<()> {
+        let bent = sweep_path(&Plane::XY, &square(4.0), &[Vec3::ZERO, Vec3::new(0.0, 0.0, 20.0), Vec3::new(20.0, 0.0, 20.0)])?;
+        let m = measure(&bent)?;
+        assert!(m.volume > 16.0 * 36.0 && m.volume < 16.0 * 44.0, "{m:?}");
+        // A 4 x 4 section in the XZ plane, 20 mm from the Z axis, two turns of pitch 10.
+        let plane = Plane { origin: Vec3::new(20.0, 0.0, 0.0), x: Vec3::X, y: Vec3::Z };
+        let coil = sweep_helix(&plane, &square(4.0), Vec3::ZERO, Vec3::Z, 10.0, 2.0)?;
+        let m = measure(&coil)?;
+        let pappus = 16.0 * 20.0 * TAU * 2.0;
+        assert!((m.volume - pappus).abs() < 2e-2 * pappus, "{m:?} vs {pappus}");
+        Ok(())
+    }
+
+    #[test]
+    fn a_loft_between_squares_is_a_frustum() -> Result<()> {
+        let top = Plane { origin: Vec3::new(0.0, 0.0, 30.0), x: Vec3::X, y: Vec3::Y };
+        let b = loft(&[(Plane::XY, square(20.0).outer), (top, square(10.0).outer)])?;
+        let m = measure(&b)?;
+        assert!((m.volume - 7000.0).abs() < 1e-6 && m.faces == 6, "{m:?}");
+        let h = b.history().ok_or(KernelError::Failed("no history".into()))?;
+        let caps = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Cap { .. }])).count();
+        let sides = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Profile { .. }])).count();
+        assert_eq!((caps, sides), (2, 4), "{:?}", h.faces);
         Ok(())
     }
 }
