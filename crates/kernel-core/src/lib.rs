@@ -16,6 +16,7 @@ pub mod measure;
 pub mod meshbody;
 pub mod native_meta;
 pub mod numbered;
+pub mod offset2d;
 pub mod p21;
 pub mod par;
 pub mod profile;

@@ -95,7 +95,9 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
   `cadrum`. Build the other backend with `-F solidcraft-kernel/cadrum` on workspace commands, or
   `-F cadrum` on one app (`cargo run -p solidcraft-cli -F cadrum`); `cargo xtask ci --backend cadrum`
   (also `test`, `oracle`) runs the gate with it: the tests listed in `tests/cadrum-allowlist.txt`
-  may fail, and any listed test that passes fails the run until its line is removed.
+  may fail, and any listed test that passes fails the run until its line is removed; a test that
+  crashes the process inside OpenCASCADE is skipped through `tests/cadrum-skiplist.txt` (never
+  allowed: each entry waits on a cadrum fix).
 - **The UI is thin**: panels read engine state and act through `app.run(id, params)` /
   `app.start(id)`. Colours come from `theme::Tokens`.
 - **One set of camera controls**: every page or canvas with a camera (viewport, Render

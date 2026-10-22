@@ -19,9 +19,9 @@ const MAX_SECTIONS: usize = 64;
 
 /// Where a sweep ends: a point on the end cap's plane and that plane's normal.
 #[derive(Clone, Copy)]
-struct End {
-    point: Vec3,
-    normal: Vec3,
+pub(crate) struct End {
+    pub(crate) point: Vec3,
+    pub(crate) normal: Vec3,
 }
 
 /// One closed loop as cadrum edges, swept along `spine`.
@@ -30,7 +30,7 @@ fn pipe(what: &str, lp: &[ProfileEdge], spine: &[cadrum::Edge], orient: cadrum::
 }
 
 /// `a` without the solids `tools`, as one solid (the largest, when the cut leaves several).
-fn without(what: &str, a: cadrum::Solid, tools: &[cadrum::Solid]) -> Result<cadrum::Solid> {
+pub(crate) fn without(what: &str, a: cadrum::Solid, tools: &[cadrum::Solid]) -> Result<cadrum::Solid> {
     if tools.is_empty() {
         return Ok(a);
     }
@@ -50,7 +50,14 @@ fn without(what: &str, a: cadrum::Solid, tools: &[cadrum::Solid]) -> Result<cadr
 
 /// `solid`, built from the loops of `region` on `plane`, with every face placed: a side on
 /// its profile segment, a cap at the start (on `plane`) or the end.
-fn placed(what: &str, solid: cadrum::Solid, plane: &Plane, region: &Region2, loops: &[Vec<ProfileEdge>], end: Option<End>) -> Result<Body> {
+pub(crate) fn placed(
+    what: &str,
+    solid: cadrum::Solid,
+    plane: &Plane,
+    region: &Region2,
+    loops: &[Vec<ProfileEdge>],
+    end: Option<End>,
+) -> Result<Body> {
     let body = Body::from_solids(vec![solid])?;
     let size = body.size().max(1e-9);
     let tol = size * 1e-5 + 1e-9;

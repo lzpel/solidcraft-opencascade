@@ -6,7 +6,7 @@ use solidcraft_geom::{Plane, Region2, Vec3};
 use solidcraft_kernel_core::history::{Change, EdgeOrigin, EdgeProv, FaceOrigin, FaceProv, History};
 
 use crate::body::{Body, Inner, cadrum_handle, dv};
-use crate::types::BoolOp;
+use crate::types::{BoolOp, FaceSurface, HalfSpace, SplitTool};
 use crate::{KernelError, Result, failed, unsupported};
 
 /// A boolean of two bodies: `None` where nothing is left. The result carries its history over
@@ -297,6 +297,70 @@ pub fn half_space(body: &Body, plane: &Plane, positive: bool) -> Result<(Option<
     let tool = Body::from_solids(vec![crate::guard("half space", || Ok(cadrum::Solid::half_space(dv(plane.origin), dv(n))))?])?;
     let part = combine(&[body, &tool], BoolOp::Intersect)?;
     Ok((part, tool))
+}
+
+/// The plane a split tool cuts along: the plane itself, or another body's planar face (its
+/// plane extended). A curved face or sketch curves are not on this backend yet.
+fn tool_plane(tool: &SplitTool) -> Result<Plane> {
+    match tool {
+        SplitTool::Plane(p) => Ok(*p),
+        SplitTool::Face { body, face } => match crate::query::face_surface(body, *face) {
+            Some(FaceSurface::Plane { normal, point }) => {
+                let n = normal.vec();
+                let x = crate::body::any_perpendicular(n).ok_or_else(|| KernelError::Invalid("split face normal".into()))?;
+                Plane::new(point, x, n.cross(x)).ok_or_else(|| KernelError::Invalid("split face plane".into()))
+            }
+            Some(_) => Err(unsupported("splitting by a curved face")),
+            None => Err(KernelError::Invalid("no such face to split by".into())),
+        },
+        SplitTool::Curves { .. } => Err(unsupported("splitting by sketch curves")),
+    }
+}
+
+/// Split a body into the parts on either side of a tool: a plane, or another body's planar
+/// face (its plane extended). Parts come with those on the tool's back first; a body the tool
+/// misses comes back whole. Each part's history is over `[body]` (and the tool).
+pub fn split_body(body: &Body, tool: &SplitTool) -> Result<Vec<Body>> {
+    body.require_brep("split body")?;
+    let plane = tool_plane(tool)?;
+    let mut out = Vec::new();
+    for positive in [false, true] {
+        out.extend(half_space(body, &plane, positive)?.0);
+    }
+    if out.is_empty() {
+        return Err(KernelError::Failed("the split left nothing".into()));
+    }
+    Ok(out)
+}
+
+/// The convex polyhedron bounded by the half-spaces (`n · x <= d`, `n` outward): a box
+/// around them all, cut by each in turn. The half-spaces must bound a solid.
+pub fn convex_polyhedron(hs: &[HalfSpace]) -> Result<Body> {
+    if hs.len() < 4 || hs.len() > 1000 {
+        return Err(KernelError::Invalid("a polyhedron needs 4…1000 half-spaces".into()));
+    }
+    if hs.iter().any(|h| !(h.n.is_finite() && h.d.is_finite() && h.d.abs() < 1e9) || h.n.normalized().is_none()) {
+        return Err(KernelError::Invalid("half-spaces must be finite with a direction".into()));
+    }
+    let reach = hs.iter().map(|h| h.d.abs()).fold(1.0, f64::max) * 4.0;
+    let mut body = crate::build::box_solid(Vec3::new(-reach, -reach, -reach), Vec3::new(reach, reach, reach))?;
+    for h in hs {
+        let n = h.n.normalized().ok_or_else(|| KernelError::Invalid("half-space normal".into()))?;
+        let x = crate::body::any_perpendicular(n).ok_or_else(|| KernelError::Invalid("half-space normal".into()))?;
+        let plane = Plane::new(n * h.d, x, n.cross(x)).ok_or_else(|| KernelError::Invalid("half-space plane".into()))?;
+        body = half_space(&body, &plane, false)?.0.ok_or_else(|| KernelError::Invalid("the half-spaces bound no solid".into()))?;
+    }
+    let bbox = body.inner()?.bbox;
+    if bbox.min.x <= -reach + 1e-6
+        || bbox.min.y <= -reach + 1e-6
+        || bbox.min.z <= -reach + 1e-6
+        || bbox.max.x >= reach - 1e-6
+        || bbox.max.y >= reach - 1e-6
+        || bbox.max.z >= reach - 1e-6
+    {
+        return Err(KernelError::Invalid("the half-spaces do not bound a solid".into()));
+    }
+    Ok(body)
 }
 
 pub fn faceted_boolean(_a: &Body, _b: &solidcraft_geom::Mesh, _op: BoolOp, _tol: f64) -> Result<Option<Body>> {

@@ -178,14 +178,6 @@ pub fn extrude_planar_regions(plane: &Plane, regions: &[Region2], start: f64, en
     }
 }
 
-pub fn extrude_tapered(_plane: &Plane, _region: &Region2, _length: f64, _dir_sign: f64, _taper: f64) -> Result<Body> {
-    Err(unsupported("tapered extrude (draft)"))
-}
-
-pub fn extrude_tapered_between(_plane: &Plane, _region: &Region2, _from: f64, _to: f64, _foot: f64, _dir_sign: f64, _taper: f64) -> Result<Body> {
-    Err(unsupported("tapered extrude (draft)"))
-}
-
 // ---- revolutions ----
 
 /// The revolve axis in space, pointing so that the sweep turns the profile the positive way.
