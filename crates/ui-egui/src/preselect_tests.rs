@@ -342,6 +342,7 @@ fn cylinder_emboss_empty_target_face_applies_automatic_wrap_and_deboss() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_emboss_target_face_and_edit_keep_the_anchored_operation() {
     let mut h = crate::scenario::Harness::new();
     h.app.run("solid.cylinder", json!({"radius":10,"height":20,"body_name":"Sleeve"})).unwrap();
@@ -381,6 +382,7 @@ fn cylinder_emboss_target_face_and_edit_keep_the_anchored_operation() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_emboss_edit_retains_second_source_and_author_paths_and_all_profiles() {
     let mut h = crate::scenario::Harness::new();
     let source = h.app.run("component.create", json!({"name":"Source"})).unwrap()["component"].as_u64().unwrap();
@@ -475,6 +477,7 @@ fn cylinder_emboss_edit_retains_second_source_and_author_paths_and_all_profiles(
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_emboss_profile_guide_uses_target_or_unique_foreign_sketch_frame() {
     for target_owned in [true, false] {
         let mut h = crate::scenario::Harness::new();
@@ -614,6 +617,7 @@ fn used_profile_of_the_last_sketch_is_not_pre_picked() {
 /// #684: what stops the pre-pick is a feature building from the sketch's profile (not just an
 /// extrude), anywhere in the timeline; a feature that only follows its curves does not.
 #[test]
+#[ignore = "needs OpenCASCADE: a patch (lzpel/cadrum#317)"]
 fn profile_use_not_curve_use_stops_the_pre_pick() {
     // A surface patch fills the sketch's region.
     let mut app = app_with(json!([
@@ -834,6 +838,7 @@ fn a_hole_is_mirrored_as_a_feature() {
 
 /// The canvas names the G2 size correctly and edits the same value when the feature is reopened.
 #[test]
+#[ignore = "needs OpenCASCADE: a G2 fillet (lzpel/cadrum#317)"]
 fn curvature_canvas_value_uses_equivalent_radius_when_created_and_reopened() {
     for style in ["curvature", "g2"] {
         let mut app = boxed();
@@ -874,6 +879,7 @@ fn fillet_and_chamfer_arrows_point_into_the_body() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: an asymmetric chamfer (lzpel/cadrum#317)"]
 fn chamfer_types_send_their_values() {
     let mut app = boxed();
     let e = edge(&app, Vec3::new(20.0, 0.0, 20.0));
@@ -1001,6 +1007,7 @@ fn shell_tangent_chain_highlights_and_counts_faces_without_saving_extra_picks() 
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a variable-radius fillet (lzpel/cadrum#317)"]
 fn variable_fillet_round_trip() {
     let mut app = boxed();
     let e0 = edge(&app, Vec3::new(40.0, 15.0, 20.0));
@@ -1018,6 +1025,7 @@ fn variable_fillet_round_trip() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a variable-radius fillet (lzpel/cadrum#317)"]
 fn variable_fillet_mid_radii_round_trip() {
     let mut app = boxed();
     let e0 = edge(&app, Vec3::new(40.0, 15.0, 20.0));
@@ -1527,6 +1535,7 @@ fn align_accepts_a_plane_click() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a patch (lzpel/cadrum#317)"]
 fn surface_dialogs_make_their_commands() {
     // A planar patch of a sketch's rectangle, then thickened; Edit Feature brings both back.
     let mut app = app_with(json!([
@@ -1556,6 +1565,7 @@ fn surface_dialogs_make_their_commands() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a surface extrude (lzpel/cadrum#317)"]
 fn surface_extrude_dialog_takes_profiles_and_curves() {
     // A rectangle and a free line in one sketch: the dialog sends both (the profile's walls
     // and the line's wall) as one surface extrude, and Edit Feature brings the picks back.
@@ -1585,6 +1595,7 @@ fn surface_extrude_dialog_takes_profiles_and_curves() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: unstitching (lzpel/cadrum#317)"]
 fn unstitch_and_reverse_normal_dialogs_take_a_body_or_faces() {
     // A whole box picked: Unstitch sends the body alone; two of its faces: their points.
     let mut app = app_with(json!([{"command": "solid.box", "params": {"length": 10, "width": 10, "height": 10, "body_name": "Box"}}]));
@@ -1610,6 +1621,7 @@ fn unstitch_and_reverse_normal_dialogs_take_a_body_or_faces() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a surface revolve (lzpel/cadrum#317)"]
 fn surface_revolve_dialog_takes_curves_and_an_axis() {
     // A line beside the sketch's y axis, turned a quarter round: a quarter cylinder. Edit
     // Feature brings back the curve and the axis.
@@ -1638,6 +1650,7 @@ fn surface_revolve_dialog_takes_curves_and_an_axis() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a surface sweep (lzpel/cadrum#317)"]
 fn surface_sweep_dialog_takes_curves_and_a_path() {
     // A line along y carried 5 up a line in the XZ plane: a 10 × 5 sheet. Edit Feature brings
     // back the curve and the path.
@@ -1666,6 +1679,7 @@ fn surface_sweep_dialog_takes_curves_and_a_path() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a surface loft (lzpel/cadrum#317)"]
 fn surface_loft_dialog_makes_a_section_per_sketch() {
     // A line in each of two sketches 5 apart: two sections, a 10 × 5 strip; Edit Feature brings
     // the curves back.
@@ -1695,6 +1709,7 @@ fn surface_loft_dialog_makes_a_section_per_sketch() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a ruled surface (lzpel/cadrum#317)"]
 fn ruled_surface_dialog_takes_edges_a_face_and_a_direction() {
     // A box top's front and right edges, ruled across the top 2 mm with round corners: two
     // 10 × 2 strips and a quarter disc between them. Edit Feature brings it back; along a
@@ -1735,6 +1750,7 @@ fn ruled_surface_dialog_takes_edges_a_face_and_a_direction() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a patch (lzpel/cadrum#317)"]
 fn trim_dialog_takes_curves_several_keep_points_and_another_surface() {
     // Two 20 × 10 sheets crossing at x = 0 / z = 0 and a sketch line x = 3 on XY.
     let mut app = app_with(json!([
@@ -1788,6 +1804,7 @@ fn trim_dialog_takes_curves_several_keep_points_and_another_surface() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: untrimming a surface (lzpel/cadrum#317)"]
 fn untrim_dialog_takes_a_face_its_holes_and_the_outer_boundary() {
     // A 40 × 20 × 2 plate with three holes: its top untrimmed (every hole) is the whole 800 mm²
     // rectangle; one hole picked by an edge; Edit Feature brings the picks and options back.
@@ -1823,6 +1840,7 @@ fn untrim_dialog_takes_a_face_its_holes_and_the_outer_boundary() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: offsetting a surface (lzpel/cadrum#317)"]
 fn offset_surface_dialog_takes_faces_a_distance_and_the_chain() {
     // A box top picked, moved up 5: a 10 × 10 square at z = 15; Edit Feature brings it back.
     let mut app = app_with(json!([{"command": "solid.box", "params": {"length": 10, "width": 10, "height": 10, "body_name": "Box"}}]));
@@ -1848,6 +1866,7 @@ fn offset_surface_dialog_takes_faces_a_distance_and_the_chain() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a patch (lzpel/cadrum#317)"]
 fn patch_dialog_fills_a_loop_of_edges_that_is_not_planar() {
     // A box with its top cut away by a sideways cylinder: its rim is a closed loop of four
     // curved edges, not in a plane. Picking them in the Patch dialog fills it with one face.
@@ -1979,6 +1998,7 @@ fn a_primitive_without_a_pick_or_with_its_position_cleared_stays_at_the_origin()
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: unstitching (lzpel/cadrum#317)"]
 fn patch_dialog_takes_continuity_and_points_and_brings_them_back() {
     // A tube with its top face taken off: the rim's edges, G1, through a point above it.
     let mut app = app_with(json!([
@@ -2080,6 +2100,7 @@ fn every_construct_tool_opens_a_dialog_instead_of_failing() {
 /// points or face names". Started with nothing selected it opens a dialog; with a face picked
 /// first it takes that face, and OK takes the fillet off.
 #[test]
+#[ignore = "needs OpenCASCADE: delete face (lzpel/cadrum#317)"]
 fn delete_face_asks_for_faces_and_takes_the_preselected_one() {
     let mut h = crate::scenario::Harness::new();
     h.app.run("solid.box", json!({"length":40,"width":30,"height":20,"body_name":"B"})).unwrap();
@@ -2157,6 +2178,7 @@ fn point_along_path_has_its_position_and_missing_picks_are_named() {
 /// #3001: Convert Mesh opens a dialog instead of failing with "select a mesh body". With the
 /// mesh selected first it takes it, and OK rebuilds it as faces.
 #[test]
+#[ignore = "needs OpenCASCADE: converting a mesh body to a B-rep (lzpel/cadrum#317)"]
 fn convert_mesh_asks_for_the_body_and_converts_the_selected_one() {
     use solidcraft_engine::doc::{Document, FeatureKind, MeshData};
     let body = solidcraft_engine::kernel::box_solid(Vec3::ZERO, Vec3::new(10., 20., 30.)).unwrap();

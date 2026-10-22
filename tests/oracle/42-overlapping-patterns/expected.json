@@ -21,5 +21,6 @@
       5.0000001
     ]
   },
-  "faces": 39
+  "faces": 39,
+  "known_failure": "lzpel/cadrum#317 item 10: the copies of overlapping patterns leave 4 coplanar faces unmerged (43 faces, 39 expected)"
 }

@@ -389,6 +389,7 @@ mod tests {
     /// pasted Emboss keeps that name, moved onto the pasted cylinder, so the copy gets its own
     /// badge, with or without a translate (#1035).
     #[test]
+    #[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
     fn pasted_cylinder_emboss_badges_the_pasted_cylinder() {
         for translate in [Some(json!([50, 0, 0])), None] {
             let mut s = Session::default();

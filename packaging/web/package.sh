@@ -3,7 +3,8 @@
 #
 # Usage: packaging/web/package.sh [--skip-build]
 #
-# Needs: trunk and the wasm32-unknown-unknown target. The zip holds a self-contained static site
+# Needs: docker (the build runs inside cadrum's image, packaging/web/build-cadrum.sh). The zip
+# holds a self-contained static site
 # in solidcraft-web-<version>/ that works from any URL path (public_url = "./" in Trunk.toml).
 # Saving designs needs HTTPS or localhost (the browser's private file storage).
 # Adapted from PhotoCraft's packaging (storytold/photocraft, Apache-2.0; see ATTRIBUTION.md).
@@ -12,8 +13,8 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 
 if [ "${1:-}" != "--skip-build" ]; then
-  command -v trunk >/dev/null || { echo "error: trunk not found (cargo install trunk --locked)" >&2; exit 1; }
-  (cd "$ROOT/apps/solidcraft-web" && trunk build --release)
+  command -v docker >/dev/null || { echo "error: docker not found (the web app is built inside cadrum's image)" >&2; exit 1; }
+  sh "$ROOT/packaging/web/build-cadrum.sh"
 fi
 
 SITE="$ROOT/dist/web"

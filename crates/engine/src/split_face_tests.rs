@@ -24,6 +24,7 @@ fn boxed() -> Session {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn split_a_face_by_a_plane() {
     let mut s = boxed();
     run(&mut s, "solid.split_face", json!({"faces": [[10, 15, 20]], "plane": {"origin": [20, 0, 0], "normal": [1, 0, 0]}}));
@@ -34,6 +35,7 @@ fn split_a_face_by_a_plane() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn split_a_face_by_another_bodys_face() {
     let mut s = boxed();
     run(&mut s, "solid.box", json!({"corner": [-5, 10, 25], "length": 50, "width": 5, "height": 5, "body_name": "Tool"}));
@@ -43,6 +45,7 @@ fn split_a_face_by_another_bodys_face() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn split_a_face_by_sketch_curves() {
     let mut s = boxed();
     run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Cuts"}));
@@ -64,6 +67,7 @@ fn a_tool_that_misses_is_refused() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn export_keeps_split_faces_through_later_features() {
     let mut s = boxed();
     run(&mut s, "solid.split_face", json!({"faces": [[10, 15, 20]], "plane": {"origin": [20, 0, 0], "normal": [1, 0, 0]}}));
@@ -82,6 +86,7 @@ fn export_keeps_split_faces_through_later_features() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn split_pieces_count_and_move_apart() {
     let mut s = boxed();
     run(&mut s, "solid.split_face", json!({"faces": [[10, 15, 20]], "plane": {"origin": [20, 0, 0], "normal": [1, 0, 0]}}));

@@ -27,6 +27,7 @@ const SIZES: [(f64, f64); 9] = [(3.0, 0.5), (4.0, 0.7), (5.0, 0.8), (6.0, 1.0), 
 /// Keep the original 48-station reproduction of the shell error even though new fine
 /// threads now use more stations. The same cut polygons must rebuild as a closed solid.
 #[test]
+#[ignore = "needs OpenCASCADE: helical sweep (lzpel/cadrum#317)"]
 fn faceted_flange_thread_preserves_thin_crest_boundaries() {
     use crate::geom::{Plane, Vec2, Vec3};
     use crate::kernel;
@@ -56,6 +57,7 @@ fn faceted_flange_thread_preserves_thin_crest_boundaries() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: helical sweep (lzpel/cadrum#317)"]
 fn modelled_full_length_m44_flange_thread() {
     let mut s = Session::default();
     let sample = crate::sample::samples().into_iter().find(|s| s.name == "Bolted Flange").unwrap();
@@ -77,6 +79,7 @@ fn modelled_full_length_m44_flange_thread() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: helical sweep (lzpel/cadrum#317)"]
 fn modelled_full_length_fine_threads_on_large_shafts() {
     for (d, p, len) in [(44.0, 1.0, 5.0), (44.0, 1.5, 16.0), (100.0, 1.5, 6.0)] {
         let mut s = Session::default();
@@ -98,6 +101,7 @@ fn modelled_full_length_fine_threads_on_large_shafts() {
 /// leaves a 6 mm threaded section on an 8 mm stub, its turned face named for later features.
 /// A shaft of the thread's own size is cut as it is.
 #[test]
+#[ignore = "needs OpenCASCADE: helical sweep (lzpel/cadrum#317)"]
 fn a_shaft_thicker_than_a_modelled_thread_is_turned_down_to_it() {
     let (p, len) = (1.0, 8.0);
     let root = 3.0 - 5.0 * p * 3f64.sqrt() / 16.0;
@@ -139,6 +143,7 @@ fn a_shaft_thicker_than_a_modelled_thread_is_turned_down_to_it() {
 /// Issue 2705: an M14 over the top 10 mm of a 14.6 mm boss on a plate. Turned to 14 mm first:
 /// 1600 + π 7.3² 15 − π (7.3² − 7²) 10 − 5 turns of 50.189 mm³ (tests/kernel-cases/threads/2705).
 #[test]
+#[ignore = "needs OpenCASCADE: helical sweep (lzpel/cadrum#317)"]
 fn an_m14_thread_on_a_14_6_mm_boss_turns_it_to_14_mm() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"corner": [-10, -10, 0], "length": 20, "width": 20, "height": 4, "body_name": "Part"}));
@@ -196,6 +201,7 @@ fn per_turn(a: f64, b: f64, width: impl Fn(f64) -> f64) -> f64 {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: helical sweep (lzpel/cadrum#317)"]
 fn modelled_external_threads_m3_to_m20() {
     let h = |p: f64| p * 3f64.sqrt() / 2.0;
     let slope = (PI / 6.0).tan();
@@ -214,6 +220,7 @@ fn modelled_external_threads_m3_to_m20() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: helical sweep (lzpel/cadrum#317)"]
 fn modelled_internal_threads_m3_to_m20() {
     let h = |p: f64| p * 3f64.sqrt() / 2.0;
     let slope = (PI / 6.0).tan();
@@ -318,6 +325,7 @@ fn hex_nut(hole: f64) -> Session {
 /// thousands of facets were healed pair by pair, once per feature after it, and the fillet's
 /// preview then compared each of them with the whole old body.
 #[test]
+#[ignore = "needs OpenCASCADE: helical sweep (lzpel/cadrum#317)"]
 fn fillet_beside_a_modelled_thread_finishes() {
     let mut s = Session::default();
     for (id, p) in [

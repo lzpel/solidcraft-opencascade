@@ -57,6 +57,7 @@ fn face_names(s: &mut Session, body: &str) -> Vec<String> {
 /// A circle swept up a line to end scale 0.5 is a cone frustum; the surface sweep of its curve
 /// is the frustum's lateral face. Saved and reopened, the design gives the same solid.
 #[test]
+#[ignore = "needs OpenCASCADE: sweep options (orientation, twist, scale, rails) (lzpel/cadrum#317)"]
 fn scaled_sweep_is_a_frustum() {
     let mut s = setup();
     let (big, small, h) = (10.0, 5.0, 40.0);
@@ -79,6 +80,7 @@ fn scaled_sweep_is_a_frustum() {
 /// A twisted square keeps its faces' names (each wall after its profile curve), and the twist is
 /// a parameter: editing it changes the solid, a plain sweep has the same names.
 #[test]
+#[ignore = "needs OpenCASCADE: sweep options (orientation, twist, scale, rails) (lzpel/cadrum#317)"]
 fn twisted_sweep_faces_follow_the_profile_curves() {
     let mut s = setup();
     sweep(&mut s, "Q", "Plain", json!({})).unwrap();
@@ -105,6 +107,7 @@ fn twisted_sweep_faces_follow_the_profile_curves() {
 /// Parallel along a straight path leaning out of the profile's plane gives a sheared prism (the
 /// volume of the upright one); so does a direction, along a straight path.
 #[test]
+#[ignore = "needs OpenCASCADE: sweep options (orientation, twist, scale, rails) (lzpel/cadrum#317)"]
 fn orientations() {
     let mut s = setup();
     run(&mut s, "sketch.create", json!({"plane": "XZ", "name": "Lean"}));

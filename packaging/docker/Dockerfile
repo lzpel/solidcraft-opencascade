@@ -10,25 +10,25 @@
 # server; the site works under any URL path.
 #
 # The site is wasm, the same on every platform, so it is built once on the build machine's own
-# platform even for a multi-platform image. CI builds it outside Docker (with its Rust cache and
-# git commit for Help › About) and passes it in as the `site` stage: --build-context site=dist/web.
+# platform even for a multi-platform image, inside cadrum's cross-compilation image (the
+# OpenCASCADE kernel needs its wasi-sdk toolchain). CI builds it outside this file (with its
+# cache and git commit for Help › About) and passes it in as the `site` stage:
+# --build-context site=dist/web.
 
-ARG RUST_VERSION=1.95
 ARG TRUNK_VERSION=0.21.14
 
-FROM --platform=$BUILDPLATFORM rust:${RUST_VERSION}-slim-bookworm AS build
+FROM --platform=$BUILDPLATFORM ghcr.io/lzpel/cross-wasm32-unknown-unknown AS build
 ARG TRUNK_VERSION
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates curl \
- && rm -rf /var/lib/apt/lists/*
-RUN rustup target add wasm32-unknown-unknown \
- && curl -fsSL "https://github.com/trunk-rs/trunk/releases/download/v${TRUNK_VERSION}/trunk-$(uname -m)-unknown-linux-gnu.tar.gz" \
+RUN curl -fsSL "https://github.com/trunk-rs/trunk/releases/download/v${TRUNK_VERSION}/trunk-$(uname -m)-unknown-linux-gnu.tar.gz" \
     | tar -xz -C /usr/local/bin trunk
 WORKDIR /src
 COPY . .
 WORKDIR /src/apps/solidcraft-web
-# Trunk downloads the wasm-bindgen and wasm-opt its build needs; its post-build hook writes sw.js.
+# The image's cargo targets wasm32 by default; trunk asks for wasm32 itself, and the post-build
+# hook (`cargo xtask web-offline`, which writes sw.js) must run on the container's own target.
+ENV CARGO_BUILD_TARGET=x86_64-unknown-linux-gnu
+# Trunk downloads the wasm-bindgen and wasm-opt its build needs.
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/src/target \
     trunk build --release

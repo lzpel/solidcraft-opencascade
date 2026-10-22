@@ -34,6 +34,7 @@ fn blend(h: &Harness, name: &str) -> (String, String, [Continuity; 2], [f64; 2],
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a surface blend (lzpel/cadrum#317)"]
 fn edges_at_each_end_make_a_blend_and_come_back_in_an_edit() {
     let mut h = Harness::new();
     h.app.run("solid.box", json!({"length": 40, "width": 10, "height": 10, "corner": [0, 0, 0], "body_name": "A"})).unwrap();

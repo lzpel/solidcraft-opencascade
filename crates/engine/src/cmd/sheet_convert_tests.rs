@@ -120,6 +120,7 @@ fn trapezoid_section(s: &mut Session, t: f64) -> Vec<[f64; 3]> {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_shelled_tray_keeps_its_walls_and_unfolds_by_the_k_factor() {
     let (t, k, r, gap) = (2.0, 0.44, 2.0, 0.5);
     let mut s = Session::default();
@@ -165,6 +166,7 @@ fn a_shelled_tray_keeps_its_walls_and_unfolds_by_the_k_factor() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn bends_picked_inside_and_a_fixed_face_inside_give_the_same_sheet() {
     let (t, k, r, gap) = (2.0, 0.44, 2.0, 0.5);
     let inner = [[50.0, 2.0, 2.0], [98.0, 30.0, 2.0], [50.0, 58.0, 2.0], [2.0, 30.0, 2.0]];
@@ -196,6 +198,7 @@ fn bends_picked_inside_and_a_fixed_face_inside_give_the_same_sheet() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_solid_block_takes_its_rules_thickness_inward() {
     let (k, r, gap) = (0.44, 2.0, 0.5);
     for (name, t) in [(None, 2.0), (Some("Thick"), 3.0)] {
@@ -224,6 +227,7 @@ fn a_solid_block_takes_its_rules_thickness_inward() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_trapezoid_section_unfolds_through_72_and_108_degree_bends() {
     let (t, k, r) = (2.0, 0.5, 1.0);
     let mut s = Session::default();
@@ -253,6 +257,7 @@ fn a_trapezoid_section_unfolds_through_72_and_108_degree_bends() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_z_section_bends_up_at_one_edge_and_down_at_the_other() {
     let (t, k, r) = (2.0, 0.5, 1.0);
     let mut s = Session::default();
@@ -280,6 +285,7 @@ fn a_z_section_bends_up_at_one_edge_and_down_at_the_other() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: tapered extrude (draft) (lzpel/cadrum#317)"]
 fn a_tapered_tray_converts_with_72_degree_walls_and_slanted_corners() {
     let (t, k, r, gap) = (2.0, 0.5, 1.0, 0.5);
     let mut s = Session::default();
@@ -310,6 +316,7 @@ fn a_tapered_tray_converts_with_72_degree_walls_and_slanted_corners() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn the_sheet_follows_the_solid_through_parameter_changes_undo_and_reopening() {
     let (t, k, r) = (2.0, 0.44, 2.0);
     let mut s = Session::default();
@@ -350,6 +357,7 @@ fn the_sheet_follows_the_solid_through_parameter_changes_undo_and_reopening() {
 /// Designs from before bend edges open unchanged: a plate conversion saves without `bends`, as
 /// it always did, and a format 16 file with one is the same document and the same sheet.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn designs_from_before_bend_edges_open_unchanged() {
     let mut s = Session::default();
     rule(&mut s, "Test", 2.0, 0.44, 2.0, 0.5);
@@ -371,6 +379,7 @@ fn designs_from_before_bend_edges_open_unchanged() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn bend_edges_changed_in_an_edit_are_the_ones_bent() {
     let (t, k, r) = (2.0, 0.44, 2.0);
     let mut s = Session::default();
@@ -401,6 +410,7 @@ fn chamfered_channel(s: &mut Session) {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_chamfer_picked_in_its_middle_is_one_bend_at_the_virtual_sharp() {
     // The rule's radius bends, not the one the chamfers stand for.
     let (t, k, r) = (2.0, 0.5, 3.0);
@@ -511,6 +521,7 @@ fn bent_section(s: &mut Session, outer: &[(f64, f64)], t: f64, ri: f64, len: f64
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_bend_modelled_with_its_radius_is_one_bend_of_the_rules_radius() {
     // An L: a base 60 and a leg 40 to the sharp corner outside, 2 thick and 100 long, its
     // corner bent R 2 inside and R 4 outside. The rule bends R 3: its radius, not the model's.
@@ -560,6 +571,7 @@ fn a_bend_modelled_with_its_radius_is_one_bend_of_the_rules_radius() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_channel_with_its_bends_modelled_folds_back_into_itself_under_its_own_radius() {
     // A channel 40 wide with walls 30 high to the sharp corners outside, 2 thick and 100 long,
     // bent R 2 inside, R 4 outside. Under a rule of that radius the sheet is the model.
@@ -598,6 +610,7 @@ fn a_channel_with_its_bends_modelled_folds_back_into_itself_under_its_own_radius
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_filleted_edge_of_a_solid_block_is_a_bend() {
     // A block's bottom edge rounded R 5: the faces either side meet at the old sharp edge,
     // the rule's thickness taken inward, an L with a 100 base and a 30 wall outside.
@@ -615,6 +628,7 @@ fn a_filleted_edge_of_a_solid_block_is_a_bend() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn edge_flanges_and_cuts_work_on_a_converted_sheet() {
     let mut s = Session::default();
     rule(&mut s, "Test", 2.0, 0.44, 2.0, 0.5);
@@ -875,6 +889,7 @@ fn dxf_entities(s: &mut Session) -> (usize, usize, usize) {
 /// converts with the holes as circles. It was refused as "not a plate of even thickness": its
 /// holes came out as polygons, whose area missed the holes' by more than the plate check allows.
 #[test]
+#[ignore = "needs OpenCASCADE: STEP import (lzpel/cadrum#317)"]
 fn a_plate_whose_hole_walls_are_half_cylinders_converts_with_round_holes() {
     let (w, t, r) = (30.0, 2.0, 2.0);
     let centres = [[6.0, 6.0], [24.0, 6.0], [24.0, 24.0], [6.0, 24.0]];
@@ -898,6 +913,7 @@ fn a_plate_whose_hole_walls_are_half_cylinders_converts_with_round_holes() {
 /// Holes of any radius whose walls come in two, three or four pieces, seams anywhere: each is one
 /// circle.
 #[test]
+#[ignore = "needs OpenCASCADE: STEP import (lzpel/cadrum#317)"]
 fn hole_walls_in_any_number_of_pieces_each_make_one_circle() {
     let (t, holes) = (2.0, [([20.0, 30.0], 5.0, 2, 0.0), ([50.0, 30.0], 3.0, 3, 37.0), ([80.0, 30.0], 8.0, 4, 10.0)]);
     let mut loops = vec![rectangle(100.0, 60.0, false)];
@@ -915,6 +931,7 @@ fn hole_walls_in_any_number_of_pieces_each_make_one_circle() {
 /// in two pieces each, a straight side in two faces. Each corner and slot end is one arc, the
 /// side one line.
 #[test]
+#[ignore = "needs OpenCASCADE: STEP import (lzpel/cadrum#317)"]
 fn rounded_corners_slot_ends_and_split_sides_convert_as_single_arcs_and_lines() {
     let (t, rc, rs, rh) = (2.0, 6.0, 4.0, 5.0);
     let quarter = |c: [f64; 2], from: f64, pieces: usize| -> Vec<Wall> {
@@ -959,6 +976,7 @@ fn rounded_corners_slot_ends_and_split_sides_convert_as_single_arcs_and_lines() 
 /// Holes drilled here come out as circles too (their walls are half-cylinders as well), and a
 /// plate with many small ones converts: nine 4 mm holes in a 30 x 30 x 2 plate were refused too.
 #[test]
+#[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
 fn a_plate_with_holes_drilled_here_converts_with_round_holes() {
     let (w, t, r) = (30.0, 2.0, 2.0);
     let mut s = Session::default();
@@ -992,6 +1010,7 @@ fn convert_box(l: f64, w: f64, t: f64, holes: &[([f64; 2], f64)]) -> Session {
 /// takes the plate's two faces, not the space one thickness beyond the face picked (a 100 x 60 x 2
 /// plate on XY used to come out at z −2…0 picked on top, and 2…4 picked underneath).
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_converted_plate_stays_where_the_plate_was() {
     for pick in [[40.0, 15.0, 2.0], [40.0, 15.0, 0.0]] {
         let mut s = Session::default();
@@ -1010,6 +1029,7 @@ fn a_converted_plate_stays_where_the_plate_was() {
 /// outline's tolerance was a thousandth of the body's size (1.2), more than the thickness, so the
 /// far side's triangles counted as the picked face's and no boundary was left.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_long_thin_strip_converts() {
     let mut s = convert_box(1200.0, 100.0, 1.0, &[]);
     assert!((volume(&mut s) - 120_000.0).abs() < 1e-6 * 120_000.0, "{}", volume(&mut s));
@@ -1022,6 +1042,7 @@ fn a_long_thin_strip_converts() {
 /// Plates further past that, a thousandth of their size two to six times their thickness: a
 /// full sheet, a foil, a long bar.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn plates_thousands_of_times_longer_than_thick_convert() {
     for (l, w, t) in [(3000.0, 1500.0, 0.5), (400.0, 100.0, 0.2), (6000.0, 20.0, 1.0)] {
         let mut s = convert_box(l, w, t, &[]);
@@ -1036,6 +1057,7 @@ fn plates_thousands_of_times_longer_than_thick_convert() {
 /// long it was refused; just under the old limit, 990 long, it converted without the 1 mm hole:
 /// the outline's chords could sag 0.99, more than that hole's radius, and it fell out.
 #[test]
+#[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
 fn a_long_thin_strip_keeps_its_small_round_holes() {
     let d = [10.0, 4.0, 2.0, 1.0];
     for l in [990.0, 1200.0] {
@@ -1097,6 +1119,7 @@ fn lines_on(dxf: &str, layer: &str) -> usize {
 /// Picked on the engraved face, the pocket starts from the sheet's z = 0 (the face picked);
 /// picked on the other face, it ends at z = T.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_plate_with_an_engraving_converts_with_the_engraving_as_a_pocket() {
     for (pick, layer) in [([45.0, 30.0, 1.0], "POCKET_BOTTOM_Z0.000000_TO_0.100000_MM"), ([45.0, 30.0, 0.0], "POCKET_TOP_Z0.900000_TO_1.000000_MM")] {
         let mut s = Session::default();
@@ -1137,6 +1160,7 @@ fn a_plate_with_an_engraving_converts_with_the_engraving_as_a_pocket() {
 /// A plate large enough that its tessellation tolerance (1/1000 of its size, 0.72 mm here) is
 /// more than its engraving's depth keeps the engraving too.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_large_plate_keeps_an_engraving_shallower_than_its_tessellation_tolerance() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 600, "width": 400, "height": 1, "body_name": "Plate"}));
@@ -1156,6 +1180,7 @@ fn a_large_plate_keeps_an_engraving_shallower_than_its_tessellation_tolerance() 
 /// An engraved ring (an "O": a 5 mm circle round a 3 mm island) is one pocket with a hole; the
 /// island stays at full thickness.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn an_engraved_ring_converts_as_a_pocket_round_its_island() {
     let mut s = Session::default();
     engraved_plate(
@@ -1186,6 +1211,7 @@ fn an_engraved_ring_converts_as_a_pocket_round_its_island() {
 /// recesses larger than the face they are in); a plate with a boss is no plate, as before. A bend
 /// across a kept engraving is refused.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn recesses_a_plate_cannot_keep_are_refused_with_the_reason() {
     let err = |s: &mut Session, face: [f64; 3]| {
         s.execute("sheet.convert", &json!({"body": "Plate", "face": face})).err().map(|e| e.to_string()).unwrap_or_default()
@@ -1297,6 +1323,7 @@ fn channel_volume(t: f64, r: f64, cut: f64) -> f64 {
 /// flat pattern, where the bend allowance puts them: in the fixed face (the web) and in the bent
 /// ones (the legs). With bend edges, such faces were refused ("faces with curved edges").
 #[test]
+#[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
 fn holes_and_a_slot_in_a_channels_faces_land_where_the_bends_put_them() {
     let (t, k, r) = (2.0, 0.4, 2.0);
     let mut s = Session::default();
@@ -1348,6 +1375,7 @@ fn holes_and_a_slot_in_a_channels_faces_land_where_the_bends_put_them() {
 /// Round edges of a bent face stay arcs: the legs' free corners rounded by 5, and a notch of
 /// radius 4 in one leg's free edge. They were refused too.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn rounded_corners_and_a_notch_on_a_leg_stay_arcs_in_the_flat() {
     let (t, k, r) = (2.0, 0.4, 2.0);
     let mut s = Session::default();
@@ -1420,6 +1448,7 @@ fn pocket_box(p: &Value) -> ([f64; 2], [f64; 2]) {
 /// radius, the sheet is the model again: the hole is a cut-out where the bend allowance puts it,
 /// and each label is a pocket on its own skin of the sheet.
 #[test]
+#[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
 fn a_channel_with_its_bends_modelled_keeps_its_hole_and_engravings_on_either_skin() {
     let (t, k, r) = (2.0, 0.4, 2.0);
     let mut s = Session::default();
@@ -1493,6 +1522,7 @@ fn a_channel_with_its_bends_modelled_keeps_its_hole_and_engravings_on_either_ski
 /// left sharp corner and one 18 up its right leg, the chamfers picked in their middles. The holes
 /// land from the virtual sharps, where the faces were taken out to.
 #[test]
+#[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
 fn holes_beside_chamfer_bends_land_from_the_virtual_sharps() {
     let (t, k, r) = (2.0, 0.5, 3.0);
     let mut s = Session::default();
@@ -1558,6 +1588,7 @@ fn outline_has(s: &mut Session, want: &[[f64; 2]]) -> bool {
 /// closed end starts, g/√2 + T from the sharp: R − g/√2 longer. The conversion used to bend every
 /// corner as a notch, whatever the rule said.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_converted_trays_corners_are_closed_and_relieved_as_a_flanged_trays_are() {
     let (t, r, k, gap) = (2.0, 2.0, 0.44, 0.5);
     let ba = FRAC_PI_2 * (r + k * t);
@@ -1648,6 +1679,7 @@ fn bracket(s: &mut Session, x0: f64, x1: f64, plate: f64) {
 /// bend's setback R + T = 4, was used up by it and the conversion refused; from the inner skin the
 /// bend ended against the plate without a relief. T 2, R 2, K 0.44: BA = 1.44 π, BD = 8 − BA.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_bend_ends_where_its_wall_ends_with_the_rules_bend_relief_beside_it() {
     let (t, r, k) = (2.0, 2.0, 0.44);
     let ba = FRAC_PI_2 * (r + k * t);
@@ -1711,6 +1743,7 @@ fn a_bend_ends_where_its_wall_ends_with_the_rules_bend_relief_beside_it() {
 /// corner: the plate from y = 4 and up to x = 96 beside the short wall, 100 past it; bends 96 − 4
 /// and 26 − 4 long; the bend relief x 95 … 100, y 30 … 32.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_wall_on_part_of_an_edge_meets_a_wall_at_a_relieved_corner_and_is_relieved_at_its_end() {
     let (t, r, k, gap) = (2.0, 2.0, 0.44, 0.5);
     let ba = FRAC_PI_2 * (r + k * t);

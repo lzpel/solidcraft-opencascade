@@ -9,8 +9,10 @@ license.workspace = true
 workspace = true
 
 [features]
-# The OpenCASCADE kernel backend (forwards to the kernel façade's feature).
+# The kernel backends (forwarded to the kernel façade): OpenCASCADE through cadrum is the
+# default; `truck` selects the pure-Rust backend.
 cadrum = ["solidcraft-kernel/cadrum"]
+truck = ["solidcraft-kernel/truck"]
 # Turns on the parameter-contract audit recorder (`SOLIDCRAFT_PARAM_AUDIT`, see
 # `src/schema/record.rs`), for checking a new contract against the whole test suite.
 param-audit = []

@@ -101,6 +101,7 @@ fn designs() -> Vec<(String, Session)> {
 /// scaled by 1.1 gives what a fresh build at that value gives, and setting it back gives the
 /// original topology.
 #[test]
+#[ignore = "needs OpenCASCADE: extrude (lzpel/cadrum#317)"]
 fn a_parameter_edit_rebuilds_like_a_fresh_build_and_reverts_exactly() {
     let dir = scratch_dir("corpus");
     let mut problems = Vec::new();

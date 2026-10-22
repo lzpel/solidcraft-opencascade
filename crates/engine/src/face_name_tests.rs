@@ -88,6 +88,7 @@ fn model_faces_gives_a_point_on_each_face_and_the_hole_axis_and_radius() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: delete face (lzpel/cadrum#317)"]
 fn delete_face_takes_the_faces_of_the_hole_by_name() {
     let mut s = Session::default();
     plate_with_hole(&mut s, 60.0, 40.0, 10.0);
@@ -103,6 +104,7 @@ fn delete_face_takes_the_faces_of_the_hole_by_name() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
 fn convert_to_sheet_metal_takes_the_plates_face_by_name() {
     // A 100 x 60 x 2.5 plate with a hole in the middle: the centroid of its large face is in the
     // hole, where no point of the face is.
@@ -141,6 +143,7 @@ fn shell_takes_the_face_to_open_by_name() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn split_face_takes_the_face_to_split_by_name() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 100, "width": 60, "height": 30, "body_name": "Tray"}));
@@ -172,6 +175,7 @@ fn a_name_that_finds_no_face_is_refused_and_the_design_is_unchanged() {
 /// A 30 x 20 x 10 block with a hole of radius 3 in a component, moved 50 mm along x: `model.faces`
 /// speaks the world, and a name finds its face where the component is shown.
 #[test]
+#[ignore = "needs OpenCASCADE: delete face (lzpel/cadrum#317)"]
 fn names_find_the_faces_of_a_moved_component() {
     let mut s = Session::default();
     run(&mut s, "component.create", json!({"name": "Part"}));

@@ -45,6 +45,7 @@ fn close(a: f64, b: f64, rel: f64) -> bool {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: fillet (lzpel/cadrum#317)"]
 fn old_designs_open_and_evaluate_as_saved() {
     let mut problems = Vec::new();
     for p in corpus() {
@@ -97,6 +98,7 @@ fn old_designs_open_and_evaluate_as_saved() {
 /// where their centres lay (`F2:top#2`). They keep naming the faces they named: marked as such,
 /// they are found as the build that saved them found them, without new notes.
 #[test]
+#[ignore = "needs OpenCASCADE: extrude (lzpel/cadrum#317)"]
 fn names_saved_before_exact_history_find_the_faces_they_named() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/naming-split-pieces.solidcraft");
     let s = open(&path);
@@ -117,6 +119,7 @@ fn names_saved_before_exact_history_find_the_faces_they_named() {
 /// The features after the split that refer to a piece by its body name still find that piece:
 /// the far one stays `Body1` (chamfered), the near one `Body1 (1)` (filleted, coloured).
 #[test]
+#[ignore = "needs OpenCASCADE: extrude (lzpel/cadrum#317)"]
 fn body_names_saved_before_exact_history_keep_their_pieces() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/split-body-pieces.solidcraft");
     let s = open(&path);

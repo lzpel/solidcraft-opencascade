@@ -240,6 +240,7 @@ fn exact_cylinder_volume(s: &Session) -> f64 {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_emboss_persists_selection_and_replays_radial_depth() {
     use solidcraft_geom::Vec3;
     let mut s = cylinder_badge();
@@ -270,6 +271,7 @@ fn cylinder_emboss_persists_selection_and_replays_radial_depth() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_deboss_is_connected_and_unsupported_profile_failure_is_atomic() {
     let mut s = cylinder_badge();
     let before = exact_cylinder_volume(&s);
@@ -288,6 +290,7 @@ fn cylinder_deboss_is_connected_and_unsupported_profile_failure_is_atomic() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_small_chord_pick_is_saved_on_the_exact_surface() {
     let mut s = Session::default();
     run(&mut s, "solid.cylinder", json!({"radius":"0.1mm","height":"0.2mm","body_name":"Tiny"}));
@@ -312,6 +315,7 @@ fn cylinder_small_chord_pick_is_saved_on_the_exact_surface() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_cross_component_emboss_keeps_source_owner_and_placements() {
     for (pick_offset, auto) in [(0., false), (80., false), (0., true), (80., true)] {
         let run = |s: &mut Session, id: &str, p: Value| run(s, id, auto_emboss_params(p, auto && matches!(id, "solid.emboss" | "timeline.redefine")));
@@ -399,6 +403,7 @@ fn cylinder_cross_component_emboss_keeps_source_owner_and_placements() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_active_second_source_occurrence_authors_shared_geometry() {
     check_active_second_source(false);
     check_active_second_source(true);
@@ -428,6 +433,7 @@ fn check_active_second_source(auto: bool) {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_pending_leaf_or_ancestor_positions_require_capture_atomically() {
     for (ancestor, auto) in [(false, false), (true, false), (false, true), (true, true)] {
         let mut s = Session::default();
@@ -453,6 +459,7 @@ fn cylinder_pending_leaf_or_ancestor_positions_require_capture_atomically() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_pending_third_component_profile_requires_capture_atomically() {
     check_pending_third_profile(false);
     check_pending_third_profile(true);
@@ -484,6 +491,7 @@ fn check_pending_third_profile(auto: bool) {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn cylinder_body_offset_keeps_exact_profile_and_anchor_frames() {
     check_body_offset(false);
     check_body_offset(true);
@@ -592,6 +600,7 @@ fn align_takes_planes_and_the_origin() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a loft to a point (lzpel/cadrum#317)"]
 fn coil_and_loft_to_a_point() {
     use std::f64::consts::{PI, TAU};
     let mut s = Session::default();
@@ -956,6 +965,7 @@ fn a_tapered_text_joins_a_block_on_its_face_or_hanging_over_its_edge() {
 /// sewn on along it; one drawn just inside the face's edge starts on it. Either way: the part plus
 /// the frustum, and nothing beside the part's walls.
 #[test]
+#[ignore = "needs OpenCASCADE: tapered extrude (draft) (lzpel/cadrum#317)"]
 fn a_tapered_foot_under_a_part_joins_as_drawn() {
     // (round, the foot's half width: the whole face, or just inside its edge)
     for (round, half) in [(false, 15.0), (true, 15.0), (false, 14.9)] {
@@ -1009,6 +1019,7 @@ fn a_tapered_foot_under_a_part_joins_as_drawn() {
 /// the offset. Controls that build today: the same extrude with the taper and no offset, and
 /// with the offset and no taper. Two-sided and symmetric tapers are still refused, by name.
 #[test]
+#[ignore = "needs OpenCASCADE: tapered extrude (draft) (lzpel/cadrum#317)"]
 fn a_drafted_extrude_starts_at_an_offset() {
     use solidcraft_kernel::{FaceSurface, face_surface, measure as measure_body};
     // A 30 x 20 profile, 12 mm long, drafted 6 deg, started 4 mm along the normal.
@@ -1109,6 +1120,7 @@ fn a_drafted_extrude_starts_at_an_offset() {
 /// its rim lies on a face bounded by an intersection curve, not by straight lines. The tool
 /// lies wholly in material, so the cut removes exactly the frustum over its profile.
 #[test]
+#[ignore = "needs OpenCASCADE: tapered extrude (draft) (lzpel/cadrum#317)"]
 fn a_drafted_offset_cut_into_a_body_with_history() {
     use solidcraft_kernel::{FaceSurface, face_surface, measure as measure_body};
     let (w, d, h, off) = (30.0, 20.0, 12.0, 18.0);
@@ -1399,6 +1411,7 @@ fn a_line_of_text_cuts_into_a_block_at_any_depth() {
 /// a sloping side edge of one and on the top edge of the other, both saved by edge name. They
 /// still find their edges, and the part comes out the same.
 #[test]
+#[ignore = "needs OpenCASCADE: tapered extrude (draft) (lzpel/cadrum#317)"]
 fn fillets_on_tapered_bosses_saved_before_still_find_their_edges() {
     let text = include_str!("../../../../tests/taper/before-1014/two_tapered_bosses_filleted.json");
     let mut s = Session::new(solidcraft_doc::Document::from_json(text).unwrap());

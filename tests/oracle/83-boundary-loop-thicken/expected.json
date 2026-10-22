@@ -21,5 +21,6 @@
       1.0
     ]
   },
-  "faces": 6
+  "faces": 6,
+  "known_failure": "lzpel/cadrum#317: boundary surfaces (NURBS face access)"
 }

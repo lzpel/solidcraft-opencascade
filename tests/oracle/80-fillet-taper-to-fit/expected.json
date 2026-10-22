@@ -21,5 +21,6 @@
       15.0
     ]
   },
-  "faces": 7
+  "faces": 7,
+  "known_failure": "lzpel/cadrum#317: tapered fillets"
 }

@@ -66,6 +66,7 @@ fn face_names(s: &mut Session, body: &str) -> Vec<String> {
 /// an edit (the circle then widens only toward the rail: an elliptic cone, sections πr²k); the
 /// rails are saved with the feature.
 #[test]
+#[ignore = "needs OpenCASCADE: sweep options (orientation, twist, scale, rails) (lzpel/cadrum#317)"]
 fn a_rail_sweeps_a_frustum_and_stretching_is_an_edit() {
     let mut s = setup();
     let volume = PI * 40.0 / 3.0 * (100.0 + 50.0 + 25.0);
@@ -98,6 +99,7 @@ fn a_rail_sweeps_a_frustum_and_stretching_is_an_edit() {
 /// Two arcs bulging apart carry a line between them: the sheet fills the region between the
 /// arcs in the XZ plane, area 2(a√(R² − a²) + R² asin(a/R)) − 400 with R = 25, a = 20.
 #[test]
+#[ignore = "needs OpenCASCADE: a surface sweep (lzpel/cadrum#317)"]
 fn two_rails_carry_a_line_between_arcs() {
     let mut s = setup();
     run(

@@ -197,6 +197,7 @@ fn deleting_external_transfer_source_refuses_without_dangling_archive() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn earlier_selected_cylinder_emboss_keeps_source_frame_after_transfer_and_edit() {
     let mut s = Session::default();
     let source = run(&mut s, "component.create", json!({"name":"Source"}));

@@ -7,7 +7,8 @@ license.workspace = true
 publish = false
 
 # The workspace lints, except unsafe_code: denied, not forbidden, so that src/main.rs can run
-# OpenCASCADE's C++ constructors (`__wasm_call_ctors`) on wasm32 with the cadrum backend: there
+# OpenCASCADE's C++ constructors (`__wasm_call_ctors`) on wasm32 with the cadrum backend (the
+# default): there
 # is no safe API for it. Keep the rest in sync with [workspace.lints].
 [lints.rust]
 unsafe_code = "deny"
@@ -24,8 +25,10 @@ name = "solidcraft-web"
 path = "src/main.rs"
 
 [features]
-# The OpenCASCADE kernel backend: `cargo run -p <this> -F cadrum`.
+# The kernel backends: OpenCASCADE through cadrum is the default (`cadrum` is kept for
+# scripts that name it); `cargo run -p <this> -F truck` builds the pure-Rust truck backend.
 cadrum = ["solidcraft-engine/cadrum"]
+truck = ["solidcraft-engine/truck"]
 
 [dependencies]
 solidcraft-engine = { workspace = true }

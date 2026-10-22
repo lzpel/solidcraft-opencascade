@@ -4723,6 +4723,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
     fn edge_flange_matches_fusion() {
         // Oracle 68: 100 x 60 plate, 20 mm flange on the y = 0 top edge.
         let mut s = plate(100.0, 60.0);
@@ -4886,6 +4887,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
     fn contour_flange_matches_fusion() {
         // Oracle 72: XZ chain (0,0)→(40,0)→(40,−30)→(70,−30), 50 wide.
         let xz = Plane::new(Vec3::ZERO, Vec3::X, Vec3::new(0.0, 0.0, -1.0)).unwrap();
@@ -4899,6 +4901,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
     fn hem_and_holes() {
         // Oracle 73: flange then a flat hem of 8 on its top edge.
         let mut s = plate(100.0, 60.0);
@@ -4922,6 +4925,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn disconnected_material_keeps_each_hole_with_its_own_region() {
         let mut s = plate(100.0, 60.0);
         s.holes.push(rect(Vec2::new(45.0, -5.0), Vec2::new(55.0, -5.0), Vec2::new(55.0, 65.0), Vec2::new(45.0, 65.0)));
@@ -4939,6 +4943,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn ring_cut_retains_exact_central_material_island() {
         let mut s = plate(100.0, 60.0);
         s.holes.push(Region2 { outer: Loop2::circle(Vec2::new(50.0, 30.0), 10.0), holes: vec![Loop2::circle(Vec2::new(50.0, 30.0), 5.0)] });
@@ -4953,6 +4958,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn freeform_profile_stays_exact_with_exact_round_holes() {
         let mut s = plate(100.0, 60.0);
         let cubic =
@@ -4985,6 +4991,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn free_form_cut_outs_stay_exact_in_the_flat_pattern_and_follow_arcs_in_the_folded_solid() {
         let mut s = plate(100.0, 60.0);
         s.add_flange(Vec3::new(50.0, 0.0, 2.5), 20.0, std::f64::consts::FRAC_PI_2, 2.5, "inside", false).unwrap();
@@ -5046,6 +5053,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn pockets_with_free_form_outlines_are_machined_beside_free_form_cut_outs() {
         let mut s = plate(100.0, 60.0);
         s.holes.push(ellipse(Vec2::new(30.0, 30.0), 15.0, 8.0));
@@ -5076,6 +5084,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn round_cutouts_count_as_exact_arcs_in_the_flat_budget() {
         // 240 round 4 mm holes sample to over 16 384 chords of 0.001 mm, but are 480 exact arcs.
         let mut s = plate(250.0, 130.0);
@@ -5091,6 +5100,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn overlapping_round_cutouts_union_with_exact_arc_boundaries() {
         let mut s = plate(100.0, 60.0);
         s.holes.push(Region2 { outer: Loop2::circle(Vec2::new(20.0, 30.0), 5.0), holes: vec![] });
@@ -5105,6 +5115,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn nested_and_repeated_round_cutouts_keep_only_the_largest_exact_boundary() {
         for reverse in [false, true] {
             let mut s = plate(100.0, 60.0);
@@ -5178,6 +5189,7 @@ mod tests {
     /// 400 x 300 from a larger size) failed to unfold in the planar arrangement while the same
     /// tray drawn at that size unfolded.
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn nearly_square_base_unfolds_like_the_exact_one() {
         let rv = RuleValues { thickness: 2.0, k_factor: 0.5, bend_radius: 1.0, ..steel() };
         let tray = |[a, b, c, d]: [Vec2; 4]| {
@@ -5228,6 +5240,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn slanted_and_round_cut_outs_across_a_bend_fold() {
         let area = |s: &SheetBody| s.flat_regions().unwrap().iter().map(Region2::area).sum::<f64>();
         for angle in [90f64, 72.0, 108.0] {
@@ -5339,6 +5352,7 @@ mod tests {
     /// The planar booleans leave such a corner as corners a hair apart on the base and on the
     /// bend, and the refold joined them by an edge as short ("sew: a degenerate edge").
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_cut_out_corner_a_hair_beside_a_bend_line_refolds() {
         let rule = RuleValues { bend_radius: 2.0, ..alu() };
         let outline = [Vec2::new(0.0, 0.0), Vec2::new(100.0, 0.0), Vec2::new(85.0, 20.0), Vec2::new(0.0, 20.0)];
@@ -5375,6 +5389,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn closed_corners_end_on_the_bisector_with_the_gap() {
         let (t, r, g, h) = (2.0, 1.0, 0.5, 38.6);
         for deg in [90.0f64, 72.0] {
@@ -5436,6 +5451,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
     fn corners_that_are_not_square_close_with_the_gap() {
         // A trapezoid: two acute and two obtuse corners.
         let pts = [Vec2::new(0.0, 0.0), Vec2::new(120.0, 0.0), Vec2::new(100.0, 90.0), Vec2::new(20.0, 90.0)];
@@ -5563,6 +5579,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn corner_reliefs_cut_the_base_corner_and_stop_the_bends() {
         use std::f64::consts::{FRAC_PI_2, FRAC_PI_4};
         // The tray: the bends on x = 0 and y = 0 meet at c = (s0, s0), s0 = (R + T)·tan(θ/2) in from
@@ -5627,6 +5644,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn corner_reliefs_follow_corners_that_are_not_square() {
         use std::f64::consts::PI;
         // The base fills α = atan(90/20) = 77.47° at the two lower corners of the trapezoid and 180° − α
@@ -5671,6 +5689,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn corner_reliefs_hold_at_every_angle_and_size() {
         use std::f64::consts::{FRAC_PI_2, PI};
         // The round relief runs into the bends' straight ends tangentially, a contact the planar
@@ -5741,6 +5760,7 @@ mod tests {
     /// edge: they are the 120° ones opposite each other in a rhombus, and the square relief at
     /// each reaches 2r from it along the bisector, so the two reach each other.
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn two_reliefs_that_would_overlap_are_both_left_out() {
         // A rhombus of 120° and 60° corners, with a flange on each of its four edges. The two
         // 120° corners are 12 mm apart in the trimmed base; a square relief 8 mm across reaches
@@ -5789,6 +5809,7 @@ mod tests {
     /// four shapes. The relief is cut `size / 2` from the corner along both edges, the bends stop
     /// there, and the flat pattern keeps one clean loop.
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn corner_reliefs_at_acute_and_obtuse_corners() {
         use std::f64::consts::FRAC_PI_3;
         let rv = alu();
@@ -5872,6 +5893,7 @@ mod tests {
     /// The corner reliefs at a corner that is not square, with the flanges of unequal height:
     /// the ends are still closed with the gap and the flanges still keep clear of each other.
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn corner_reliefs_at_acute_and_obtuse_corners_with_unequal_heights() {
         let rv = alu();
         let heights = [38.6, 25.0, 45.0, 30.0];
@@ -5899,6 +5921,7 @@ mod tests {
     /// The reliefs at the two corners of one short edge: both fit, and the corners do not depend
     /// on the order the flanges were made in.
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn the_reliefs_at_two_corners_of_one_edge_do_not_depend_on_their_order() {
         // A quadrilateral with a 120° corner at the origin and a 90° one 9 mm along the edge
         // between them, and flanges on the three edges that meet there. The two corners are
@@ -5983,6 +6006,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn edge_flange_on_a_folded_panels_side_keeps_its_flat_material() {
         let base = rect(Vec2::new(0.0, 0.0), Vec2::new(120.0, 0.0), Vec2::new(120.0, 90.0), Vec2::new(0.0, 90.0));
         let mut s = base_flange("Body1", "AL2", &alu(), Plane::XY, base);
@@ -6000,6 +6024,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn edge_flanges_across_an_existing_bend_close_their_corner() {
         for position in ["inside", "outside", "middle"] {
             for reverse in [false, true] {
@@ -6071,6 +6096,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn corners_across_a_bend_cut_the_selected_relief_in_the_flat_material() {
         for shape in [ReliefShape::Round, ReliefShape::Rectangular] {
             let base = rect(Vec2::new(0.0, 0.0), Vec2::new(120.0, 0.0), Vec2::new(120.0, 90.0), Vec2::new(0.0, 90.0));
@@ -6103,6 +6129,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn closed_corners_keep_their_flat_pattern_at_every_angle() {
         // 45° to 135° in steps of 5° on the tray and on a trapezoid. Which angles lose the flat
         // pattern to a rounding slip in the planar arrangement is a matter of luck (50°, 60°, 65°,
@@ -6146,6 +6173,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_flange_beside_a_leg_of_the_base_trims_its_own_edge_and_gets_a_bend_relief() {
         // A 90° flange 15 high on the bar's top edge: setback s0 = (R + T)·tan 45° = 3 inside,
         // half of it in the middle, none outside; bend allowance BA = (π/2)·(R + K·T) = π; panel
@@ -6183,6 +6211,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn flanges_on_both_sides_of_a_leg_each_trim_their_own_edge() {
         // A 160 x 30 bar with a 20 x 10 leg in the middle of its top edge, and flanges on the two
         // parts of that edge (x 0…70 and 90…160) in one call: each takes the strip under its own
@@ -6201,6 +6230,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_flange_on_the_side_of_a_leg_leaves_the_base_the_leg_stands_on() {
         // The leg's right side (x = 20, y 30…60): past that edge's line the whole bar runs on. The
         // setback takes x 17…20 of the leg alone, and the relief goes into the bar beside the
@@ -6232,6 +6262,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_ledge_beside_an_edge_as_tall_as_the_setback_goes_with_the_strip() {
         // A 100 x 60 plate with a ledge 3 wide beside its y = 0 edge, as tall as the setback of a
         // 90° flange 15 high on that edge: (R + T)·tan 45° = 3 inside, half of it in the middle;
@@ -6300,6 +6331,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_bend_relief_at_one_end_leaves_the_corner_at_the_other_as_it_was() {
         // Flanges on the bar's top and right edges in one call: their bends meet at (157, 27),
         // where the corner is closed and relieved or torn by the rule's shape, and the top one
@@ -6341,6 +6373,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_bend_relief_that_cannot_be_cut_is_left_out_with_a_note() {
         let leg = [(20.0, 60.0), (0.0, 60.0)];
         // The same leg held by a neck 2 wide: a notch from the left (x 0…18, y 43…45) under its end.
@@ -6375,6 +6408,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn an_edge_flange_runs_along_what_a_cut_out_leaves_of_its_edge() {
         // A cut has taken the plate's bottom left 100 x 60, so its y = 0 edge is left from x = 100
         // to 200. A 90° flange 40 high picked there (setback 3 inside, half of it in the middle,
@@ -6423,6 +6457,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn edge_flanges_on_either_side_of_a_notch_each_take_their_own_stretch_of_the_edge() {
         // A notch 40 wide and 30 deep in the middle of the plate's y = 0 edge leaves x 0…80 and
         // 120…200 of it. A flange picked on one side spans that side and takes its setback (3)
@@ -6463,6 +6498,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn an_edge_flange_beside_base_that_a_cut_out_left_gets_its_bend_relief() {
         // A cut 2 deep along x 0…100 of the y = 0 edge is shallower than the flange's setback (3):
         // beside the bend's end at x = 100 it leaves 1 mm of the base before the bend line. The
@@ -6483,6 +6519,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_flange_on_a_flange_runs_along_what_a_cut_out_leaves_of_its_far_edge() {
         // A 40 high flange on the plate's y = 0 edge (outside): its panel's far edge lies at
         // y = −(BA + 37) in the flat. A cut takes x 0…60 of that edge, 12 into the panel, and a
@@ -6555,6 +6592,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_base_trimmed_for_a_flange_keeps_its_arcs() {
         // A 200 x 100 plate with its corners rounded 8 and a 90° flange 40 high on its y = 0 edge
         // (setback 3 inside, half of it in the middle, none outside; BA = π; panel 37). Bent
@@ -6629,6 +6667,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_trim_that_stops_at_a_leg_or_a_cut_out_keeps_the_arc_at_its_other_end() {
         let (ba, quarter, root) = (std::f64::consts::PI, std::f64::consts::FRAC_PI_2, 39f64.sqrt());
         // A 200 x 40 bar with a 30 x 20 leg on its upper edge at the left and its upper right
@@ -6960,6 +6999,7 @@ mod tests {
     const MIXED: [f64; 4] = [60.0, 90.0, 105.0, 120.0];
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn flanges_with_their_own_angle_and_height_close_at_their_corners() {
         // Four angles on a 120 x 90 tray, then four heights as well, in one call: every panel ends
         // where the hand derivation says, whatever its neighbour's angle and height.
@@ -6993,6 +7033,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_trapezoid_with_unequal_angles_and_heights_closes_at_its_acute_and_obtuse_corners() {
         // 77.5° and 102.5° base corners; flanges at 60°, 105°, 75° and 120°, each its own height.
         let pts = [Vec2::new(0.0, 0.0), Vec2::new(120.0, 0.0), Vec2::new(100.0, 90.0), Vec2::new(20.0, 90.0)];
@@ -7130,6 +7171,7 @@ mod tests {
     const TRAY_RETURNS: [(usize, bool, usize, bool); 4] = [(4, false, 7, true), (4, true, 5, false), (5, true, 6, false), (6, true, 7, false)];
 
     #[test]
+    #[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
     fn returns_on_a_tray_are_mitred_the_gap_apart() {
         use std::f64::consts::{PI, SQRT_2};
         // The 120 x 90 tray with walls 20 high at 90° and, on their far edges, returns 12 high at
@@ -7257,6 +7299,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn returns_on_leaning_walls_close_on_each_corners_bisector() {
         // Walls at 110° (leaning 20° in) with returns at 70°. Every return used to run its wall's
         // bend length from where the wall's far edge started: through the neighbouring wall and
@@ -7282,6 +7325,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn returns_close_at_any_corner_on_walls_leaning_either_way() {
         // Walls leaning out (70°), upright and leaning in (110°), each with level returns, on the
         // tray, the trapezoid and parallelograms with corners of 60° and 120°: 9 parts, 36 corners.
@@ -7299,6 +7343,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn returns_close_at_relieved_corners_as_at_whole_ones() {
         use std::f64::consts::{FRAC_PI_2, PI};
         // A round or rectangular corner relief stops the walls' bends half its size short of the
@@ -7332,6 +7377,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn returns_at_unequal_angles_meet_on_a_leaning_mitre() {
         // The tray's 90° walls with, in one call, returns at 90° on the walls on y = 0 and y = 90
         // and at 70° (rising 20° toward the middle) on the other two: at every corner two returns
@@ -7371,6 +7417,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
     fn returns_turned_outward_close_the_v_between_them() {
         use std::f64::consts::{PI, SQRT_2};
         // The tray's 90° walls with returns turned away from the base (picked on the walls' outer
@@ -7408,6 +7455,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_lone_return_follows_its_walls_end_and_keeps_clear_of_the_wall_beside_it() {
         use std::f64::consts::SQRT_2;
         // A wall's closed end is not where its bend ends: at 70° the wall leans out and its end
@@ -7480,6 +7528,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn returns_keep_out_of_the_walls_beside_them_whatever_the_angles() {
         // A wall that leans in over the base also leans in over a return on the wall beside it.
         // Returns alone on one wall, and returns on every wall in one call, level and at 90°, on
@@ -7524,6 +7573,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn returns_that_cannot_close_stay_open_with_a_note_and_others_are_left_alone() {
         // A gap of zero would make the ends touch: the returns stay as their walls' ends leave
         // them, with a note for each corner that names the point on the wall's far edge.
@@ -7569,6 +7619,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn returns_close_across_a_cut_off_corner_but_not_across_an_edge_of_the_base() {
         use std::f64::consts::SQRT_2;
         let rv = alu();
@@ -7639,6 +7690,7 @@ mod tests {
     const SWEEP: [f64; 7] = [45.0, 60.0, 75.0, 90.0, 105.0, 120.0, 135.0];
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn every_pair_of_angles_closes_at_any_base_corner() {
         // A parallelogram base (120 and 90 long) with a corner of 60°, 90° or 120° at the origin;
         // flanges 38.6 high on its two edges there, in one call, at every pair of the angles: 147
@@ -7672,6 +7724,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn corner_reliefs_are_cut_between_flanges_of_unequal_angle_and_height() {
         use std::f64::consts::FRAC_PI_2;
         // The relief is cut in the base, so flanges with their own angle and height get the same
@@ -7719,6 +7772,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_tear_cuts_each_bend_from_the_corner_to_its_flanges_end() {
         use std::f64::consts::SQRT_2;
         // The tray under `alu()`: T = 2, R = 1, gap g = 0.5, flanges h = 38.6 high. The bends on y = 0
@@ -7790,6 +7844,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_tear_follows_corners_that_are_not_square() {
         // The trapezoid of the relief tests with 72° flanges: the base fills α = atan(90/20) = 77.47°
         // at its lower corners and β = 180° − α at the upper ones. Seen from above, a point u along a
@@ -7835,6 +7890,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_cut_out_over_torn_bend_ends_folds() {
         use std::f64::consts::{FRAC_PI_2, PI};
         // A round cut-out of radius 2 about the corner (s0, s0) of the tray's bends takes the two
@@ -7865,6 +7921,7 @@ mod tests {
     /// triangle's tip touches the next piece. The refold ran the face through that corner twice
     /// ("This wire is not simple").
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_cut_out_with_a_corner_on_a_bend_line_or_the_sheets_edge_refolds() {
         let rule = RuleValues { bend_radius: 2.0, ..alu() };
         let outline = [Vec2::new(0.0, 0.0), Vec2::new(100.0, 0.0), Vec2::new(85.0, 20.0), Vec2::new(0.0, 20.0)];
@@ -7916,6 +7973,7 @@ mod tests {
     /// the plate's edge. So the refold needs both: without the joining it failed with "sew: a
     /// degenerate edge", without the touching sew with "This wire is not simple".
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_cut_out_on_one_side_of_a_bend_line_with_a_corner_a_hair_from_it_refolds() {
         let rule = RuleValues { bend_radius: 2.0, ..alu() };
         let outline = [Vec2::new(0.0, 0.0), Vec2::new(100.0, 0.0), Vec2::new(85.0, 20.0), Vec2::new(0.0, 20.0)];
@@ -7954,6 +8012,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_tear_holds_at_every_angle() {
         use std::f64::consts::{FRAC_PI_2, PI};
         // Every 5° from 45° to 135° on the tray and on the trapezoid: all four corners are torn, the
@@ -7988,6 +8047,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn flanges_of_unequal_angle_are_torn_where_their_bends_stay_apart() {
         // The tray with flanges at 60°, 90°, 105° and 120°, each its own height. Three corners are
         // torn: each bend's start line runs between the corners of the bend lines, and its far edge
@@ -8036,6 +8096,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn every_pair_of_angles_is_torn_or_keeps_its_notch() {
         // The corners of `every_pair_of_angles_closes_at_any_base_corner` under the tear. Flanges at
         // one angle are always torn. Where the angles differ, the plane that halves the flanges
@@ -8079,6 +8140,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn returns_close_at_torn_corners_as_at_whole_ones() {
         use std::f64::consts::{FRAC_PI_2, PI};
         // Like a relief, a tear leaves the walls' closed ends as they are, so the returns on them
@@ -8127,6 +8189,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_torn_bend_end_folds_to_two_smooth_pieces_on_its_helix() {
         // The tray of `a_tear_cuts_each_bend_from_the_corner_to_its_flanges_end` (T = 2, R = 1):
         // each of its eight torn bend ends is the wall ruled between a helix on the bend's inner
@@ -8205,6 +8268,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_tear_that_cannot_be_made_leaves_the_notch_with_a_note() {
         // Flanges at very different angles on the two edges at the origin of a parallelogram (as in
         // `every_pair_of_angles_is_torn_or_keeps_its_notch`). The bend lines lie s0 = 3·tan(θ/2) in
@@ -8240,6 +8304,7 @@ mod tests {
     /// flat the base starts at y = t + R = 5, the bend's zone is (π/2)·(R + K·t) long and the
     /// flange's panel 20 − 5, so its far edge lies at y = 5 − (π/2)·3.6 − 15.
     #[test]
+    #[ignore = "needs OpenCASCADE: a boolean of sketch regions (lzpel/cadrum#317)"]
     fn a_cut_names_the_pieces_it_parts_from_the_base_and_no_others() {
         use std::f64::consts::{FRAC_PI_2, PI};
         let far = 5.0 - FRAC_PI_2 * (2.5 + 0.44 * 2.5) - 15.0;

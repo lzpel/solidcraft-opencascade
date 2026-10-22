@@ -10,10 +10,10 @@ use std::time::Instant;
 use crate::{Backend, cargo, root};
 
 /// Tests the OpenCASCADE backend is expected to fail, one libtest path per line (`#` comments);
-/// `cargo xtask test --backend cadrum` skips them and fails on any of them that passes.
+/// `cargo xtask test` skips them and fails on any of them that passes.
 pub const CADRUM_ALLOWLIST: &str = "tests/cadrum-allowlist.txt";
 /// Tests that crash the OpenCASCADE backend's process (an access violation inside OpenCASCADE,
-/// which no `Result` catches), in the allowlist's format: `cargo xtask test --backend cadrum`
+/// which no `Result` catches), in the allowlist's format: `cargo xtask test`
 /// passes each as `--skip` to its binary, so the rest of that binary's tests still run.
 pub const CADRUM_SKIPLIST: &str = "tests/cadrum-skiplist.txt";
 
@@ -26,7 +26,7 @@ struct TestBin {
 
 /// Build the tests with `cargo_args` (e.g. `--locked`), run each binary with `test_args`, and run
 /// the `side` jobs one after another meanwhile. Each prints a line when it ends; a failure prints
-/// its whole output. With the cadrum backend the tests listed in [`CADRUM_ALLOWLIST`] may fail
+/// its whole output. With the cadrum backend (the default) the tests listed in [`CADRUM_ALLOWLIST`] may fail
 /// (a binary whose failures are all listed counts as passing), and one of them that passes fails
 /// the run until its line goes: the list only ever shrinks.
 pub fn run_backend(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, Command)>, backend: Backend) -> Result<(), String> {

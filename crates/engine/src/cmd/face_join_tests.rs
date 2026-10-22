@@ -95,6 +95,7 @@ fn face_join_maps_the_picked_instance_body_and_point_together() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: STEP export (lzpel/cadrum#317)"]
 fn face_join_of_a_step_import_keeps_all_32_neighbours_unchanged() {
     let mut source = assembly(true);
     for i in 0..31 {
