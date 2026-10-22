@@ -11,6 +11,27 @@ Part 21 and IGES text readers. Callers get SolidCraft types (`Body`, face and ed
 meshes, measures) and a `KernelError` instead of backend types and panics, whichever backend is
 built (`solidcraft_kernel::BACKEND` names it).
 
+## Building and testing the cadrum backend
+
+`cargo build -F solidcraft-kernel/cadrum` selects it on workspace commands, `-F cadrum` on one app
+(`cargo run -p solidcraft -F cadrum`); the first build downloads cadrum's prebuilt OpenCASCADE for
+the host. `cargo xtask ci --backend cadrum` (also `test` and `oracle`) runs the
+gate against it: the tests in `tests/cadrum-allowlist.txt` (`<binary label> :: <test path>`) may
+fail, and one that passes fails the run until its line goes, so the list only shrinks. An oracle case the backend fails is
+marked `known_failure_cadrum` in its `expected.json`. Operations the backend does not implement
+yet return `KernelError::TooLarge("… on the OpenCASCADE backend")`, shown as "not supported
+yet". What cadrum itself still lacks is collected in one tracking issue,
+[lzpel/cadrum#317](https://github.com/lzpel/cadrum/issues/317), re-edited as gaps turn up.
+
+### What the cadrum backend keeps in a body
+
+A `Body` holds its lumps (`cadrum::Solid`s) behind a mutex: cadrum's types are `Send` but not
+`Sync`, and OpenCASCADE writes a shape's triangulation into the shape. The face and edge order is
+read once when the body is made (OpenCASCADE's traversal order, lump by lump) and every index the
+application sees refers to it; the shape ids never leave the crate. A cadrum `clone` is a deep
+copy that changes every id, so bodies share their solids through `Arc` and only an operation that
+consumes a solid (a transform) copies one.
+
 ## `guard`
 
 truck can panic on geometry it doesn't handle. Every call into it goes through

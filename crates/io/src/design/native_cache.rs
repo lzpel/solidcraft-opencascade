@@ -6,7 +6,8 @@ use super::*;
 use solidcraft_doc::{ModelState, SavedModel};
 
 const FORMAT: &str = "solidcraft-model-cache/2";
-const PRODUCER: &str = "solidcraft-truck-adapter/3";
+/// The backend that wrote the cache: a cache another backend wrote is a miss, never misread.
+const PRODUCER: &str = solidcraft_kernel::NATIVE_PRODUCER;
 const MANIFEST: &str = "cache/model.json";
 const PAYLOAD: &str = "cache/bodies.bin";
 /// Body records (a placed copy is one record; its part is stored once).

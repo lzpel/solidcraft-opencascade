@@ -1,0 +1,19 @@
+[package]
+name = "solidcraft-kernel-cadrum"
+description = "SolidCraft B-rep kernel, OpenCASCADE backend through the cadrum crate: solids, extrude/revolve/booleans/fillets, tessellation, measures and STEP behind the kernel API (selected by the `cadrum` feature of solidcraft-kernel)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+solidcraft-geom = { workspace = true }
+solidcraft-kernel-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+# OpenCASCADE 8.0.1, prebuilt and statically linked (MIT crate; OCCT is LGPL-2.1 with the OCCT
+# exception, see ATTRIBUTION.md). No `png`: that would pull a second tiny-skia into the tree.
+cadrum = { version = "0.9.1", default-features = false }

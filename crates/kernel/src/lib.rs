@@ -8,8 +8,8 @@
 //!
 //! - `truck` (default): `solidcraft-kernel-truck`, the pure-Rust truck crates (Apache-2.0) plus
 //!   our own operations.
-//! - `cadrum`: `solidcraft-kernel-cadrum`, OpenCASCADE through the `cadrum` crate (phase 2 of
-//!   the migration; not wired yet).
+//! - `cadrum`: `solidcraft-kernel-cadrum`, OpenCASCADE through the `cadrum` crate (prebuilt,
+//!   statically linked). It wins when both features are enabled.
 //!
 //! Both backends re-export `solidcraft-kernel-core` (errors, the panic [`guard`], history, face
 //! sources, measures), so those types are the same whichever backend is built. Every call into
@@ -22,7 +22,7 @@
 pub use solidcraft_kernel_truck::*;
 
 #[cfg(feature = "cadrum")]
-compile_error!("the `cadrum` backend is not wired yet (phase 2 of the truck → cadrum migration)");
+pub use solidcraft_kernel_cadrum::*;
 
 #[cfg(not(any(feature = "truck", feature = "cadrum")))]
 compile_error!("solidcraft-kernel needs a backend feature: `truck` (default) or `cadrum`");

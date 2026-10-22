@@ -163,6 +163,19 @@ fn render(root: &Path, crates: &[Crate]) -> String {
         }
     }
 
+    // OpenCASCADE: not a crate but the prebuilt static library the `cadrum` crate links (only when
+    // the kernel's `cadrum` backend is built), under the LGPL 2.1 with the Open CASCADE exception.
+    if crates.iter().any(|c| c.name == "cadrum") {
+        let read = |name: &str| std::fs::read_to_string(root.join("packaging/licences").join(name)).unwrap_or_default().replace("\r\n", "\n");
+        out += &format!(
+            "\n{rule}\nOpen CASCADE Technology 8.0.1 (https://dev.opencascade.org), statically linked through the cadrum crate\n{rule}\n\n\
+             GNU Lesser General Public License, version 2.1, with the Open CASCADE exception (version 1.0).\n\
+             The exception text follows, then the licence.\n\n{}\n{}\n",
+            read("OCCT_LGPL_EXCEPTION.txt"),
+            read("OCCT_LICENSE_LGPL_21.txt")
+        );
+    }
+
     // Bundled font licences (SIL Open Font License, Version 1.1)
     let font_rule = "=".repeat(80);
     out += &format!(

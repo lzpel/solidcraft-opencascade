@@ -14,6 +14,8 @@ Editable drawing code, native projects and shipped exports are collected under `
 
 | File | Author | Source | Licence |
 |---|---|---|---|
+| packaging/licences/OCCT_LICENSE_LGPL_21.txt | Free Software Foundation, Inc. | the GNU Lesser General Public License, version 2.1, as shipped with Open CASCADE Technology 8.0.1 (the text of OpenCASCADE's licence; OpenCASCADE itself reaches SolidCraft only as the prebuilt static library the `cadrum` crate links, and only in `crates/kernel-cadrum`) | LGPL-2.1 (licence text; verbatim copying permitted) |
+| packaging/licences/OCCT_LGPL_EXCEPTION.txt | Open CASCADE SAS | the Open CASCADE exception (version 1.0) to the LGPL 2.1, as shipped with Open CASCADE Technology 8.0.1 | licence text; verbatim copying permitted |
 | examples/render-studio.json | SolidCraft contributors | original procedural box/cylinder enclosure script for the integrated Render workspace | MIT OR Apache-2.0 |
 | examples/render-opaque-studio.json | SolidCraft contributors | original procedural sphere study varying opaque metal fraction and roughness independently; no external assets or engineering data | MIT OR Apache-2.0 |
 | crates/gpu/src/pbr.rs | SolidCraft contributors | original WGSL translation of SolidCraft's opaque surface and fixed studio reference, embedded as Rust source; no external shader code | MIT OR Apache-2.0 |
