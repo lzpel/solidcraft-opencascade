@@ -30,8 +30,17 @@ const REL: f64 = 1e-6;
 /// Tests share the file when they record.
 static FILE: Mutex<()> = Mutex::new(());
 
+/// The goldens file of the kernel backend built in: `goldens.json` for the truck backend,
+/// `goldens-<backend>.json` for another (what each seed builds differs between kernels).
+fn file_name() -> String {
+    match crate::kernel::BACKEND {
+        "truck" => "goldens.json".to_string(),
+        other => format!("goldens-{other}.json"),
+    }
+}
+
 fn path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/robustness/goldens.json")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/robustness").join(file_name())
 }
 
 fn load() -> Value {
@@ -142,8 +151,9 @@ fn check(seed: u64) {
     }
     assert!(
         changed.is_empty(),
-        "{} seed(s) build differently from tests/robustness/goldens.json (if that is intended, record it with ROBUSTNESS_GOLDENS_BLESS=\"why\" and say why in the pull request):\n{}",
+        "{} seed(s) build differently from tests/robustness/{} (if that is intended, record it with ROBUSTNESS_GOLDENS_BLESS=\"why\" and say why in the pull request):\n{}",
         changed.len(),
+        file_name(),
         changed.iter().map(|(s, d)| format!("seed {s}: {d}")).collect::<Vec<_>>().join("\n")
     );
 }

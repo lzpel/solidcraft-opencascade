@@ -847,7 +847,7 @@ pub(crate) fn cadrum_handle(s: &cadrum::Solid) -> cadrum::Solid {
     s.clone()
 }
 
-fn any_perpendicular(n: Vec3) -> Option<Vec3> {
+pub(crate) fn any_perpendicular(n: Vec3) -> Option<Vec3> {
     let t = if n.x.abs() < 0.9 { Vec3::X } else { Vec3::Y };
     (t - n * t.dot(n)).normalized()
 }

@@ -888,3 +888,81 @@ mod conformance {
         assert!(failures.is_empty(), "{}", failures.join("\n"));
     }
 }
+
+mod audit {
+    use solidcraft_geom::{Loop2, Plane, Region2, Vec2, Vec3};
+    use solidcraft_kernel_core::history::FaceOrigin;
+
+    use crate::{
+        HalfSpace, KernelError, Result, SplitTool, box_solid, convex_polyhedron, extrude_tapered, extrude_tapered_between, measure, split_body,
+    };
+
+    fn square(s: f64) -> Region2 {
+        let h = s * 0.5;
+        Region2 { outer: Loop2::polygon(&[Vec2::new(-h, -h), Vec2::new(h, -h), Vec2::new(h, h), Vec2::new(-h, h)]), holes: Vec::new() }
+    }
+
+    #[test]
+    fn a_tapered_extrude_is_a_frustum_with_placed_faces() -> Result<()> {
+        // A 20 mm square grown by atan(1/6) over 30 mm: a 30 mm square on top.
+        let b = extrude_tapered(&Plane::XY, &square(20.0), 30.0, 1.0, (1.0f64 / 6.0).atan())?;
+        let m = measure(&b)?;
+        assert!((m.volume - 19_000.0).abs() < 1e-6 * 19_000.0 && m.faces == 6, "{m:?}");
+        assert!((m.bbox.max.x - 15.0).abs() < 1e-6 && (m.bbox.max.z - 30.0).abs() < 1e-6, "{:?}", m.bbox);
+        let h = b.history().ok_or(KernelError::Failed("no history".into()))?;
+        let caps = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Cap { .. }])).count();
+        let sides = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Profile { .. }])).count();
+        assert_eq!((caps, sides), (2, 4), "{:?}", h.faces);
+        // Shrinking the other way, with a straight foot.
+        let b = extrude_tapered_between(&Plane::XY, &square(20.0), 0.0, 30.0, 10.0, 1.0, -(1.0f64 / 8.0).atan())?;
+        let m = measure(&b)?;
+        // The sides slope from the foot up to the top a full-height taper reaches: 12.5 mm.
+        let frustum = 20.0 / 3.0 * (400.0 + 156.25 + 250.0);
+        assert!((m.volume - (400.0 * 10.0 + frustum)).abs() < 1e-6 * 10_000.0 && m.faces == 10, "{m:?}");
+        // A hole shrinks as the outline grows.
+        let ring = Region2 { outer: square(20.0).outer, holes: vec![square(8.0).outer.reversed()] };
+        let b = extrude_tapered(&Plane::XY, &ring, 10.0, 1.0, (0.2f64).atan())?;
+        let m = measure(&b)?;
+        let outer = 10.0 / 3.0 * (400.0 + 576.0 + 480.0);
+        let hole = 10.0 / 3.0 * (64.0 + 16.0 + 32.0);
+        assert!((m.volume - (outer - hole)).abs() < 1e-6 * outer && m.faces == 10, "{m:?}");
+        assert!(extrude_tapered(&Plane::XY, &square(2.0), 30.0, 1.0, -(0.5f64).atan()).is_err(), "a taper that closes the profile is refused");
+        Ok(())
+    }
+
+    #[test]
+    fn a_body_splits_by_another_bodys_planar_face() -> Result<()> {
+        let block = box_solid(Vec3::ZERO, Vec3::new(40.0, 30.0, 20.0))?;
+        let tool = box_solid(Vec3::new(10.0, -5.0, -5.0), Vec3::new(50.0, 40.0, 30.0))?;
+        // The tool's face at x = 10 (its -X face).
+        let face = (0..tool.face_count())
+            .find(|&i| tool.face_plane(i).is_some_and(|p| (p.origin.x - 10.0).abs() < 1e-9 && p.normal().x.abs() > 0.9))
+            .ok_or(KernelError::Failed("no face at x = 10".into()))?;
+        let parts = split_body(&block, &SplitTool::Face { body: &tool, face })?;
+        assert_eq!(parts.len(), 2);
+        let mut volumes: Vec<f64> = parts.iter().map(|p| measure(p).map(|m| m.volume)).collect::<Result<_>>()?;
+        volumes.sort_by(f64::total_cmp);
+        assert!((volumes[0] - 6000.0).abs() < 1e-6 && (volumes[1] - 18_000.0).abs() < 1e-6, "{volumes:?}");
+        assert!(split_body(&block, &SplitTool::Plane(Plane { origin: Vec3::new(100.0, 0.0, 0.0), ..Plane::YZ })).map(|p| p.len()) == Ok(1));
+        Ok(())
+    }
+
+    #[test]
+    fn half_spaces_bound_a_polyhedron() -> Result<()> {
+        let hs = [
+            HalfSpace { n: Vec3::X, d: 1.0 },
+            HalfSpace { n: -Vec3::X, d: 0.0 },
+            HalfSpace { n: Vec3::Y, d: 2.0 },
+            HalfSpace { n: -Vec3::Y, d: 0.0 },
+            HalfSpace { n: Vec3::Z, d: 3.0 },
+            HalfSpace { n: -Vec3::Z, d: 0.0 },
+            // A corner cut off.
+            HalfSpace { n: Vec3::new(1.0, 1.0, 1.0).normalized().unwrap_or(Vec3::Z), d: 5.0 / 3.0f64.sqrt() },
+        ];
+        let b = convex_polyhedron(&hs)?;
+        let m = measure(&b)?;
+        assert!((m.volume - (6.0 - 1.0 / 6.0)).abs() < 1e-9 && m.faces == 7, "{m:?}");
+        assert!(convex_polyhedron(&hs[..5]).is_err(), "an open set of half-spaces is refused");
+        Ok(())
+    }
+}

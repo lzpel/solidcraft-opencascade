@@ -1,0 +1,6 @@
+# Tests that crash the OpenCASCADE backend's process: `cargo xtask test --backend cadrum` passes
+# each to its binary as `--skip` (the format is the allowlist's). A crash is never allowed: each
+# entry waits on a cadrum fix (lzpel/cadrum#317) and goes when the test runs; the reproductions
+# are the scripts of tests/cadrum-crashes/.
+# engine lib solidcraft_engine: 1
+engine lib solidcraft_engine :: tests::robustness_goldens::seed_06  # access violation in BRepFilletAPI_MakeFillet on a shelled body (#317 item 28)

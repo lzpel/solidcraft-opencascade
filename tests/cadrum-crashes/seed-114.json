@@ -1,0 +1,79 @@
+{
+ "about": "Robustness seed 114 on the cadrum backend: OpenCASCADE's fillet crashes the process (lzpel/cadrum#317 item 28). Run with a cadrum build: solidcraft-cli run tests/cadrum-crashes/seed-114.json",
+ "commands": [
+  {
+   "command": "sketch.create",
+   "params": {
+    "plane": "XY"
+   }
+  },
+  {
+   "command": "sketch.line",
+   "params": {
+    "points": [
+     [
+      0,
+      0
+     ],
+     [
+      22.5,
+      0
+     ],
+     [
+      22.5,
+      22.5
+     ],
+     [
+      0,
+      22.5
+     ]
+    ]
+   }
+  },
+  {
+   "command": "sketch.arc.three_point",
+   "params": {
+    "end": [
+     0,
+     0
+    ],
+    "start": [
+     0,
+     22.5
+    ],
+    "through": [
+     -7.5,
+     11.25
+    ]
+   }
+  },
+  {
+   "command": "sketch.finish",
+   "params": {}
+  },
+  {
+   "command": "solid.extrude",
+   "params": {
+    "distance": 5.0
+   }
+  },
+  {
+   "command": "solid.fillet",
+   "params": {
+    "edges": [
+     [
+      22.5,
+      11.25,
+      0.0
+     ],
+     [
+      -7.462563249974378,
+      11.25,
+      5.0
+     ]
+    ],
+    "radius": 2.5
+   }
+  }
+ ]
+}
