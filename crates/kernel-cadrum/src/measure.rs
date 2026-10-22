@@ -5,7 +5,9 @@
 
 use std::collections::BTreeMap;
 
-use solidcraft_geom::{Aabb3, Vec3};
+use std::sync::Arc;
+
+use solidcraft_geom::{Aabb3, Mesh, Vec3};
 
 use crate::body::{Body, Shape, v3};
 use crate::{BodyMeasure, KernelError, MassMeasure, Result, TopoCounts};
@@ -93,27 +95,64 @@ fn mass(b: &Body) -> Result<(MassMeasure, (usize, usize, usize), TopoCounts)> {
             // full extent, a free-form face's to its control points): a body with one is
             // measured by its fine tessellation, when that fits the mesh budget.
             let curved = counts.face_types.iter().any(|(kind, n)| kind != "plane" && *n > 0);
-            let bbox = if curved { tight_bbox(b, inner).unwrap_or(inner.bbox) } else { inner.bbox };
+            let free_form = counts.face_types.get("other").is_some_and(|n| *n > 0);
+            let (mut volume, mut area, mut bbox) = (volume, area, inner.bbox);
+            if curved && let Ok(m) = fine_mesh(b, inner) {
+                bbox = tight_bbox(inner, &m);
+                // OpenCASCADE integrates a free-form face with a fixed rule (lzpel/cadrum#317):
+                // a rational B-spline cylinder came out 0.8 % too large. Where the fine
+                // tessellation disagrees by more than its own error, it is the better figure.
+                if free_form {
+                    let (mv, ma) = mesh_volume_area(&m);
+                    if mv > 0.0 && (volume - mv).abs() > 2e-3 * mv {
+                        volume = mv;
+                    }
+                    if ma > 0.0 && (area - ma).abs() > 2e-3 * ma {
+                        area = ma;
+                    }
+                }
+            }
             Ok((MassMeasure { volume, area, centroid, bbox }, (inner.faces.len(), inner.edges.len(), inner.vertices), counts))
         }
     }
 }
 
+/// The fine tessellation a measure checks OpenCASCADE's figures against.
+fn fine_mesh(b: &Body, inner: &crate::body::Inner) -> Result<Arc<Mesh>> {
+    let size = if inner.bbox.is_empty() { 1.0 } else { inner.bbox.diagonal().max(1e-9) };
+    crate::tess::mesh(b, size * 1e-4, crate::DISPLAY_ANGLE)
+}
+
 /// The body's box, each side OpenCASCADE's where that is tight (an untrimmed quadric's is
 /// exact) and the fine tessellation's where OpenCASCADE's reaches beyond it (a trimmed
 /// quadric's to its full extent, a free-form face's to its control points).
-fn tight_bbox(b: &Body, inner: &crate::body::Inner) -> Result<Aabb3> {
+fn tight_bbox(inner: &crate::body::Inner, m: &Mesh) -> Aabb3 {
     let size = if inner.bbox.is_empty() { 1.0 } else { inner.bbox.diagonal().max(1e-9) };
     let deflection = size * 1e-4;
-    let m = crate::tess::mesh(b, deflection, crate::DISPLAY_ANGLE)?;
     let mut mesh = Aabb3::EMPTY;
     for p in &m.positions {
         mesh.add(*p);
     }
     if mesh.is_empty() {
-        return Ok(inner.bbox);
+        return inner.bbox;
     }
-    let pick = |bnd: f64, tess: f64| if (bnd - tess).abs() <= 4.0 * deflection { bnd } else { tess };
-    let side = |bnd: Vec3, tess: Vec3| Vec3::new(pick(bnd.x, tess.x), pick(bnd.y, tess.y), pick(bnd.z, tess.z));
-    Ok(Aabb3 { min: side(inner.bbox.min, mesh.min), max: side(inner.bbox.max, mesh.max) })
+    // A side taken from the tessellation is quantized (its vertices carry rounding noise)
+    // and inflated by the shape tolerance, as OpenCASCADE's tight sides are, so the same
+    // shape measures the same whichever way its box was found.
+    let settle = |tess: f64, outward: f64| (tess * 1e9).round() / 1e9 + outward * 1e-7;
+    let pick = |bnd: f64, tess: f64, outward: f64| if (bnd - tess).abs() <= 4.0 * deflection { bnd } else { settle(tess, outward) };
+    let side =
+        |bnd: Vec3, tess: Vec3, outward: f64| Vec3::new(pick(bnd.x, tess.x, outward), pick(bnd.y, tess.y, outward), pick(bnd.z, tess.z, outward));
+    Aabb3 { min: side(inner.bbox.min, mesh.min, -1.0), max: side(inner.bbox.max, mesh.max, 1.0) }
+}
+
+/// The volume (by the divergence theorem) and area of a closed triangle mesh.
+fn mesh_volume_area(m: &Mesh) -> (f64, f64) {
+    let (mut volume, mut area) = (0.0, 0.0);
+    for t in &m.triangles {
+        let Some([a, b, c]) = m.tri(t) else { continue };
+        volume += a.dot(b.cross(c)) / 6.0;
+        area += (b - a).cross(c - a).len() * 0.5;
+    }
+    (volume.abs(), area)
 }

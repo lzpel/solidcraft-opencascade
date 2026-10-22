@@ -20,11 +20,14 @@ pub mod fuzz;
 pub mod loft_blend;
 mod measure;
 mod meshbody;
+mod native;
 mod ops;
 mod query;
 mod record;
 mod sketch_profile;
 mod step;
+mod step_in;
+mod step_out;
 mod stubs;
 mod sweep;
 mod tess;
@@ -48,6 +51,7 @@ pub use build::{
 pub use loft_blend::loft_blend;
 pub use measure::{measure, measure_mass};
 pub use meshbody::{convert_prismatic_mesh, mesh_body};
+pub use native::{decode_native_body, encode_native_body, native_preview_mesh};
 pub use ops::{
     boolean, can_join_all_touching_faces, can_join_touching_faces, compound_disjoint_extrusions, faceted_boolean, half_space, is_planar, join_apart,
     place_matrix, planar_boolean, planar_regions_boolean, split_by_plane, transform, transform_matrix, union_apart, with_attempt_budget,
@@ -57,10 +61,10 @@ pub use query::{
     merged_topology, seam_flags, with_same_surface,
 };
 pub use step::{
-    ExportBody, ExportProduct, ImportedBody, MAX_IGES_BYTES, StepImport, StepReading, decode_native_body, encode_native_body, iges_export_bodies,
-    iges_import, native_preview_mesh, step_cache_alive, step_export, step_export_bodies, step_export_products, step_import, step_import_shared,
-    step_orientation_errors, step_validate,
+    ExportBody, ExportProduct, ImportedBody, MAX_IGES_BYTES, StepImport, StepReading, iges_export_bodies, iges_import, step_cache_alive, step_import,
+    step_import_shared, step_orientation_errors, step_validate,
 };
+pub use step_out::{step_export, step_export_bodies, step_export_products};
 pub use stubs::*;
 pub use sweep::{loft, loft_regions, loft_to_point, loft_with_rails, sweep, sweep_helix, sweep_path, sweep_path_with, sweep_with};
 pub use types::*;
