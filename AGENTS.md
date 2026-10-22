@@ -33,9 +33,11 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
   and calls through its function pointers), two functions in
   `apps/solidcraft/src/open_documents.rs` (macOS hands Finder files only to an Objective-C
   method), the Windows-only `apps/solidcraft/src/native_crash.rs` (the exception filter that
-  records crashes inside native code such as graphics drivers) and the Windows-only
+  records crashes inside native code such as graphics drivers) the Windows-only
   `apps/solidcraft/src/native_frame.rs` (the window procedure that answers the resize-border hit
-  test of the window without OS decorations).
+  test of the window without OS decorations) and `kernel_init` in `apps/solidcraft-web/src/main.rs`
+  (runs OpenCASCADE's C++ constructors, `__wasm_call_ctors`, when the web app starts with the
+  cadrum backend).
 - **Errors are `Result<T, E>`** through the crate's error type and `?`. An unfinished feature
   returns an error ("not supported yet: …"); it never panics.
 - **Input-derived numbers are hostile** (command parameters, design files, control-channel
@@ -123,8 +125,11 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
   check `git ls-files` before pushing.
 - **Never break wasm**: everything below the apps must build for `wasm32-unknown-unknown`
   (`cargo xtask wasm`, part of `cargo xtask ci`). The OpenCASCADE backend builds for wasm only
-  inside cadrum's Docker image (`ghcr.io/lzpel/cross-wasm32-unknown-unknown`), so the local check
-  skips `crates/kernel-cadrum` until that route is wired.
+  inside cadrum's Docker image (`ghcr.io/lzpel/cross-wasm32-unknown-unknown`): the host check
+  (`cargo xtask wasm`) leaves `crates/kernel-cadrum` out, and `cargo xtask wasm --backend cadrum`
+  (also the wasm step of `cargo xtask ci --backend cadrum`) runs the check inside that image, or
+  says it skipped it where docker is not available. `packaging/docker/Dockerfile.web` builds the
+  web app with the OpenCASCADE backend the same way.
 
 ## Showing and following through on changes
 

@@ -7,6 +7,9 @@
 const PLANE: u32 = 0u;
 const NURBS: u32 = 1u;
 const REVOLVED: u32 = 2u;
+// A face whose positions and normals are given (no surface to evaluate): every vertex is fixed
+// at p, its normal packed into (u, v, p.w).
+const FIXED: u32 = 3u;
 // Basis slots for the highest degree (MAX_SPLINE_DEGREE = 7).
 const W: u32 = 8u;
 
@@ -284,6 +287,20 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     }
     let vert = vertices[i];
     let s = surfaces[vert.surface];
+    if (s.kind == FIXED) {
+        var fixed_n = vec3<f32>(vert.u, vert.v, vert.p.w);
+        if (length(fixed_n) > 0.0) {
+            fixed_n = normalize(fixed_n);
+        } else {
+            fixed_n = vec3<f32>(0.0, 0.0, 1.0);
+        }
+        if ((vert.flags & 1u) != 0u) {
+            fixed_n = -fixed_n;
+        }
+        out[2u * i] = vec4<f32>(vert.p.xyz, 1.0);
+        out[2u * i + 1u] = vec4<f32>(fixed_n, 0.0);
+        return;
+    }
     let d = derivs(s, vert.u, vert.v);
     var n = oriented(s, cross(d.du, d.dv));
     let scale = length(d.du) * length(d.dv);

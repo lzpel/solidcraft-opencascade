@@ -282,3 +282,43 @@ fn bench_plate() {
         println!("| {tol} | {:.1} ms | {:.1} ms | {:.1} ms | {g} | {nr} / {np} |", median(r), median(p), median(c));
     }
 }
+
+/// A face that carries its positions and normals (no surface: a mesh body's, or every face of
+/// a backend whose surfaces the GPU cannot evaluate) is drawn from them, exactly, on the GPU as
+/// on the CPU; a face without a position for every vertex is refused, not misdrawn.
+#[test]
+fn fixed_faces_are_evaluated_from_their_positions_and_normals() {
+    use solidcraft_geom::tess::{FacePlan, TessPlan};
+    let Some(g) = gpu() else { return };
+    let positions = vec![Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 0.0, 0.0), Vec3::new(0.0, 10.0, 0.0), Vec3::new(10.0, 10.0, 5.0)];
+    let normals = vec![Vec3::Z, Vec3::Z, Vec3::new(0.0, 0.0, -1.0), Vec3::new(1.0, 0.0, 1.0).normalized().unwrap_or(Vec3::Z)];
+    let face = |flip: bool| FacePlan {
+        face: 0,
+        surface: None,
+        uv: vec![[0.0; 2]; positions.len()],
+        fixed: positions.clone(),
+        normals: normals.clone(),
+        flip,
+        triangles: vec![[0, 1, 2], [1, 3, 2]],
+    };
+    let plan = TessPlan { faces: vec![face(false), FacePlan { face: 1, ..face(true) }], ..Default::default() };
+    let cpu = plan.evaluate();
+    let got = ok(g.evaluate(&plan));
+    assert_eq!(got.positions, cpu.positions, "positions are the fixed ones, exactly");
+    assert_eq!(got.triangles, cpu.triangles);
+    for (a, b) in got.normals.iter().zip(&cpu.normals) {
+        assert!((*a - *b).len() < 1e-6, "{a:?} vs {b:?}");
+    }
+    assert!(got.normals.get(4).is_some_and(|n| n.z < 0.0), "the flipped face's normals point the other way: {:?}", got.normals);
+    let short = TessPlan { faces: vec![FacePlan { fixed: positions[..2].to_vec(), ..face(false) }], ..Default::default() };
+    assert!(matches!(g.evaluate(&short), Err(GpuError::Unsupported(_))));
+    // Mixed with an evaluated plane in one dispatch.
+    let mut mixed = ok(ok(solidcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 4.0))).display_plan(1e-2));
+    mixed.faces.push(face(false));
+    let cpu = mixed.evaluate();
+    let got = ok(g.evaluate(&mixed));
+    assert_eq!(got.positions.len(), cpu.positions.len());
+    for (a, b) in got.positions.iter().zip(&cpu.positions) {
+        assert!((*a - *b).len() < 1e-4, "{a:?} vs {b:?}");
+    }
+}
