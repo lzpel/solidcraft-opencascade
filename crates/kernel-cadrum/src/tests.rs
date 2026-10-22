@@ -658,3 +658,233 @@ mod paths {
         Ok(())
     }
 }
+
+mod native {
+    use solidcraft_geom::Vec3;
+
+    use crate::{BoolOp, FaceSource, KernelError, Result, boolean, box_solid, cylinder, decode_native_body, encode_native_body, measure};
+
+    #[test]
+    fn a_body_with_sources_and_history_survives_the_native_cache_exactly() -> Result<()> {
+        let block = box_solid(Vec3::ZERO, Vec3::new(40.0, 30.0, 20.0))?;
+        let bore = cylinder(Vec3::new(20.0, 15.0, -1.0), Vec3::Z, 5.0, 22.0)?;
+        let cut = boolean(&block, &bore, BoolOp::Cut)?.ok_or(KernelError::Failed("empty cut".into()))?.with_color(Some([0.2, 0.4, 0.6]));
+        let bytes = encode_native_body(&cut)?;
+        assert!(bytes.starts_with(b"SCBREP05"));
+        let back = decode_native_body(&bytes)?;
+        let (a, b) = (measure(&cut)?, measure(&back)?);
+        assert_eq!((a.volume, a.area, a.faces, a.edges), (b.volume, b.area, b.faces, b.edges));
+        assert_eq!(back.color(), Some([0.2, 0.4, 0.6]));
+        assert_eq!(back.history(), cut.history());
+        assert_eq!(back.face_sources().map(|s| s.iter().filter(|s| matches!(s, Some(FaceSource::Box { .. }))).count()), Some(6));
+        assert!((back.size() - cut.size()).abs() < 1e-12);
+        // The B-rep bytes carry whatever triangulation the shape holds, so a re-encoding
+        // need not repeat the bytes; the decoded geometry does.
+        let again = decode_native_body(&encode_native_body(&back)?)?;
+        assert_eq!(measure(&again)?.volume, a.volume);
+        assert!(decode_native_body(b"SCBREP04junk").is_err());
+        assert!(decode_native_body(&bytes[..bytes.len() / 2]).is_err());
+        Ok(())
+    }
+}
+
+mod exchange {
+    use solidcraft_geom::Vec3;
+    use solidcraft_kernel_core::p21;
+
+    use crate::{
+        BoolOp, ExportBody, ExportProduct, FacePaint, KernelError, Paint, Result, StepHeader, boolean, box_solid, cylinder, step_export,
+        step_export_products,
+    };
+
+    #[test]
+    fn bodies_export_as_named_coloured_solids_in_one_part() -> Result<()> {
+        let block = box_solid(Vec3::ZERO, Vec3::new(40.0, 30.0, 20.0))?;
+        let bore = cylinder(Vec3::new(20.0, 15.0, -1.0), Vec3::Z, 5.0, 22.0)?;
+        let cut = boolean(&block, &bore, BoolOp::Cut)?.ok_or(KernelError::Failed("empty cut".into()))?;
+        let painted = cut
+            .with_color(Some([1.0, 0.0, 0.0]))
+            .with_paint(Some(Paint { opacity: 1.0, faces: vec![FacePaint { face: 0, color: [0.0, 1.0, 0.0], opacity: 1.0 }] }));
+        let text = step_export(&[&painted, &block], "test")?;
+        assert_eq!(text.matches("MANIFOLD_SOLID_BREP(").count(), 2, "{text}");
+        assert!(text.contains("MANIFOLD_SOLID_BREP('Body1'") && text.contains("MANIFOLD_SOLID_BREP('Body2'"), "{text}");
+        assert_eq!(text.matches("STYLED_ITEM(").count(), 2, "the body colour and one face colour: {text}");
+        assert!(text.contains("AP242_MANAGED_MODEL_BASED_3D_ENGINEERING"));
+        let ex = p21::parse(&text).map_err(KernelError::Failed)?;
+        assert!(ex.duplicates.is_empty());
+        let faces = ex.entities.values().filter(|e| e.name() == "ADVANCED_FACE").count();
+        assert_eq!(faces, 7 + 6, "{faces}");
+        Ok(())
+    }
+
+    #[test]
+    fn an_assembly_exports_its_occurrences_with_placements() -> Result<()> {
+        let part = box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 10.0))?;
+        let mut m = [[0.0; 4]; 4];
+        for (i, row) in m.iter_mut().enumerate() {
+            row[i] = 1.0;
+        }
+        m[3] = [50.0, 0.0, 0.0, 1.0];
+        let products = vec![
+            ExportProduct {
+                name: "Assembly".into(),
+                bodies: Vec::new(),
+                children: vec![
+                    (1, m, "Cube:1".into()),
+                    (1, [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 50.0, 0.0, 1.0]], String::new()),
+                ],
+            },
+            ExportProduct { name: "Cube".into(), bodies: vec![ExportBody { name: "Cube".into(), body: &part, color: None }], children: Vec::new() },
+        ];
+        let text = step_export_products(&products, 0, &StepHeader::default())?;
+        assert_eq!(text.matches("NEXT_ASSEMBLY_USAGE_OCCURRENCE(").count(), 2, "{text}");
+        assert_eq!(text.matches("MANIFOLD_SOLID_BREP(").count(), 1);
+        assert!(text.contains("ITEM_DEFINED_TRANSFORMATION"));
+        Ok(())
+    }
+}
+
+mod import {
+    use solidcraft_geom::Vec3;
+
+    use crate::{
+        BoolOp, ExportBody, ExportProduct, FacePaint, FaceSource, KernelError, Paint, Result, StepHeader, boolean, box_solid, cylinder, measure,
+        step_export, step_export_products, step_import, step_validate,
+    };
+
+    #[test]
+    fn named_coloured_bodies_round_trip_through_step() -> Result<()> {
+        let block = box_solid(Vec3::ZERO, Vec3::new(40.0, 30.0, 20.0))?;
+        let bore = cylinder(Vec3::new(20.0, 15.0, -1.0), Vec3::Z, 5.0, 22.0)?;
+        let cut = boolean(&block, &bore, BoolOp::Cut)?.ok_or(KernelError::Failed("empty cut".into()))?;
+        let painted = cut
+            .with_color(Some([1.0, 0.0, 0.0]))
+            .with_paint(Some(Paint { opacity: 1.0, faces: vec![FacePaint { face: 2, color: [0.0, 1.0, 0.0], opacity: 1.0 }] }));
+        let text = step_export(&[&painted, &block], "test")?;
+        assert!(step_validate(&text).is_ok(), "{:?}", step_validate(&text));
+        let imp = step_import(&text)?;
+        assert!(imp.warnings.is_empty(), "{:?}", imp.warnings);
+        assert_eq!(imp.bodies.len(), 2);
+        let names: Vec<&str> = imp.bodies.iter().map(|b| b.name.as_str()).collect();
+        assert_eq!(names, ["Body1", "Body2"]);
+        let a = &imp.bodies[0];
+        let m = measure(&a.body)?;
+        let want = measure(&painted)?;
+        assert!((m.volume - want.volume).abs() < 1e-6 * want.volume && m.faces == want.faces, "{m:?} vs {want:?}");
+        assert_eq!(a.color, Some([1.0, 0.0, 0.0]));
+        assert!(a.closed && a.file_faces == 7 && a.face_origin.len() == 7, "{} {}", a.file_faces, a.face_origin.len());
+        let sources = a.body.face_sources().ok_or(KernelError::Failed("no sources".into()))?;
+        assert!(sources.iter().all(|s| matches!(s, Some(FaceSource::Imported { .. }))));
+        let paint = a.body.paint().ok_or(KernelError::Failed("no paint".into()))?;
+        assert_eq!(paint.faces.len(), 1, "one face keeps its own colour: {paint:?}");
+        assert_eq!(imp.tree.len(), 1);
+        assert_eq!(imp.tree[0].bodies, vec![0, 1]);
+        Ok(())
+    }
+
+    #[test]
+    fn an_assembly_round_trips_with_its_placements_and_instances() -> Result<()> {
+        let part = box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 10.0))?;
+        let shift = |x: f64, y: f64| [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [x, y, 0.0, 1.0]];
+        let products = vec![
+            ExportProduct {
+                name: "Assembly".into(),
+                bodies: Vec::new(),
+                children: vec![(1, shift(50.0, 0.0), "Cube:1".into()), (1, shift(0.0, 50.0), String::new())],
+            },
+            ExportProduct { name: "Cube".into(), bodies: vec![ExportBody { name: "Cube".into(), body: &part, color: None }], children: Vec::new() },
+        ];
+        let text = step_export_products(&products, 0, &StepHeader::default())?;
+        let imp = step_import(&text)?;
+        assert!(imp.warnings.is_empty(), "{:?}", imp.warnings);
+        assert_eq!(imp.bodies.len(), 2, "one body per instance");
+        let centres: Vec<Vec3> = imp.bodies.iter().map(|b| measure(&b.body).map(|m| m.centroid)).collect::<Result<_>>()?;
+        assert!(centres.iter().any(|c| (*c - Vec3::new(55.0, 5.0, 5.0)).len() < 1e-6), "{centres:?}");
+        assert!(centres.iter().any(|c| (*c - Vec3::new(5.0, 55.0, 5.0)).len() < 1e-6), "{centres:?}");
+        assert_eq!(imp.bodies[0].path, vec!["Assembly".to_string(), "Cube".to_string()]);
+        assert_eq!(imp.bodies[0].instance.as_deref(), Some("Cube:1"));
+        assert_eq!(imp.tree.len(), 1);
+        assert_eq!(imp.tree[0].children.len(), 2);
+        assert!(imp.bodies[1].body.display_share().is_some(), "the second instance shows the first's mesh placed");
+        Ok(())
+    }
+}
+
+mod conformance {
+    use solidcraft_geom::Vec3;
+
+    use crate::{measure, step_import};
+
+    fn rel(a: f64, b: f64) -> f64 {
+        (a - b).abs() / b.abs().max(1e-12)
+    }
+
+    /// Parts of known shape from the step-conformance corpus (`tests/step-conformance`,
+    /// generated from formulas by https://github.com/dan335/step-conformance at 96f30bb, CC0
+    /// 1.0): each reads back with its exact volume, its box and its face count (merged: a
+    /// cylinder's wall is one face here, two pieces on the truck backend).
+    #[test]
+    fn step_conformance_parts_read_back_their_exact_shape() {
+        // (file, exact volume (mm³), box (min, max), merged faces, bodies)
+        #[rustfmt::skip]
+        let parts: [(&str, &str, f64, [f64; 6], usize, usize); 16] = [
+            ("cone_point", include_str!("../../../tests/step-conformance/cone_point.step"), 1000.0 * std::f64::consts::PI, [-10.0, -10.0, 0.0, 10.0, 10.0, 30.0], 2, 1),
+            ("cone_point_vertex", include_str!("../../../tests/step-conformance/cone_point_vertex.step"), 1000.0 * std::f64::consts::PI, [-10.0, -10.0, 0.0, 10.0, 10.0, 30.0], 2, 1),
+            ("cylinder", include_str!("../../../tests/step-conformance/cylinder.step"), 9424.778, [-10.0, -10.0, 0.0, 10.0, 10.0, 30.0], 3, 1),
+            ("cylinder_inch", include_str!("../../../tests/step-conformance/cylinder_inch.step"), 9424.778, [-10.0, -10.0, 0.0, 10.0, 10.0, 30.0], 3, 1),
+            ("cylinder_nurbs", include_str!("../../../tests/step-conformance/cylinder_nurbs.step"), 9424.778, [-10.0, -10.0, 0.0, 10.0, 10.0, 30.0], 3, 1),
+            ("cylinder_placed", include_str!("../../../tests/step-conformance/cylinder_placed.step"), 9424.778, [31.835, -33.165, 1.835, 65.485, 0.485, 35.485], 3, 1),
+            ("cylinder_seam", include_str!("../../../tests/step-conformance/cylinder_seam.step"), 9424.778, [-10.0, -10.0, 0.0, 10.0, 10.0, 30.0], 3, 1),
+            ("cylinder_twice", include_str!("../../../tests/step-conformance/cylinder_twice.step"), 18849.556, [-10.0, -10.0, 0.0, 90.0, 10.0, 30.0], 6, 2),
+            ("dome", include_str!("../../../tests/step-conformance/dome.step"), 16755.161, [-20.0, -20.0, 0.0, 20.0, 20.0, 20.0], 2, 1),
+            ("dome_nurbs", include_str!("../../../tests/step-conformance/dome_nurbs.step"), 16755.161, [-20.0, -20.0, 0.0, 20.0, 20.0, 20.0], 2, 1),
+            ("far_cylinder", include_str!("../../../tests/step-conformance/far_cylinder.step"), 9424.778, [99990.0, -10.0, 0.0, 100010.0, 10.0, 30.0], 3, 1),
+            ("grooved_shaft", include_str!("../../../tests/step-conformance/grooved_shaft.step"), 153532.251, [-10.0, -10.0, 0.0, 10.0, 10.0, 501.0], 753, 1),
+            ("plate_100_holes", include_str!("../../../tests/step-conformance/plate_100_holes.step"), 71588.321, [0.0, 0.0, 0.0, 100.0, 100.0, 10.0], 110, 1),
+            ("sheet_disc", include_str!("../../../tests/step-conformance/sheet_disc.step"), 193396443.755, [-1800.0, -1800.0, 0.0, 1800.0, 1800.0, 19.0], 3, 1),
+            ("tiny_pin", include_str!("../../../tests/step-conformance/tiny_pin.step"), std::f64::consts::FRAC_PI_8, [-0.25, -0.25, 0.0, 0.25, 0.25, 2.0], 3, 1),
+            ("washer", include_str!("../../../tests/step-conformance/washer.step"), 3534.292, [-20.0, -20.0, 0.0, 20.0, 20.0, 3.0], 4, 1),
+        ];
+        let mut failures = Vec::new();
+        for (name, text, volume, bbox, faces, bodies) in parts {
+            let imp = match step_import(text) {
+                Ok(imp) => imp,
+                Err(e) => {
+                    failures.push(format!("{name}: {e}"));
+                    continue;
+                }
+            };
+            if !imp.warnings.is_empty() {
+                failures.push(format!("{name}: warnings {:?}", imp.warnings));
+            }
+            if imp.bodies.len() != bodies {
+                failures.push(format!("{name}: {} bodies, want {bodies}", imp.bodies.len()));
+            }
+            let (mut v, mut n) = (0.0, 0);
+            let mut b = solidcraft_geom::Aabb3::EMPTY;
+            for body in &imp.bodies {
+                let Ok(m) = measure(&body.body) else {
+                    failures.push(format!("{name}: a body cannot be measured"));
+                    continue;
+                };
+                v += m.volume;
+                n += m.merged.faces;
+                b = b.union(&m.bbox);
+            }
+            if rel(v, volume) >= 1e-3 {
+                failures.push(format!("{name}: volume {v} vs {volume}"));
+            }
+            if n != faces {
+                failures.push(format!("{name}: {n} faces, want {faces}"));
+            }
+            let [x0, y0, z0, x1, y1, z1] = bbox;
+            let size = Vec3::new(x1 - x0, y1 - y0, z1 - z0).len();
+            for (got, want) in [(b.min, Vec3::new(x0, y0, z0)), (b.max, Vec3::new(x1, y1, z1))] {
+                if got.dist(want) > size * 1e-3 {
+                    failures.push(format!("{name}: box corner {got:?} vs {want:?}"));
+                }
+            }
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+    }
+}

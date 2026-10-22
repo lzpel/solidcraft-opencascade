@@ -5,33 +5,18 @@
 # feature lands (docs/book/src/dev/kernel.md). Phase 2 recorded every failure of the skeleton;
 # most are extrude/revolve (phase 3), booleans with history (4), blends/shell/sweep (5), STEP (6).
 
-# ui-egui test stand_up_offer: 4
-ui-egui test stand_up_offer :: dont_ask_again_turns_the_offer_off
-ui-egui test stand_up_offer :: leave_it_keeps_the_file_and_the_preference
-ui-egui test stand_up_offer :: prefs_stand_up_false_leaves_the_offer
-ui-egui test stand_up_offer :: the_offer_buttons_are_handles
-
 # solidcraft-cli test model_cache: 3
 solidcraft-cli test model_cache :: corpus_designs_open_from_their_model_as_evaluated
 solidcraft-cli test model_cache :: imported_assemblies_open_from_their_model_as_evaluated
 solidcraft-cli test model_cache :: sample_designs_open_from_their_model_as_evaluated
 
-# engine test step_merge_regressions: 2
-engine test step_merge_regressions :: shelled_thin_three_quarter_tube_keeps_its_volume
-engine test step_merge_regressions :: shelled_thin_wide_tube_keeps_its_volume
-
-# engine test step_export_regressions: 2
+# engine test step_export_regressions: 1
 engine test step_export_regressions :: shelled_chamfered_revolve_exports
-engine test step_export_regressions :: shelled_revolve_with_a_sphere_cut_exports
-
-# engine test save_as_cache: 2
-engine test save_as_cache :: a_filename_rename_preserves_opted_in_warm_assembly_caches
-engine test save_as_cache :: naming_a_design_does_not_warm_cold_or_revalidate_stale_placements
 
 # ui-egui test icon_audit: 1
 ui-egui test icon_audit :: requested_menu_icons_have_artwork_and_match_manifest
 
-# doc lib solidcraft_doc: 89
+# doc lib solidcraft_doc: 86
 doc lib solidcraft_doc :: config::certificates::shell_tests::regularized_shell_keeps_legacy_and_explicit_single_face_projections_closed
 doc lib solidcraft_doc :: config::certificates::shell_tests::saved_curved_strip_projection_is_lost_after_exact_wall_coalescence
 doc lib solidcraft_doc :: config::certificates::shell_tests::saved_former_strip_projection_reports_lost_without_expanding_healthy_material
@@ -41,9 +26,6 @@ doc lib solidcraft_doc :: display_quality::tests::each_level_has_its_own_plan_an
 doc lib solidcraft_doc :: eval::coplanar_growth_tests::arcs_grow_only_where_they_gain_nothing
 doc lib solidcraft_doc :: eval::coplanar_growth_tests::buried_join_ends_stop_at_material_boundaries
 doc lib solidcraft_doc :: eval::coplanar_growth_tests::the_tool_grows_only_where_it_gains_nothing
-doc lib solidcraft_doc :: eval::cost_tests::a_sketch_on_a_face_still_sees_the_placed_bodies
-doc lib solidcraft_doc :: eval::cost_tests::a_sketch_on_a_fixed_plane_costs_the_same_in_a_large_placed_design
-doc lib solidcraft_doc :: eval::cost_tests::an_imported_file_is_fingerprinted_by_its_text
 doc lib solidcraft_doc :: eval::whole_face_tests::slab_cut_into_a_spline_prism
 doc lib solidcraft_doc :: sheet::tests::a_base_trimmed_for_a_flange_keeps_its_arcs
 doc lib solidcraft_doc :: sheet::tests::a_base_trimmed_through_a_free_form_curve_follows_it_with_arcs
@@ -138,31 +120,14 @@ gpu lib solidcraft_gpu :: tests::a_resident_mesh_matches_the_cpu
 gpu lib solidcraft_gpu :: tests::a_scene_in_one_dispatch_matches_each_body_on_the_cpu
 gpu lib solidcraft_gpu :: tests::gpu_evaluation_matches_the_cpu
 
-# io lib solidcraft_io: 14
-io lib solidcraft_io :: design::tests::a_model_cache_too_big_for_the_file_is_left_out_not_a_failed_save
-io lib solidcraft_io :: design::tests::model_cache_stores_repeated_parts_once_and_keeps_placed_copies
-io lib solidcraft_io :: design::tests::native_cache_mismatch_is_only_a_cache_miss
-io lib solidcraft_io :: design::tests::native_cache_round_trip_and_preview_defer_original_sources
-io lib solidcraft_io :: design::tests::step_over_the_part_limit_imports_saves_compressed_and_reopens
-io lib solidcraft_io :: design::tests::step_that_cannot_be_saved_even_compressed_is_refused_at_import
-io lib solidcraft_io :: native_cad::tests::freecad_box_imports_as_a_solid
-io lib solidcraft_io :: native_cad::tests::other_contents_are_refused
-io lib solidcraft_io :: native_cad::tests::rhino_box_imports_as_a_solid
+# io lib solidcraft_io: 2
 io lib solidcraft_io :: tests::exports_write_design_properties
-io lib solidcraft_io :: tests::step_and_design
-io lib solidcraft_io :: tests::step_import_names_follow_the_choice
-io lib solidcraft_io :: tests::step_names_in_a_legacy_encoding
 io lib solidcraft_io :: tests::stl_quirks_read_cleanly
 
-# mcp lib solidcraft_mcp: 5
-mcp lib solidcraft_mcp :: tests::agent_builds_box_fillet_hole
+# mcp lib solidcraft_mcp: 1
 mcp lib solidcraft_mcp :: tests::batch_reports_timings_and_profile
-mcp lib solidcraft_mcp :: tests::open_stands_a_y_up_step_file_up
-mcp lib solidcraft_mcp :: tests::the_default_folders_are_the_designs_the_recovery_folder_and_the_scratch_folder
-mcp lib solidcraft_mcp :: tests::tool_calls_stay_inside_the_agents_folders
 
-# solidcraft-cli test run_strict: 2
-solidcraft-cli test run_strict :: a_clean_timeline_still_writes
+# solidcraft-cli test run_strict: 1
 solidcraft-cli test run_strict :: allow_errors_writes_anyway_and_a_saved_design_keeps_failing
 
 # solidcraft-cli test action_matrix: 8
@@ -175,25 +140,18 @@ solidcraft-cli test action_matrix :: action_matrix_sample
 solidcraft-cli test action_matrix :: press_pull_on_the_pi_case_floor
 solidcraft-cli test action_matrix :: sketches_after_a_draft_and_on_a_tapered_extrude
 
-# ui-egui test scenarios: 7
-ui-egui test scenarios :: acceptance_sensor_enclosure
+# ui-egui test scenarios: 4
 ui-egui test scenarios :: s08_sheet_metal_flat_dxf
-ui-egui test scenarios :: s09_step_roundtrip_hole
-ui-egui test scenarios :: s14_appearance_export
 ui-egui test scenarios :: s22_sheet_metal_fold
 ui-egui test scenarios :: s49_sheet_metal_flange_per_edge
 ui-egui test scenarios :: s51_sheet_metal_corner_relief
 
-# ui-egui lib solidcraft_ui_egui: 108
+# ui-egui lib solidcraft_ui_egui: 88
 ui-egui lib solidcraft_ui_egui :: blend_dialog_tests::edges_at_each_end_make_a_blend_and_come_back_in_an_edit
 ui-egui lib solidcraft_ui_egui :: boundary_dialog_tests::a_loop_of_sketch_curves_is_the_loop_patch
 ui-egui lib solidcraft_ui_egui :: boundary_dialog_tests::curves_that_meet_are_one_chain
 ui-egui lib solidcraft_ui_egui :: boundary_dialog_tests::edges_and_curves_make_a_network_and_come_back_in_an_edit
-ui-egui lib solidcraft_ui_egui :: browser::features::tests::browser_feature_imported_source_ids_never_reveal_an_unrelated_native_feature
-ui-egui lib solidcraft_ui_egui :: control::tests::engine_batch_stays_inside_allow_paths
 ui-egui lib solidcraft_ui_egui :: control::tests::engine_batch_times_its_steps
-ui-egui lib solidcraft_ui_egui :: control::tests::file_loads_stay_inside_allow_paths
-ui-egui lib solidcraft_ui_egui :: control::tests::requests_with_allow_paths_stay_inside_them
 ui-egui lib solidcraft_ui_egui :: dialogs_plastic::tests::bare_numbers_show_their_units
 ui-egui lib solidcraft_ui_egui :: dialogs_sheet::tests::bend_table_picker_writes_the_current_body
 ui-egui lib solidcraft_ui_egui :: dialogs_sheet::tests::coincident_top_and_bottom_pocket_depths_share_a_readable_annotation
@@ -212,32 +170,18 @@ ui-egui lib solidcraft_ui_egui :: dialogs_sheet::tests::rules_dialog_picks_the_c
 ui-egui lib solidcraft_ui_egui :: dialogs_sheet::tests::shallow_pocket_overlay_labels_depth_without_drawing_a_through_void
 ui-egui lib solidcraft_ui_egui :: dialogs_sheet::tests::the_rule_manager_relieves_a_corner_that_is_not_square
 ui-egui lib solidcraft_ui_egui :: display_lod::tests::a_close_up_refines_and_zooming_out_returns
-ui-egui lib solidcraft_ui_egui :: edit_clipboard::tests::contribution_linked_design_clipboard_crosses_tabs_reuses_links_and_undoes_once
-ui-egui lib solidcraft_ui_egui :: edit_clipboard::tests::contribution_linked_paste_uses_the_pointer_and_pending_numeric_move
-ui-egui lib solidcraft_ui_egui :: edit_clipboard::tests::contribution_native_copy_paste_events_insert_the_saved_design_in_another_tab
-ui-egui lib solidcraft_ui_egui :: edit_clipboard::tests::contribution_occurrence_move_panel_belongs_to_its_document
 ui-egui lib solidcraft_ui_egui :: extrude_edit_tests::tapered_from_and_signed_to_have_correct_start_volume_and_preview_parity
 ui-egui lib solidcraft_ui_egui :: extrude_edit_tests::unchanged_actual_editor_preserves_all_extents_and_parameter_identities
-ui-egui lib solidcraft_ui_egui :: file_load::tests::a_staged_step_import_lands_over_frames_and_cancels_between_them
-ui-egui lib solidcraft_ui_egui :: file_load_ui_tests::a_control_import_passes_up_and_names_on
 ui-egui lib solidcraft_ui_egui :: file_load_ui_tests::an_opened_design_shows_its_bodies_as_they_are_meshed
-ui-egui lib solidcraft_ui_egui :: file_load_ui_tests::opening_a_large_design_never_stalls_the_window
 ui-egui lib solidcraft_ui_egui :: fillet_spline_handle_tests::a_taper_over_several_edges_keeps_the_radius_arrow
 ui-egui lib solidcraft_ui_egui :: fillet_spline_handle_tests::double_clicks_add_and_remove_control_radii
 ui-egui lib solidcraft_ui_egui :: fillet_spline_handle_tests::dragging_a_taper_handle_makes_the_fillet_a_spline
 ui-egui lib solidcraft_ui_egui :: fillet_spline_handle_tests::every_edge_of_a_spline_fillet_has_handles_for_its_one_spline
 ui-egui lib solidcraft_ui_egui :: hole_placement_ui_tests::select_other_over_a_dense_cluster_by_a_curved_face_looks_it_up_once
-ui-egui lib solidcraft_ui_egui :: home::tests::imported_step_picture_is_cached_under_its_source_without_a_save_path
 ui-egui lib solidcraft_ui_egui :: home::tests::selecting_a_sample_does_not_wait_for_a_running_cold_recent
-ui-egui lib solidcraft_ui_egui :: linked_source::tests::relink_displays_the_warning_when_changed_geometry_has_joints
-ui-egui lib solidcraft_ui_egui :: linked_source::tests::relink_menu_uses_the_selected_link_from_components_and_occurrences
-ui-egui lib solidcraft_ui_egui :: linked_source::tests::relink_picker_cancel_bad_file_and_changed_document_keep_the_link
-ui-egui lib solidcraft_ui_egui :: linked_source::tests::relink_start_requires_one_linked_selection_and_opens_its_picker
 ui-egui lib solidcraft_ui_egui :: loft_rails_dialog_tests::a_rail_picked_in_the_loft_dialog_is_kept_through_an_edit
 ui-egui lib solidcraft_ui_egui :: loft_rails_dialog_tests::a_rail_picked_in_the_surface_loft_dialog_is_kept_through_an_edit
-ui-egui lib solidcraft_ui_egui :: menu_tests::component_menu_activates_grounds_and_pastes
 ui-egui lib solidcraft_ui_egui :: menu_tests::delete_key_handles_every_kind_and_asks_about_dependents
-ui-egui lib solidcraft_ui_egui :: prefs::tests::a_y_up_step_file_can_be_stood_up
 ui-egui lib solidcraft_ui_egui :: preselect_tests::chamfer_types_send_their_values
 ui-egui lib solidcraft_ui_egui :: preselect_tests::convert_mesh_asks_for_the_body_and_converts_the_selected_one
 ui-egui lib solidcraft_ui_egui :: preselect_tests::curvature_canvas_value_uses_equivalent_radius_when_created_and_reopened
@@ -280,7 +224,6 @@ ui-egui lib solidcraft_ui_egui :: sketch_tools::continuity_tests::the_legend_sho
 ui-egui lib solidcraft_ui_egui :: sweep_dialog_tests::a_new_sweep_takes_its_options_from_the_dialog
 ui-egui lib solidcraft_ui_egui :: sweep_dialog_tests::a_rail_picked_in_the_dialog_is_kept_through_an_edit
 ui-egui lib solidcraft_ui_egui :: sweep_dialog_tests::editing_sweeps_keeps_their_options
-ui-egui lib solidcraft_ui_egui :: viewport::appearance_tests::placed_step_body_uses_imported_opacity_until_a_design_look_overrides_it
 ui-egui lib solidcraft_ui_egui :: viewport::tests::a_hovered_face_lights_whole_over_a_body_drawn_from_its_plan
 ui-egui lib solidcraft_ui_egui :: viewport::tests::a_refined_body_highlights_on_its_drawn_triangles
 ui-egui lib solidcraft_ui_egui :: viewport::tests::bodies_evaluated_on_the_gpu_look_like_bodies_built_on_the_cpu
@@ -291,10 +234,9 @@ ui-egui lib solidcraft_ui_egui :: viewport::tests::continuity_colours_stay_on_th
 ui-egui lib solidcraft_ui_egui :: viewport::tests::continuity_seams_take_their_colours_from_the_theme
 ui-egui lib solidcraft_ui_egui :: viewport::tests::curved_face_hover_selection_and_dialogs_cross_the_seam
 ui-egui lib solidcraft_ui_egui :: workspace::tests::contextual_tabs_follow_the_active_body_and_allow_other_tabs
-ui-egui lib solidcraft_ui_egui :: workspace::tests::insert_design_is_on_the_assemble_panel_and_inserts_a_saved_part
 ui-egui lib solidcraft_ui_egui :: workspace::tests::new_sketch_starts_from_the_sheet_metal_tab
 
-# engine lib solidcraft_engine: 566
+# engine lib solidcraft_engine: 519
 engine lib solidcraft_engine :: boolean_regression_tests::box_intersect_splits_the_end_off_a_raked_wedge_after_its_end_rounds
 engine lib solidcraft_engine :: boolean_regression_tests::closed_sweep_redefines_to_a_half_turn_torus_cut
 engine lib solidcraft_engine :: boolean_regression_tests::cut_beside_a_sealed_void_keeps_the_body
@@ -305,7 +247,6 @@ engine lib solidcraft_engine :: boolean_regression_tests::imported_rotated_face_
 engine lib solidcraft_engine :: boolean_regression_tests::multi_target_join_keeps_nearby_bodies_and_original_absorption_order
 engine lib solidcraft_engine :: boolean_regression_tests::oblique_cuts_through_a_chamfered_ring_are_exact
 engine lib solidcraft_engine :: boolean_regression_tests::ribs_flush_with_a_window_change_nothing_away_from_them
-engine lib solidcraft_engine :: boolean_regression_tests::step_export_of_a_flanged_enclosure_finishes_and_reads_back
 engine lib solidcraft_engine :: boolean_regression_tests::step_export_of_an_enclosure_with_a_screw_hole_finishes_and_reads_back
 engine lib solidcraft_engine :: cmd::clearance::tests::a_pin_in_a_hole_is_as_far_as_the_holes_wall
 engine lib solidcraft_engine :: cmd::clearance::tests::a_pin_seated_line_to_line_in_its_bushing_is_measured
@@ -313,37 +254,14 @@ engine lib solidcraft_engine :: cmd::clearance::tests::distances_are_exact_on_ed
 engine lib solidcraft_engine :: cmd::clearance::tests::nearest_distances_of_three_spheres
 engine lib solidcraft_engine :: cmd::clearance::tests::pairs_closer_than_the_clearance_are_near
 engine lib solidcraft_engine :: cmd::clipboard::tests::pasted_cylinder_emboss_badges_the_pasted_cylinder
-engine lib solidcraft_engine :: cmd::clipboard::tests::pasting_a_second_import_of_a_file_moves_the_copies_of_its_bodies
-engine lib solidcraft_engine :: cmd::clipboard::tests::pasting_an_import_moves_the_copies_of_the_bodies_its_features_named
-engine lib solidcraft_engine :: cmd::clipboard::tests::pasting_an_import_with_one_label_on_all_solids_moves_the_copy_of_each_body
 engine lib solidcraft_engine :: cmd::compare::tests::a_hole_moved_2_mm_leaves_two_crescents
-engine lib solidcraft_engine :: cmd::compare::tests::a_part_and_its_step_round_trips_are_identical
-engine lib solidcraft_engine :: cmd::component::occurrence_tests::a_linked_design_brings_its_bodies_in_and_follows_edits_to_the_part_file
-engine lib solidcraft_engine :: cmd::component::occurrence_tests::a_stood_up_nested_step_part_is_cut_and_joined_from_its_face
 engine lib solidcraft_engine :: cmd::component::occurrence_tests::instance_styles_follow_source_identity_after_collision_rename_and_pending_move
 engine lib solidcraft_engine :: cmd::component::transfer::tests::earlier_selected_cylinder_emboss_keeps_source_frame_after_transfer_and_edit
-engine lib solidcraft_engine :: cmd::component::transfer::tests::edited_transfer_destination_updates_history_owner_copy_and_reopen
 engine lib solidcraft_engine :: cmd::component_clone::tests::copied_sheet_base_targets_its_own_sketch_history
-engine lib solidcraft_engine :: cmd::component_clone::tests::external_transfer_entry_and_internal_rotated_transfer_clone_once
-engine lib solidcraft_engine :: cmd::component_clone::tests::frozen_bore_boundary_copy_preserves_stock_void_and_reopen
 engine lib solidcraft_engine :: cmd::component_clone::tests::frozen_r6_bore_copy_uses_current_geometry_despite_mesh_measure_bias
-engine lib solidcraft_engine :: cmd::component_clone::tests::paste_new_of_a_component_with_an_import_moves_the_copy_of_each_body
-engine lib solidcraft_engine :: cmd::component_clone::tests::paste_new_of_a_design_linked_twice_moves_the_copy_of_each_body
-engine lib solidcraft_engine :: cmd::component_clone::tests::paste_new_of_an_import_with_one_label_on_all_solids_moves_the_copy_of_each_body
-engine lib solidcraft_engine :: cmd::component_clone::tests::reassigned_body_is_an_independent_base_feature
-engine lib solidcraft_engine :: cmd::component_clone::tests::reassigned_body_owned_move_replays_once_and_original_stays_unchanged
-engine lib solidcraft_engine :: cmd::component_clone::tests::reassigned_sample_plate_paste_new_preserves_complex_frozen_geometry
 engine lib solidcraft_engine :: cmd::component_clone::tests::selected_second_occurrence_emboss_copy_remaps_target_and_author_paths_and_reopens
-engine lib solidcraft_engine :: cmd::component_clone::tests::suppressed_external_entry_does_not_supply_clone_baseline
-engine lib solidcraft_engine :: cmd::component_clone::tests::transferred_frozen_face_paint_ignores_consumed_legacy_offset
-engine lib solidcraft_engine :: cmd::component_link::relink_tests::relink_keeps_joint_definitions_and_reports_solver_diagnostics
-engine lib solidcraft_engine :: cmd::component_link::relink_tests::relink_rejects_bad_sources_and_targets_without_touching_the_design_or_undo
-engine lib solidcraft_engine :: cmd::component_link::relink_tests::relink_repairs_a_moved_source_for_every_instance_in_one_undo_step
-engine lib solidcraft_engine :: cmd::component_link::tests::a_saved_assembly_reopens_with_its_link_updates_it_and_breaks_it
-engine lib solidcraft_engine :: cmd::config::certificate_tests::certified_import_payload_binding_roundtrip_clone_and_replacement_refusal
 engine lib solidcraft_engine :: cmd::config::certificate_tests::certified_side_transfer_preserves_geometry_and_unsupported_taper_refuses_atomically
 engine lib solidcraft_engine :: cmd::config::certificate_tests::legacy_v9_annulus_outer_side_emboss_keeps_its_original_heuristic_anchor
-engine lib solidcraft_engine :: cmd::config::certificate_tests::legacy_v9_imported_emboss_anchor_and_ordinary_face_paint_replay_without_renaming
 engine lib solidcraft_engine :: cmd::config::style_tests::strict_face_split_pieces_share_lineage_without_index_targets
 engine lib solidcraft_engine :: cmd::delete::tests::faces_alone_are_refused_and_hostile_input_too
 engine lib solidcraft_engine :: cmd::edit::tests::edit_takes_dotted_keys_and_numbers_for_expressions
@@ -401,9 +319,6 @@ engine lib solidcraft_engine :: cmd::features_more::tests::fillets_on_tapered_bo
 engine lib solidcraft_engine :: cmd::features_more::tests::loft_cut_through_a_shelled_basin_in_either_order
 engine lib solidcraft_engine :: cmd::features_more::tests::loft_intersect_that_trims_one_edge_changes_the_body
 engine lib solidcraft_engine :: cmd::features_more::tests::loft_through_coplanar_sections_is_refused
-engine lib solidcraft_engine :: cmd::file::tests::save_and_save_as_keep_the_model_unless_opted_out
-engine lib solidcraft_engine :: cmd::file::tests::save_uses_only_warm_meshes_and_open_preview_does_not_replace_evaluation
-engine lib solidcraft_engine :: cmd::file::tests::saved_model_needs_no_meshes_and_is_adopted_only_for_its_document
 engine lib solidcraft_engine :: cmd::file::urdf_tests::urdf_collision_skips_open_bodies
 engine lib solidcraft_engine :: cmd::file::urdf_tests::urdf_open_only_component_is_drawn
 engine lib solidcraft_engine :: cmd::joints::tests::interference_lists_a_pair_it_could_not_check
@@ -671,13 +586,11 @@ engine lib solidcraft_engine :: face_name_tests::names_find_the_faces_of_a_moved
 engine lib solidcraft_engine :: face_name_tests::split_face_takes_the_face_to_split_by_name
 engine lib solidcraft_engine :: fuzz::tests::a_patterned_bore_preserves_the_analytic_surfaces
 engine lib solidcraft_engine :: hole_matrix_tests::hole_matrix
-engine lib solidcraft_engine :: measure_centre_tests::step_round_trip_of_a_plate_with_holes
 engine lib solidcraft_engine :: naming_history_tests::a_cut_through_one_of_two_bosses_names_only_its_own_walls
 engine lib solidcraft_engine :: naming_history_tests::a_design_saved_before_pieces_were_numbered_by_place_keeps_their_numbers
 engine lib solidcraft_engine :: naming_history_tests::a_piece_keeps_its_identity_when_the_cut_that_made_it_moves_or_shrinks
 engine lib solidcraft_engine :: naming_history_tests::a_shell_fillet_does_not_follow_a_gone_edge_onto_a_smooth_seam
 engine lib solidcraft_engine :: naming_history_tests::split_pieces_keep_their_numbers_across_evaluations
-engine lib solidcraft_engine :: product_scene::tests::imported_looks_survive_product_extraction_and_design_overrides
 engine lib solidcraft_engine :: sample::tests::samples_build_cleanly
 engine lib solidcraft_engine :: split_face_tests::export_keeps_split_faces_through_later_features
 engine lib solidcraft_engine :: split_face_tests::split_a_face_by_a_plane
@@ -687,48 +600,29 @@ engine lib solidcraft_engine :: split_face_tests::split_pieces_count_and_move_ap
 engine lib solidcraft_engine :: tests::a_checkpoint_survives_file_new
 engine lib solidcraft_engine :: tests::a_sketch_on_one_piece_stays_attached_when_the_side_joins
 engine lib solidcraft_engine :: tests::a_tapered_side_drawn_in_two_collinear_pieces_is_one_face
-engine lib solidcraft_engine :: tests::appearances_survive_later_features
 engine lib solidcraft_engine :: tests::bare_lengths_take_the_design_units
 engine lib solidcraft_engine :: tests::blend_fit::chamfer_that_fits_still_builds
 engine lib solidcraft_engine :: tests::blend_fit::chamfer_through_the_openings_is_refused
 engine lib solidcraft_engine :: tests::boolean_diagnostics::boolean_retry_warning_and_details_survive_cache_undo_and_reopen
-engine lib solidcraft_engine :: tests::box_fillet_cut_part
 engine lib solidcraft_engine :: tests::chamfer_sloped_basin_rim_recomputes
 engine lib solidcraft_engine :: tests::chord_and_variable_fillets
-engine lib solidcraft_engine :: tests::components_export_as_step_assembly
 engine lib solidcraft_engine :: tests::components_occurrences_and_world_placement
 engine lib solidcraft_engine :: tests::draft_on_a_cylinder_side_makes_a_frustum
 engine lib solidcraft_engine :: tests::extrude_of_adjacent_profiles_has_whole_edges
-engine lib solidcraft_engine :: tests::face_colours_and_opacity_export
 engine lib solidcraft_engine :: tests::fillet_as_wide_as_a_face_rounds_it_off
 engine lib solidcraft_engine :: tests::fillet_fit_reduce_keeps_the_radius_where_it_fits
 engine lib solidcraft_engine :: tests::fillet_fit_reduce_uses_the_largest_radius_that_fits
 engine lib solidcraft_engine :: tests::fillet_fit_taper_follows_the_room_along_the_edge
 engine lib solidcraft_engine :: tests::iges_export_and_open
-engine lib solidcraft_engine :: tests::import_component::a_design_with_a_loose_import_rebuilds_unchanged
-engine lib solidcraft_engine :: tests::import_component::a_step_assembly_comes_in_as_nested_components_with_its_instances
-engine lib solidcraft_engine :: tests::import_component::a_step_part_comes_in_as_one_component_named_after_the_file
-engine lib solidcraft_engine :: tests::import_component::an_imported_assembly_moves_as_one_until_it_is_unlocked
-engine lib solidcraft_engine :: tests::import_component::an_inserted_assembly_exports_its_nested_parts_where_they_are
-engine lib solidcraft_engine :: tests::import_component::undo_takes_the_whole_import_away
-engine lib solidcraft_engine :: tests::imported_rgb_appearances_survive_edits_reopen_and_step_export
 engine lib solidcraft_engine :: tests::join_merges_into_the_body_it_meets
 engine lib solidcraft_engine :: tests::join_onto_a_finely_faceted_import
-engine lib solidcraft_engine :: tests::large_step_import::cancelled_import_stops_and_leaves_the_design_alone
-engine lib solidcraft_engine :: tests::large_step_import::edits_after_a_large_import_share_one_copy_of_its_text
 engine lib solidcraft_engine :: tests::lip_after_boss
-engine lib solidcraft_engine :: tests::material_and_appearance_colours_export_to_step
 engine lib solidcraft_engine :: tests::mesh_convert::an_explicit_body_wins_over_the_selection
 engine lib solidcraft_engine :: tests::mesh_convert::convert_uses_the_selected_mesh_body_when_body_is_omitted
 engine lib solidcraft_engine :: tests::mesh_convert::exported_binary_stl_with_a_bore_reconstructs_analytic_faces
 engine lib solidcraft_engine :: tests::mesh_convert::mesh_conversion_is_parametric_undoable_and_editable_after_cold_reopen
-engine lib solidcraft_engine :: tests::native_cad_import::freecad_and_rhino_files_come_in_as_a_component_named_after_the_file
 engine lib solidcraft_engine :: tests::params_docs_list_working_parameters
-engine lib solidcraft_engine :: tests::path_scope::file_commands_stay_inside_the_agents_folders
 engine lib solidcraft_engine :: tests::primitive_points::point_expressions_in_a_moved_component
-engine lib solidcraft_engine :: tests::renaming_an_imported_assembly_body_reads_nothing_again
-engine lib solidcraft_engine :: tests::renaming_an_imported_body_keeps_the_names_of_its_duplicates
-engine lib solidcraft_engine :: tests::renaming_the_first_imported_duplicate_keeps_the_numbers_of_the_others
 engine lib solidcraft_engine :: tests::revolved_planar_faces_come_out_whole
 engine lib solidcraft_engine :: tests::robustness::blend_a_knife_edge_where_a_curved_wall_runs_out
 engine lib solidcraft_engine :: tests::robustness::cut_whose_end_touches_an_arc_side_leaves_no_sliver
@@ -861,3 +755,4 @@ engine lib solidcraft_engine :: thread_tests::modelled_internal_threads_m3_to_m2
 engine lib solidcraft_engine :: thread_tests::the_cut_nothing_limit_holds_for_coarse_and_fine_pitch
 engine lib solidcraft_engine :: timing::tests::a_timed_script_reports_every_step_and_the_kernel_share_of_a_join
 engine lib solidcraft_engine :: tests::robustness::shell_thicker_than_a_step_says_so  # the truck backend refuses this shell; OpenCASCADE builds it
+engine lib solidcraft_engine :: derived_units_tests::coil_pitch_and_revolutions_keep_their_size_when_the_units_change  # a coil's box comes from its tessellation here (OpenCASCADE's box around free-form faces is loose; #317 item 10)
