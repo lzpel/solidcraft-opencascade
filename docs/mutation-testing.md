@@ -1,10 +1,10 @@
 # Mutation testing
 
-SolidCraft will move from truck to solidcore (#1597). The tests that have to catch regressions
-across that switch are the ones that don't depend on the kernel: the reference tests
-([docs/oracle.md](oracle.md)), the robustness goldens ([docs/robustness.md](robustness.md)) and
-the engine's command tests. Most of the kernel's own unit tests call truck-specific code and go
-away with it.
+SolidCraft moved from truck to OpenCASCADE (this fork; upstream plans solidcore, #1597). The
+tests that have to catch regressions across such a switch are the ones that don't depend on the
+kernel: the reference tests ([docs/oracle.md](oracle.md)), the robustness goldens
+([docs/robustness.md](robustness.md)) and the engine's command tests. Most of a kernel's own
+unit tests call backend-specific code and go away with it.
 
 Mutation testing checks those suites. [cargo-mutants](https://mutants.rs) makes small changes to
 the source, one at a time (`*` becomes `/`, a condition is negated, a function returns a default
@@ -28,14 +28,14 @@ the black-box suites would miss once the kernel is swapped.
 ```
 cargo install cargo-mutants --locked
 CARGO_TARGET_DIR=$PWD/target cargo mutants --in-place \
-  -f crates/kernel-truck/src/measure.rs \
+  -f crates/kernel-cadrum/src/measure.rs \
   --test-package solidcraft-cli --test-package solidcraft-engine \
   --baseline skip --timeout 900 --build-timeout 900
 ```
 
 - Use a worktree you don't otherwise touch: `--in-place` writes each mutant into the source tree
   and restores it afterwards.
-- `--shard 0/200 --sharding round-robin` with `-d crates/kernel-truck` takes an even sample (every 200th
+- `--shard 0/200 --sharding round-robin` with `-d crates/kernel-cadrum` takes an even sample (every 200th
   mutant) of the whole crate.
 - The `mutants` profile in `Cargo.toml` is the `ci` profile with incremental builds. It cuts the
   rebuild after a kernel change from about 3 minutes to about 15 seconds.
@@ -56,7 +56,7 @@ Two problems with cargo-mutants 27.1 are behind the flags above:
 
 | Sample | Mutants that build | Caught by the black-box suites |
 |---|---:|---:|
-| `crates/kernel-truck/src/measure.rs`, every mutant | 85 | 85% |
+| `crates/kernel-truck/src/measure.rs` (the truck backend, since removed), every mutant | 85 | 85% |
 | Whole kernel, every 200th mutant | 173 | 15% (95% interval 10–21%) |
 
 Out of 49 of the kernel sample's survivors, the kernel's own unit tests caught 21 (43%) and

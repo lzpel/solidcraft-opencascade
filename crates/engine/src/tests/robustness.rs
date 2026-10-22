@@ -155,9 +155,9 @@ fn shell_of_a_body_in_two_pieces() {
     ]));
 }
 
-/// A shell thicker than a step under a notch would turn the cavity inside out: a clear "not
-/// supported yet" error instead of a failed boolean on the truck backend; OpenCASCADE builds
-/// it, with the step's thin wall opened.
+/// A shell thicker than a step under a notch would turn the cavity inside out: OpenCASCADE
+/// builds it, with the step's thin wall opened (the previous backend refused it with "not
+/// supported yet"); either way, never a failed boolean or a panic.
 #[test]
 fn shell_thicker_than_a_step_says_so() {
     let mut s = Session::default();
@@ -167,12 +167,8 @@ fn shell_thicker_than_a_step_says_so() {
     ] {
         s.execute(c, &p).unwrap();
     }
-    let r = s.execute("solid.shell", &json!({"faces": [[18.75, 35.0, 2.5]], "thickness": 1.5}));
-    match (crate::kernel::BACKEND, r) {
-        ("truck", Err(e)) => assert!(e.to_string().contains("not supported yet"), "{e}"),
-        ("truck", Ok(v)) => panic!("truck built the shell: {v}"),
-        (_, Ok(_)) => {}
-        (_, Err(e)) => panic!("{e}"),
+    if let Err(e) = s.execute("solid.shell", &json!({"faces": [[18.75, 35.0, 2.5]], "thickness": 1.5})) {
+        panic!("{e}");
     }
 }
 

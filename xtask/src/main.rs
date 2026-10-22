@@ -65,78 +65,11 @@ commands:
                   check in headless Chrome that the web app works offline and updates to a new
                   build (a stand-in app, or the web build in DIR such as dist/web)
   ci              fmt --check, assets, icons, licences --check, lists, layers, clippy -D warnings, then the tests
-                  (the OpenCASCADE kernel backend: the tests listed in tests/cadrum-allowlist.txt may
-                  fail, and one that passes fails the run; `--backend truck` builds and tests the
-                  pure-Rust truck backend instead)
+                  (the tests listed in tests/cadrum-allowlist.txt may fail, and one that passes
+                  fails the run)
                   with the wasm check alongside, then web-offline-test when Chrome is installed
                   (stops at the first failing step)
 ";
-
-/// Which geometry backend a command builds the workspace with: `--backend cadrum|truck`, else
-/// `SOLIDCRAFT_KERNEL_BACKEND`, else cadrum (the kernel façade's default feature).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Backend {
-    Truck,
-    Cadrum,
-}
-
-impl Backend {
-    /// The cargo arguments that select the backend (the façade's `truck` feature wins over its
-    /// default `cadrum`, so nothing has to be switched off).
-    pub fn cargo_args(self) -> Vec<&'static str> {
-        match self {
-            Backend::Cadrum => Vec::new(),
-            Backend::Truck => vec!["-F", "solidcraft-kernel/truck"],
-        }
-    }
-
-    /// The cargo arguments that select the backend for one app package (`-p solidcraft-cli`
-    /// and the like forward a `truck` feature of their own to the façade).
-    pub fn package_args(self) -> Vec<&'static str> {
-        match self {
-            Backend::Cadrum => Vec::new(),
-            Backend::Truck => vec!["-F", "truck"],
-        }
-    }
-
-    pub fn name(self) -> &'static str {
-        match self {
-            Backend::Truck => "truck",
-            Backend::Cadrum => "cadrum",
-        }
-    }
-}
-
-fn backend(rest: &[&str]) -> Backend {
-    let named = rest
-        .iter()
-        .position(|a| *a == "--backend")
-        .and_then(|i| rest.get(i + 1))
-        .map(|s| s.to_string())
-        .or_else(|| std::env::var("SOLIDCRAFT_KERNEL_BACKEND").ok());
-    match named.as_deref() {
-        Some("truck") => Backend::Truck,
-        _ => Backend::Cadrum,
-    }
-}
-
-/// `rest` without the `--backend <name>` pair.
-fn without_backend<'a>(rest: &[&'a str]) -> Vec<&'a str> {
-    let mut out = Vec::new();
-    let mut skip = false;
-    for a in rest {
-        if skip {
-            skip = false;
-            continue;
-        }
-        if *a == "--backend" {
-            skip = true;
-            continue;
-        }
-        out.push(*a);
-    }
-    out
-}
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -148,7 +81,7 @@ fn main() -> ExitCode {
         Some("app-icons") => app_icons::run(&root()),
         Some("features") => features::run(&root()),
         Some("i18n") => i18n::run(&root(), &rest),
-        Some("oracle") => cmd_oracle(rest.iter().position(|a| *a == "--cli").and_then(|i| rest.get(i + 1)).copied(), backend(&rest)),
+        Some("oracle") => cmd_oracle(rest.iter().position(|a| *a == "--cli").and_then(|i| rest.get(i + 1)).copied()),
         Some("action-matrix") => {
             let arg = |name: &str| rest.iter().position(|a| *a == name).and_then(|i| rest.get(i + 1)).copied();
             cmd_action_matrix(rest.contains(&"--bless"), arg("--results"), arg("--from"))
@@ -157,14 +90,11 @@ fn main() -> ExitCode {
         Some("licences") => licences::run(&root(), rest.contains(&"--check")),
         Some("lists") => lists::run(&root(), rest.contains(&"--fix")),
         Some("test") => {
-            let backend = backend(&rest);
-            let rest: Vec<&str> = without_backend(&rest);
             let (cargo_args, test_args) = rest.iter().position(|a| *a == "--").map_or((&rest[..], &[][..]), |i| (&rest[..i], &rest[i + 1..]));
-            let cargo_args: Vec<&str> = cargo_args.iter().copied().chain(backend.cargo_args()).collect();
-            test::run_backend(&cargo_args, test_args, vec![test::doc_tests(&cargo_args, test_args)], backend)
+            test::run(cargo_args, test_args, vec![test::doc_tests(cargo_args, test_args)])
         }
-        Some("ci") => cmd_ci(backend(&rest)),
-        Some("wasm") => cmd_wasm(backend(&rest)),
+        Some("ci") => cmd_ci(),
+        Some("wasm") => cmd_wasm(),
         Some("web-offline") => web_offline::run(&root(), rest.first().copied()),
         Some("web-offline-test") => {
             let site = rest.iter().position(|a| *a == "--site").and_then(|i| rest.get(i + 1)).copied();
@@ -296,7 +226,7 @@ const NO_ORACLE: [(&str, &str); 5] = [
 /// Replay every reference case in tests/oracle, compare with its expected.json and write
 /// docs/oracle.md. Fails when a case fails, unless its expected.json names the issue that
 /// tracks it (`known_failure`); a known failure that passes fails too, so the mark is removed.
-fn cmd_oracle(cli: Option<&str>, backend: Backend) -> Result<(), String> {
+fn cmd_oracle(cli: Option<&str>) -> Result<(), String> {
     let dir = root().join("tests/oracle");
     let mut cases: Vec<PathBuf> = std::fs::read_dir(&dir)
         .map_err(|e| format!("{}: {e}", dir.display()))?
@@ -316,7 +246,7 @@ fn cmd_oracle(cli: Option<&str>, backend: Backend) -> Result<(), String> {
         }
         None => {
             let mut c = cargo();
-            c.args(["run", "-q", "--release", "-p", "solidcraft-cli"]).args(backend.package_args()).arg("--");
+            c.args(["run", "-q", "--release", "-p", "solidcraft-cli", "--"]);
             c
         }
     };
@@ -341,12 +271,7 @@ fn cmd_oracle(cli: Option<&str>, backend: Backend) -> Result<(), String> {
         let source_kind = source.split_whitespace().next().unwrap_or("").to_string();
         *sources.entry(if want.is_null() { "none yet".into() } else { source_kind }).or_default() += 1;
         let ok = r["pass"].as_bool().unwrap_or(false);
-        // The two backends fail different cases: `known_failure` marks the default backend's,
-        // `known_failure_truck` the truck backend's.
-        let issue = match backend {
-            Backend::Cadrum => want["known_failure"].as_str().map(str::to_string),
-            Backend::Truck => want["known_failure_truck"].as_str().map(str::to_string),
-        };
+        let issue = want["known_failure"].as_str().map(str::to_string);
         let status = match (ok, want.is_null(), &issue) {
             (_, true, _) => {
                 missing += 1;
@@ -418,11 +343,11 @@ fn cmd_oracle(cli: Option<&str>, backend: Backend) -> Result<(), String> {
 
 /// Never break wasm: every layered crate (everything below the apps) and the web app must
 /// build for the browser.
-fn cmd_wasm(backend: Backend) -> Result<(), String> {
-    match wasm_check(backend)? {
+fn cmd_wasm() -> Result<(), String> {
+    match wasm_check()? {
         Some((c, n)) => {
-            run(c, &format!("cargo check --target wasm32-unknown-unknown ({n} crates, {})", backend.name()))?;
-            println!("wasm: {n} crates build for wasm32-unknown-unknown with the {} backend", backend.name());
+            run(c, &format!("cargo check --target wasm32-unknown-unknown ({n} crates)"))?;
+            println!("wasm: {n} crates build for wasm32-unknown-unknown");
             Ok(())
         }
         None => {
@@ -436,11 +361,10 @@ fn cmd_wasm(backend: Backend) -> Result<(), String> {
 pub const WASM_IMAGE: &str = "ghcr.io/lzpel/cross-wasm32-unknown-unknown";
 
 /// The wasm check and how many crates it covers; `None` when it cannot run here. OpenCASCADE
-/// builds for wasm32 only with the wasi-sdk C++ toolchain of [`WASM_IMAGE`], and the kernel
-/// façade's default pulls it into every crate above it, so the check runs inside that image with
-/// the repository mounted and a target directory of its own (`target/wasm-docker`), over every
-/// layer crate and the web app, whichever backend is selected.
-fn wasm_check(backend: Backend) -> Result<Option<(Command, usize)>, String> {
+/// builds for wasm32 only with the wasi-sdk C++ toolchain of [`WASM_IMAGE`], so the check runs
+/// inside that image with the repository mounted and a target directory of its own
+/// (`target/wasm-docker`), over every layer crate and the web app.
+fn wasm_check() -> Result<Option<(Command, usize)>, String> {
     let crates = layers::from_metadata(&metadata()?)?;
     let mut set: Vec<String> =
         crates.iter().filter(|c| matches!(layers::classify(&c.name), Some(layers::Class::Layer(_)))).map(|c| c.name.clone()).collect();
@@ -457,7 +381,7 @@ fn wasm_check(backend: Backend) -> Result<Option<(Command, usize)>, String> {
         "CARGO_TARGET_DIR=/work/target/wasm-docker",
         WASM_IMAGE,
     ]);
-    c.args(["cargo", "check", "--target", "wasm32-unknown-unknown", "--profile", "ci"]).args(backend.cargo_args());
+    c.args(["cargo", "check", "--target", "wasm32-unknown-unknown", "--profile", "ci"]);
     for p in &set {
         c.args(["-p", p]);
     }
@@ -476,8 +400,7 @@ fn docker_available() -> bool {
 
 /// The quick gates first, so they fail fast; the wasm check (and doc tests) run while the test
 /// binaries do, which leaves cargo's build lock free.
-fn cmd_ci(backend: Backend) -> Result<(), String> {
-    eprintln!("ci: kernel backend {}", backend.name());
+fn cmd_ci() -> Result<(), String> {
     let mut c = cargo();
     c.args(["fmt", "--all", "--", "--check"]);
     run(c, "cargo fmt --check")?;
@@ -487,16 +410,15 @@ fn cmd_ci(backend: Backend) -> Result<(), String> {
     lists::run(&root(), false)?;
     cmd_layers()?;
     let mut c = cargo();
-    c.args(["clippy", "--workspace", "--all-targets", "--profile", "ci"]).args(backend.cargo_args()).args(["--", "-D", "warnings"]);
+    c.args(["clippy", "--workspace", "--all-targets", "--profile", "ci", "--", "-D", "warnings"]);
     run(c, "cargo clippy -D warnings")?;
-    let cargo_args = backend.cargo_args();
     let mut side = Vec::new();
-    match wasm_check(backend)? {
-        Some((wasm, n)) => side.push((format!("wasm32-unknown-unknown check ({n} crates, {})", backend.name()), wasm)),
+    match wasm_check()? {
+        Some((wasm, n)) => side.push((format!("wasm32-unknown-unknown check ({n} crates)"), wasm)),
         None => println!("wasm: skipped (the wasm32 check runs inside {WASM_IMAGE}, and docker is not available here)"),
     }
-    side.push(test::doc_tests(&cargo_args, &[]));
-    test::run_backend(&cargo_args, &[], side, backend)?;
+    side.push(test::doc_tests(&[], &[]));
+    test::run(&[], &[], side)?;
     web_offline_test::run(&root(), None, false)?;
     eprintln!("ci: all gates passed");
     Ok(())

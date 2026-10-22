@@ -20,12 +20,6 @@ too_many_arguments = "allow"
 type_complexity = "allow"
 neg_cmp_op_on_partial_ord = "allow"
 
-[features]
-# The kernel backends: OpenCASCADE through cadrum is the default (`cadrum` is kept for
-# scripts that name it); `cargo run -p <this> -F truck` builds the pure-Rust truck backend.
-cadrum = ["solidcraft-engine/cadrum"]
-truck = ["solidcraft-engine/truck"]
-
 [dependencies]
 solidcraft-engine = { workspace = true }
 solidcraft-ui-egui = { workspace = true }

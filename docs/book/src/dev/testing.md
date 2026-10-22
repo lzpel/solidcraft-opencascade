@@ -32,10 +32,9 @@ than adding broad ignores. The first scan prompted an update to quick-xml 0.41.0
 [RUSTSEC-2026-0194](https://rustsec.org/advisories/RUSTSEC-2026-0194) and
 [RUSTSEC-2026-0195](https://rustsec.org/advisories/RUSTSEC-2026-0195).
 
-Coverage excludes the version matching of local path patches: `truck-shapeops`,
-`truck-stepio`, `truck-meshalgo`, `matext4cgmath` and `egui-wgpu` in `vendor/`. Their checked-in
-code and patches still need comparison with their permissively licensed upstreams; a green
-scan does not establish their security or incorporate an upstream fix automatically.
+Coverage excludes the version matching of the local path patch `egui-wgpu` in `vendor/`. Its
+checked-in code and patches still need comparison with the permissively licensed upstream; a
+green scan does not establish their security or incorporate an upstream fix automatically.
 
 ## UI scenarios
 
@@ -59,8 +58,7 @@ the fix removes the step.
 ## CI profile
 
 CI runs the tests with `--profile ci`: light optimisation, line tables, no LTO and debug
-assertions off. Some of the truck backend's debug assertions fail on valid geometry; the `ci` profile disables
-them while building faster than `--release`. If a test fails only in a plain debug build, say
+assertions off; it builds faster than `--release`. If a test fails only in a plain debug build, say
 so in the PR.
 
 Run `cargo xtask test` to build with this profile and run the test binaries concurrently,
@@ -77,7 +75,7 @@ Pull requests skip a few heavy tests (each takes one to twelve minutes); they ru
 `main`, nightly, and in `cargo xtask test`:
 
 - `solidcraft-engine`: `tests::hostile_params_never_panic`, everything in `tests::robustness` and
-  the seeds of `tests::robustness_goldens` (`seed_00` … `seed_95`; pull requests that change the kernel, truck or
+  the seeds of `tests::robustness_goldens` (`seed_00` … `seed_95`; pull requests that change the kernel or
   the goldens run all but the slowest, `SLOW_SEEDS` in `ci.yml`),
   `pattern_suppress_tests::enclosure_arc_extinction_keeps_a_real_sharp_inner_lip_after_resize_and_reopen`,
   `pattern_suppress_tests::enclosure_datums_follow_wall_height_and_board_depth_with_material_proofs`,

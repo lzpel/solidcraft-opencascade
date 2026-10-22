@@ -668,12 +668,12 @@ mod web {
     }
 }
 
-/// The kernel backend's start-up, before its first call. With the OpenCASCADE backend on
-/// wasm32 the C++ runtime's constructors have not run when the module starts (there is no
+/// The kernel backend's start-up, before its first call. On wasm32 OpenCASCADE's C++
+/// runtime constructors have not run when the module starts (there is no
 /// `main` of theirs): `__wasm_call_ctors` runs them once, after the kernel anchored cadrum's
 /// WASI stub. Linking an `extern "C"` symbol and calling it has no safe form; this is the one
 /// `unsafe` of the web app (AGENTS.md lists it).
-#[cfg(all(target_arch = "wasm32", not(feature = "truck")))]
+#[cfg(target_arch = "wasm32")]
 #[allow(unsafe_code)]
 fn kernel_init() {
     use std::sync::Once;
@@ -687,11 +687,6 @@ fn kernel_init() {
         // once, before any OpenCASCADE object exists.
         unsafe { __wasm_call_ctors() };
     });
-}
-
-#[cfg(all(target_arch = "wasm32", feature = "truck"))]
-fn kernel_init() {
-    solidcraft_engine::kernel::init();
 }
 
 #[cfg(target_arch = "wasm32")]

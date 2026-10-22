@@ -7,7 +7,7 @@ use std::process::{Command, Stdio};
 use std::sync::mpsc;
 use std::time::Instant;
 
-use crate::{Backend, cargo, root};
+use crate::{cargo, root};
 
 /// Tests the OpenCASCADE backend is expected to fail, one libtest path per line (`#` comments);
 /// `cargo xtask test` skips them and fails on any of them that passes.
@@ -26,14 +26,11 @@ struct TestBin {
 
 /// Build the tests with `cargo_args` (e.g. `--locked`), run each binary with `test_args`, and run
 /// the `side` jobs one after another meanwhile. Each prints a line when it ends; a failure prints
-/// its whole output. With the cadrum backend (the default) the tests listed in [`CADRUM_ALLOWLIST`] may fail
+/// its whole output. The tests listed in [`CADRUM_ALLOWLIST`] may fail
 /// (a binary whose failures are all listed counts as passing), and one of them that passes fails
 /// the run until its line goes: the list only ever shrinks.
-pub fn run_backend(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, Command)>, backend: Backend) -> Result<(), String> {
-    let (allow, skip) = match backend {
-        Backend::Truck => (HashSet::new(), HashSet::new()),
-        Backend::Cadrum => (listed(CADRUM_ALLOWLIST)?, listed(CADRUM_SKIPLIST)?),
-    };
+pub fn run(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, Command)>) -> Result<(), String> {
+    let (allow, skip) = (listed(CADRUM_ALLOWLIST)?, listed(CADRUM_SKIPLIST)?);
     let bins = build(cargo_args)?;
     let start = Instant::now();
     let (tx, rx) = mpsc::channel::<(String, Result<String, String>, f64)>();
@@ -91,10 +88,7 @@ pub fn run_backend(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, C
                         println!("FAIL  {label:<44} {secs:6.1}s\n{output}");
                         if !unexpected.is_empty() {
                             let names = unexpected.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ");
-                            match backend {
-                                Backend::Cadrum => println!("FAIL  {label}: not in {CADRUM_ALLOWLIST}: {names}"),
-                                Backend::Truck => println!("FAIL  {label}: {names}"),
-                            }
+                            println!("FAIL  {label}: not in {CADRUM_ALLOWLIST}: {names}");
                         }
                         failed.push(label);
                     }
