@@ -65,14 +65,15 @@ commands:
                   check in headless Chrome that the web app works offline and updates to a new
                   build (a stand-in app, or the web build in DIR such as dist/web)
   ci              fmt --check, assets, icons, licences --check, lists, layers, clippy -D warnings, then the tests
-                  (`--backend cadrum` builds and tests the OpenCASCADE kernel backend instead of truck; the
-                  tests listed in tests/cadrum-allowlist.txt may fail, and one that passes fails the run)
+                  (the OpenCASCADE kernel backend: the tests listed in tests/cadrum-allowlist.txt may
+                  fail, and one that passes fails the run; `--backend truck` builds and tests the
+                  pure-Rust truck backend instead)
                   with the wasm check alongside, then web-offline-test when Chrome is installed
                   (stops at the first failing step)
 ";
 
-/// Which geometry backend a command builds the workspace with: `--backend truck|cadrum`, else
-/// `SOLIDCRAFT_KERNEL_BACKEND`, else truck (the kernel façade's default feature).
+/// Which geometry backend a command builds the workspace with: `--backend cadrum|truck`, else
+/// `SOLIDCRAFT_KERNEL_BACKEND`, else cadrum (the kernel façade's default feature).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Backend {
     Truck,
@@ -80,21 +81,21 @@ pub enum Backend {
 }
 
 impl Backend {
-    /// The cargo arguments that select the backend (the façade's `cadrum` feature wins over its
-    /// default `truck`, so nothing has to be switched off).
+    /// The cargo arguments that select the backend (the façade's `truck` feature wins over its
+    /// default `cadrum`, so nothing has to be switched off).
     pub fn cargo_args(self) -> Vec<&'static str> {
         match self {
-            Backend::Truck => Vec::new(),
-            Backend::Cadrum => vec!["-F", "solidcraft-kernel/cadrum"],
+            Backend::Cadrum => Vec::new(),
+            Backend::Truck => vec!["-F", "solidcraft-kernel/truck"],
         }
     }
 
     /// The cargo arguments that select the backend for one app package (`-p solidcraft-cli`
-    /// and the like forward a `cadrum` feature of their own to the façade).
+    /// and the like forward a `truck` feature of their own to the façade).
     pub fn package_args(self) -> Vec<&'static str> {
         match self {
-            Backend::Truck => Vec::new(),
-            Backend::Cadrum => vec!["-F", "cadrum"],
+            Backend::Cadrum => Vec::new(),
+            Backend::Truck => vec!["-F", "truck"],
         }
     }
 
@@ -114,8 +115,8 @@ fn backend(rest: &[&str]) -> Backend {
         .map(|s| s.to_string())
         .or_else(|| std::env::var("SOLIDCRAFT_KERNEL_BACKEND").ok());
     match named.as_deref() {
-        Some("cadrum") => Backend::Cadrum,
-        _ => Backend::Truck,
+        Some("truck") => Backend::Truck,
+        _ => Backend::Cadrum,
     }
 }
 
@@ -340,11 +341,11 @@ fn cmd_oracle(cli: Option<&str>, backend: Backend) -> Result<(), String> {
         let source_kind = source.split_whitespace().next().unwrap_or("").to_string();
         *sources.entry(if want.is_null() { "none yet".into() } else { source_kind }).or_default() += 1;
         let ok = r["pass"].as_bool().unwrap_or(false);
-        // A case the OpenCASCADE backend is known to fail is marked separately: the two backends
-        // fail different cases.
+        // The two backends fail different cases: `known_failure` marks the default backend's,
+        // `known_failure_truck` the truck backend's.
         let issue = match backend {
-            Backend::Truck => want["known_failure"].as_str().map(str::to_string),
-            Backend::Cadrum => want["known_failure_cadrum"].as_str().map(str::to_string),
+            Backend::Cadrum => want["known_failure"].as_str().map(str::to_string),
+            Backend::Truck => want["known_failure_truck"].as_str().map(str::to_string),
         };
         let status = match (ok, want.is_null(), &issue) {
             (_, true, _) => {
@@ -425,40 +426,25 @@ fn cmd_wasm(backend: Backend) -> Result<(), String> {
             Ok(())
         }
         None => {
-            println!("wasm: skipped (the {} backend builds for wasm32 only inside {WASM_IMAGE}, and docker is not available here)", backend.name());
+            println!("wasm: skipped (the wasm32 check runs inside {WASM_IMAGE}, and docker is not available here)");
             Ok(())
         }
     }
 }
 
-/// Crates that build for wasm only inside cadrum's Docker image: a wasi-sdk C++ toolchain for
-/// OpenCASCADE, which the host check cannot provide.
-const WASM_IN_DOCKER: &[&str] = &["solidcraft-kernel-cadrum"];
 /// cadrum's cross-compilation image: rust with the wasm32 target and the wasi-sdk toolchain.
 pub const WASM_IMAGE: &str = "ghcr.io/lzpel/cross-wasm32-unknown-unknown";
 
-/// The wasm check and how many crates it covers; `None` when it cannot run here. With the truck
-/// backend it is the host's `cargo check` (the ci profile, so the host build scripts and proc
-/// macros built for clippy and the tests are reused) over every layer crate but the cadrum one.
-/// With the cadrum backend it runs inside [`WASM_IMAGE`] with the repository mounted and a
-/// target directory of its own (`target/wasm-docker`), over every layer crate and the web app.
+/// The wasm check and how many crates it covers; `None` when it cannot run here. OpenCASCADE
+/// builds for wasm32 only with the wasi-sdk C++ toolchain of [`WASM_IMAGE`], and the kernel
+/// façade's default pulls it into every crate above it, so the check runs inside that image with
+/// the repository mounted and a target directory of its own (`target/wasm-docker`), over every
+/// layer crate and the web app, whichever backend is selected.
 fn wasm_check(backend: Backend) -> Result<Option<(Command, usize)>, String> {
     let crates = layers::from_metadata(&metadata()?)?;
-    let in_docker = backend == Backend::Cadrum;
-    let mut set: Vec<String> = crates
-        .iter()
-        .filter(|c| matches!(layers::classify(&c.name), Some(layers::Class::Layer(_))) && (in_docker || !WASM_IN_DOCKER.contains(&c.name.as_str())))
-        .map(|c| c.name.clone())
-        .collect();
+    let mut set: Vec<String> =
+        crates.iter().filter(|c| matches!(layers::classify(&c.name), Some(layers::Class::Layer(_)))).map(|c| c.name.clone()).collect();
     set.push("solidcraft-web".into());
-    if !in_docker {
-        let mut c = cargo();
-        c.args(["check", "--target", "wasm32-unknown-unknown", "--profile", "ci"]);
-        for p in &set {
-            c.args(["-p", p]);
-        }
-        return Ok(Some((c, set.len())));
-    }
     if !docker_available() {
         return Ok(None);
     }
@@ -491,9 +477,7 @@ fn docker_available() -> bool {
 /// The quick gates first, so they fail fast; the wasm check (and doc tests) run while the test
 /// binaries do, which leaves cargo's build lock free.
 fn cmd_ci(backend: Backend) -> Result<(), String> {
-    if backend != Backend::Truck {
-        eprintln!("ci: kernel backend {}", backend.name());
-    }
+    eprintln!("ci: kernel backend {}", backend.name());
     let mut c = cargo();
     c.args(["fmt", "--all", "--", "--check"]);
     run(c, "cargo fmt --check")?;
@@ -509,9 +493,7 @@ fn cmd_ci(backend: Backend) -> Result<(), String> {
     let mut side = Vec::new();
     match wasm_check(backend)? {
         Some((wasm, n)) => side.push((format!("wasm32-unknown-unknown check ({n} crates, {})", backend.name()), wasm)),
-        None => {
-            println!("wasm: skipped (the {} backend builds for wasm32 only inside {WASM_IMAGE}, and docker is not available here)", backend.name())
-        }
+        None => println!("wasm: skipped (the wasm32 check runs inside {WASM_IMAGE}, and docker is not available here)"),
     }
     side.push(test::doc_tests(&cargo_args, &[]));
     test::run_backend(&cargo_args, &[], side, backend)?;

@@ -21,5 +21,6 @@
       20.0
     ]
   },
-  "note": "the rule's thickness edits regenerate the whole sheet body; only the final 3 mm state matters"
+  "note": "the rule's thickness edits regenerate the whole sheet body; only the final 3 mm state matters",
+  "known_failure": "lzpel/cadrum#317: sheet metal (sewing faces)"
 }

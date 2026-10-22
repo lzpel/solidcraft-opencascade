@@ -30,11 +30,12 @@ const REL: f64 = 1e-6;
 /// Tests share the file when they record.
 static FILE: Mutex<()> = Mutex::new(());
 
-/// The goldens file of the kernel backend built in: `goldens.json` for the truck backend,
-/// `goldens-<backend>.json` for another (what each seed builds differs between kernels).
+/// The goldens file of the kernel backend built in: `goldens.json` for the default (OpenCASCADE
+/// through cadrum), `goldens-<backend>.json` for another (what each seed builds differs between
+/// kernels).
 fn file_name() -> String {
     match crate::kernel::BACKEND {
-        "truck" => "goldens.json".to_string(),
+        "cadrum" => "goldens.json".to_string(),
         other => format!("goldens-{other}.json"),
     }
 }

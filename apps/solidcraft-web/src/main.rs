@@ -673,7 +673,7 @@ mod web {
 /// `main` of theirs): `__wasm_call_ctors` runs them once, after the kernel anchored cadrum's
 /// WASI stub. Linking an `extern "C"` symbol and calling it has no safe form; this is the one
 /// `unsafe` of the web app (AGENTS.md lists it).
-#[cfg(all(target_arch = "wasm32", feature = "cadrum"))]
+#[cfg(all(target_arch = "wasm32", not(feature = "truck")))]
 #[allow(unsafe_code)]
 fn kernel_init() {
     use std::sync::Once;
@@ -689,7 +689,7 @@ fn kernel_init() {
     });
 }
 
-#[cfg(all(target_arch = "wasm32", not(feature = "cadrum")))]
+#[cfg(all(target_arch = "wasm32", feature = "truck"))]
 fn kernel_init() {
     solidcraft_engine::kernel::init();
 }

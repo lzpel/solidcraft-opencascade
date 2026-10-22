@@ -11,8 +11,8 @@ The web app, `apps/solidcraft-web`, is the desktop front end compiled to wasm wi
 
 A few rules follow from the layering:
 
-- **Only `crates/kernel-truck` touches truck** (and only `crates/kernel-cadrum` will touch
-  cadrum; `crates/kernel` is the façade that selects one by feature). Everything above it sees SolidCraft's own types:
+- **Only `crates/kernel-cadrum` touches cadrum (OpenCASCADE), only `crates/kernel-truck` touches
+  truck**; `crates/kernel` is the façade that selects one by feature. Everything above it sees SolidCraft's own types:
   bodies, faces, edges, meshes and measures. See [The kernel boundary](kernel.md).
 - **The document knows nothing about commands or the UI.** `crates/doc` holds the parameters,
   the feature timeline and the component tree, and evaluates them into a model.

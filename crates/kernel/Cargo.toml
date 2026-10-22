@@ -1,6 +1,6 @@
 [package]
 name = "solidcraft-kernel"
-description = "SolidCraft B-rep kernel boundary: solids, extrude/revolve/booleans/fillets, tessellation, measures and STEP, behind our own API. Selects the geometry backend by feature: `truck` (default) or `cadrum` (OpenCASCADE)"
+description = "SolidCraft B-rep kernel boundary: solids, extrude/revolve/booleans/fillets, tessellation, measures and STEP, behind our own API. Selects the geometry backend by feature: `cadrum` (OpenCASCADE, the default) or `truck`"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,12 +9,13 @@ license.workspace = true
 workspace = true
 
 [features]
-default = ["truck"]
-# The pure-Rust truck backend (crates/kernel-truck).
-truck = ["dep:solidcraft-kernel-truck"]
-# The OpenCASCADE backend through cadrum (crates/kernel-cadrum). Wins when both are enabled, so
-# feature unification across the workspace cannot pick truck by accident.
+default = ["cadrum"]
+# The OpenCASCADE backend through cadrum (crates/kernel-cadrum), the default.
 cadrum = ["dep:solidcraft-kernel-cadrum"]
+# The pure-Rust truck backend (crates/kernel-truck). Wins when both are enabled: the default
+# stays on under feature unification, so `-F solidcraft-kernel/truck` (or an app's `-F truck`)
+# is enough to select it, and nothing has to be switched off.
+truck = ["dep:solidcraft-kernel-truck"]
 
 [dependencies]
 solidcraft-kernel-core = { workspace = true }

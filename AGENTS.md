@@ -91,15 +91,18 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
 - **Layering** is enforced by `cargo xtask layers`: L0 `geom` → L1 `sketch`, `kernel`, `render`
   → L2 `doc` → L3 `io` → L4 `engine` → L5 `ui-egui` → apps. Nothing below L5 depends on
   egui/eframe/winit/wgpu/rfd. **The UI crate is swappable.** **The kernel backend is swappable:**
-  `crates/kernel` is a façade that re-exports one backend by cargo feature (`truck`, the default;
-  `cadrum`); `crates/kernel-core` holds what both share (errors, `guard`, history, face sources,
-  measures). Only `crates/kernel-truck` may use `truck`, only `crates/kernel-cadrum` may use
-  `cadrum`. Build the other backend with `-F solidcraft-kernel/cadrum` on workspace commands, or
-  `-F cadrum` on one app (`cargo run -p solidcraft-cli -F cadrum`); `cargo xtask ci --backend cadrum`
-  (also `test`, `oracle`) runs the gate with it: the tests listed in `tests/cadrum-allowlist.txt`
-  may fail, and any listed test that passes fails the run until its line is removed; a test that
-  crashes the process inside OpenCASCADE is skipped through `tests/cadrum-skiplist.txt` (never
-  allowed: each entry waits on a cadrum fix).
+  `crates/kernel` is a façade that re-exports one backend by cargo feature (`cadrum`, OpenCASCADE,
+  the default; `truck`); `crates/kernel-core` holds what both share (errors, `guard`, history,
+  face sources, measures). Only `crates/kernel-truck` may use `truck`, only `crates/kernel-cadrum`
+  may use `cadrum`. Build the truck backend with `-F solidcraft-kernel/truck` on workspace
+  commands, or `-F truck` on one app (`cargo run -p solidcraft-cli -F truck`); `cargo xtask ci
+  --backend truck` (also `test`, `oracle`) runs the gate with it. The default gate knows the
+  backend's gaps: a test of a feature OpenCASCADE does not give us is `#[ignore = "needs
+  OpenCASCADE: …"]` (remove the attribute when the feature lands); a test that fails for another
+  reason (a measurement or a name that comes out differently) is listed in
+  `tests/cadrum-allowlist.txt`, may fail, and fails the run once it passes until its line is
+  removed; a test that crashes the process inside OpenCASCADE is skipped through
+  `tests/cadrum-skiplist.txt` (never allowed: each entry waits on a cadrum fix).
 - **The UI is thin**: panels read engine state and act through `app.run(id, params)` /
   `app.start(id)`. Colours come from `theme::Tokens`.
 - **One set of camera controls**: every page or canvas with a camera (viewport, Render
@@ -124,12 +127,11 @@ People trust SolidCraft with their designs; a crash loses their work. **This out
   one topic, and never force-push `main`. Never commit `plan/`, build dirs (`target*/`) or generated reference data;
   check `git ls-files` before pushing.
 - **Never break wasm**: everything below the apps must build for `wasm32-unknown-unknown`
-  (`cargo xtask wasm`, part of `cargo xtask ci`). The OpenCASCADE backend builds for wasm only
-  inside cadrum's Docker image (`ghcr.io/lzpel/cross-wasm32-unknown-unknown`): the host check
-  (`cargo xtask wasm`) leaves `crates/kernel-cadrum` out, and `cargo xtask wasm --backend cadrum`
-  (also the wasm step of `cargo xtask ci --backend cadrum`) runs the check inside that image, or
-  says it skipped it where docker is not available. `packaging/docker/Dockerfile.web` builds the
-  web app with the OpenCASCADE backend the same way.
+  (`cargo xtask wasm`, part of `cargo xtask ci`). OpenCASCADE builds for wasm only inside
+  cadrum's Docker image (`ghcr.io/lzpel/cross-wasm32-unknown-unknown`), so the check runs inside
+  that image, or says it skipped it where docker is not available. The web app is built the same
+  way (`packaging/web/build-cadrum.sh`, `packaging/docker/Dockerfile.web`); `trunk build` on the
+  host no longer works.
 
 ## Showing and following through on changes
 
