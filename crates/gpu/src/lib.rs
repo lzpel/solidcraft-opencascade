@@ -454,51 +454,62 @@ fn push_curve(data: &mut Vec<f32>, c: &EvalCurve) -> Result<(u32, u32)> {
 /// Several plans as one: their surfaces one after another, each face's surface index offset by
 /// the surfaces of the plans before it.
 fn pack(plans: &[&TessPlan]) -> Result<Packed> {
-    let mut surfaces = Vec::with_capacity(plans.iter().map(|p| p.surfaces.len()).sum::<usize>() * SURFACE_WORDS);
+    let mut surfaces = Vec::with_capacity(plans.iter().map(|p| p.surfaces.len() + 1).sum::<usize>() * SURFACE_WORDS);
     let mut data: Vec<f32> = Vec::new();
-    for s in plans.iter().flat_map(|p| &p.surfaces) {
-        let mut head = [0u32; SURFACE_WORDS];
-        match s {
-            EvalSurface::Plane { origin, du, dv } => {
-                head[0] = 0;
-                head[8] = word(data.len())?;
-                push3(&mut data, *origin);
-                push3(&mut data, *du);
-                push3(&mut data, *dv);
+    // A plan with faces that carry their positions and normals (no surface to evaluate: a mesh
+    // body, a face the kernel could not describe, every face of the OpenCASCADE backend) gets
+    // one extra surface of the fixed kind after its own, which those faces point to.
+    let fixed_kind = |plan: &TessPlan| plan.faces.iter().any(|f| f.surface.is_none());
+    for plan in plans {
+        for s in &plan.surfaces {
+            let mut head = [0u32; SURFACE_WORDS];
+            match s {
+                EvalSurface::Plane { origin, du, dv } => {
+                    head[0] = 0;
+                    head[8] = word(data.len())?;
+                    push3(&mut data, *origin);
+                    push3(&mut data, *du);
+                    push3(&mut data, *dv);
+                }
+                EvalSurface::Nurbs { degree, knots, count, ctrl, closed } => {
+                    head[0] = 1;
+                    head[11] = u32::from(closed[0]) | (u32::from(closed[1]) << 1);
+                    head[1] = word(degree[0])?;
+                    head[2] = word(degree[1])?;
+                    head[3] = word(count[0])?;
+                    head[4] = word(count[1])?;
+                    head[5] = word(data.len())?;
+                    data.extend(knots[0].iter().map(|k| *k as f32));
+                    head[6] = word(data.len())?;
+                    data.extend(knots[1].iter().map(|k| *k as f32));
+                    head[7] = word(data.len())?;
+                    data.extend(ctrl.iter().flat_map(|h| h.map(|x| x as f32)));
+                }
+                EvalSurface::Revolved { profile, origin, axis, transform, swap } => {
+                    head[0] = 2;
+                    head[1] = word(profile.degree)?;
+                    head[3] = word(profile.ctrl.len())?;
+                    let (k, c) = push_curve(&mut data, profile)?;
+                    head[5] = k;
+                    head[7] = c;
+                    head[8] = word(data.len())?;
+                    push3(&mut data, *origin);
+                    push3(&mut data, *axis);
+                    data.extend(transform.iter().flatten().map(|x| *x as f32));
+                    head[9] = u32::from(*swap);
+                    let m = transform;
+                    let det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+                        + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+                    head[10] = u32::from(det < 0.0);
+                }
             }
-            EvalSurface::Nurbs { degree, knots, count, ctrl, closed } => {
-                head[0] = 1;
-                head[11] = u32::from(closed[0]) | (u32::from(closed[1]) << 1);
-                head[1] = word(degree[0])?;
-                head[2] = word(degree[1])?;
-                head[3] = word(count[0])?;
-                head[4] = word(count[1])?;
-                head[5] = word(data.len())?;
-                data.extend(knots[0].iter().map(|k| *k as f32));
-                head[6] = word(data.len())?;
-                data.extend(knots[1].iter().map(|k| *k as f32));
-                head[7] = word(data.len())?;
-                data.extend(ctrl.iter().flat_map(|h| h.map(|x| x as f32)));
-            }
-            EvalSurface::Revolved { profile, origin, axis, transform, swap } => {
-                head[0] = 2;
-                head[1] = word(profile.degree)?;
-                head[3] = word(profile.ctrl.len())?;
-                let (k, c) = push_curve(&mut data, profile)?;
-                head[5] = k;
-                head[7] = c;
-                head[8] = word(data.len())?;
-                push3(&mut data, *origin);
-                push3(&mut data, *axis);
-                data.extend(transform.iter().flatten().map(|x| *x as f32));
-                head[9] = u32::from(*swap);
-                let m = transform;
-                let det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
-                    + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-                head[10] = u32::from(det < 0.0);
-            }
+            surfaces.extend(head);
         }
-        surfaces.extend(head);
+        if fixed_kind(plan) {
+            let mut head = [0u32; SURFACE_WORDS];
+            head[0] = 3;
+            surfaces.extend(head);
+        }
     }
     let mut vertices = Vec::with_capacity(plans.iter().map(|p| p.vertex_count()).sum::<usize>() * VERTEX_WORDS);
     #[cfg(not(target_arch = "wasm32"))]
@@ -506,27 +517,32 @@ fn pack(plans: &[&TessPlan]) -> Result<Packed> {
     let mut count = 0usize;
     let mut base = 0u32;
     for plan in plans {
+        let own = word(plan.surfaces.len())?;
         for f in &plan.faces {
-            let Some(surface) = f.surface else {
-                return Err(GpuError::Unsupported("a face without an evaluable surface".into()));
+            let fixed_face = f.surface.is_none();
+            let surface = match f.surface {
+                Some(surface) if (surface as usize) < plan.surfaces.len() => surface,
+                Some(_) => return Err(GpuError::Failed("surface index out of range".into())),
+                None if f.fixed.len() >= f.uv.len() => own,
+                None => return Err(GpuError::Unsupported("a face without an evaluable surface needs every position".into())),
             };
-            if surface as usize >= plan.surfaces.len() {
-                return Err(GpuError::Failed("surface index out of range".into()));
-            }
             let surface = base + surface;
             for (k, uv) in f.uv.iter().enumerate() {
                 let pinned = f.fixed.get(k).copied();
                 let flags = u32::from(f.flip) | if pinned.is_some() { 2 } else { 0 };
                 let p = pinned.unwrap_or(Vec3::ZERO);
+                // A fixed face carries its normal where an evaluated face has (u, v) and a spare word.
+                let n = if fixed_face { f.normals.get(k).copied().unwrap_or(Vec3::Z) } else { Vec3::ZERO };
+                let (a, b, c) = if fixed_face { (n.x, n.y, n.z) } else { (uv[0], uv[1], 0.0) };
                 vertices.extend([
-                    (uv[0] as f32).to_bits(),
-                    (uv[1] as f32).to_bits(),
+                    (a as f32).to_bits(),
+                    (b as f32).to_bits(),
                     surface,
                     flags,
                     (p.x as f32).to_bits(),
                     (p.y as f32).to_bits(),
                     (p.z as f32).to_bits(),
-                    0,
+                    (c as f32).to_bits(),
                 ]);
                 if let Some(p) = pinned {
                     #[cfg(not(target_arch = "wasm32"))]
@@ -537,7 +553,7 @@ fn pack(plans: &[&TessPlan]) -> Result<Packed> {
                 count += 1;
             }
         }
-        base += word(plan.surfaces.len())?;
+        base += own + u32::from(fixed_kind(plan));
     }
     Ok(Packed {
         surfaces,
