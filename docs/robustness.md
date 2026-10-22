@@ -38,7 +38,7 @@ rejected before any jobs or output directories are created. The maximum seed
 
 ## Seeded goldens
 
-`tests/robustness/goldens.json` records what each of seeds 0–95 builds (eight steps at most):
+`tests/robustness/goldens.json` records what each of seeds 0–95 builds (eight steps at most) on the truck backend; `goldens-cadrum.json` what they build on the OpenCASCADE backend (`cargo xtask test --backend cadrum`), blessed the same way with `-F cadrum`:
 its steps, how it ended (ok, or the kind and the start of the error it was refused with), and
 for the design it left the bodies' total volume and area (within a relative 1e-6) and their
 face, edge and shell counts (exact). `tests::robustness_goldens` fails on any change, better or

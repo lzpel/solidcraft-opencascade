@@ -30,6 +30,7 @@ mod step_in;
 mod step_out;
 mod stubs;
 mod sweep;
+mod taper;
 mod tess;
 #[cfg(test)]
 mod tests;
@@ -45,16 +46,17 @@ pub use solidcraft_kernel_core::{
 pub use blend::{chamfer, fillet, fillet_each, fillet_max, fillet_max_each, fillet_radii, offset_faces, shell};
 pub use body::{Body, DisplayShare};
 pub use build::{
-    box_solid, canonical_revolve_axis, cylinder, extrude, extrude_planar_regions, extrude_tapered, extrude_tapered_between, extrude_whole_sides,
-    path_polyline, revolve, revolve_whole, sphere, sweep_helix_mesh, torus,
+    box_solid, canonical_revolve_axis, cylinder, extrude, extrude_planar_regions, extrude_whole_sides, path_polyline, revolve, revolve_whole, sphere,
+    sweep_helix_mesh, torus,
 };
 pub use loft_blend::loft_blend;
 pub use measure::{measure, measure_mass};
 pub use meshbody::{convert_prismatic_mesh, mesh_body};
 pub use native::{decode_native_body, encode_native_body, native_preview_mesh};
 pub use ops::{
-    boolean, can_join_all_touching_faces, can_join_touching_faces, compound_disjoint_extrusions, faceted_boolean, half_space, is_planar, join_apart,
-    place_matrix, planar_boolean, planar_regions_boolean, split_by_plane, transform, transform_matrix, union_apart, with_attempt_budget,
+    boolean, can_join_all_touching_faces, can_join_touching_faces, compound_disjoint_extrusions, convex_polyhedron, faceted_boolean, half_space,
+    is_planar, join_apart, place_matrix, planar_boolean, planar_regions_boolean, split_body, split_by_plane, transform, transform_matrix,
+    union_apart, with_attempt_budget,
 };
 pub use query::{
     certified_prism_equivalent, coaxial_candidate, coaxial_overlap, cylinder_end_at, cylinder_face, cylinder_face_at, edge_circle, face_surface,
@@ -67,6 +69,7 @@ pub use step::{
 pub use step_out::{step_export, step_export_bodies, step_export_products};
 pub use stubs::*;
 pub use sweep::{loft, loft_regions, loft_to_point, loft_with_rails, sweep, sweep_helix, sweep_path, sweep_path_with, sweep_with};
+pub use taper::{extrude_tapered, extrude_tapered_between};
 pub use types::*;
 
 /// Which geometry backend this is (`solidcraft_kernel::BACKEND`).

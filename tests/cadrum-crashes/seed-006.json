@@ -1,0 +1,123 @@
+{
+ "about": "Robustness seed 6 on the cadrum backend, the refused steps left out: OpenCASCADE's fillet of a shelled body crashes the process (lzpel/cadrum#317 item 28). Run with a cadrum build: solidcraft-cli run tests/cadrum-crashes/seed-006.json",
+ "commands": [
+  {
+   "command": "solid.box",
+   "params": {
+    "height": 30.0,
+    "length": 47.5,
+    "width": 45.0
+   }
+  },
+  {
+   "command": "solid.hole",
+   "params": {
+    "depth": 7.5,
+    "diameter": 7.0,
+    "position": [
+     23.75,
+     22.5,
+     0.0
+    ]
+   }
+  },
+  {
+   "command": "solid.box",
+   "params": {
+    "corner": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "height": 25.0,
+    "length": 25.0,
+    "operation": "join",
+    "width": 2.5
+   }
+  },
+  {
+   "command": "solid.cylinder",
+   "params": {
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "base": [
+     47.5,
+     0.0,
+     10.0
+    ],
+    "height": 30.0,
+    "operation": "join",
+    "radius": 7.5
+   }
+  },
+  {
+   "command": "solid.cylinder",
+   "params": {
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "base": [
+     0.0,
+     45.0,
+     20.0
+    ],
+    "height": 15.0,
+    "operation": "cut",
+    "radius": 1.25
+   }
+  },
+  {
+   "command": "solid.shell",
+   "params": {
+    "faces": [
+     [
+      23.790061412003144,
+      45.0,
+      14.991373319746018
+     ]
+    ],
+    "thickness": 1.0
+   }
+  },
+  {
+   "command": "solid.sphere",
+   "params": {
+    "center": [
+     -3.061515884555943e-16,
+     25.0,
+     0.0
+    ],
+    "operation": "cut",
+    "radius": 10.0
+   }
+  },
+  {
+   "command": "solid.fillet",
+   "params": {
+    "edges": [
+     [
+      7.380713866932729,
+      31.672710305001026,
+      1.0
+     ],
+     [
+      1.0,
+      45.0,
+      20.0
+     ],
+     [
+      23.75,
+      45.0,
+      0.0
+     ]
+    ],
+    "radius": 1.0
+   }
+  }
+ ]
+}

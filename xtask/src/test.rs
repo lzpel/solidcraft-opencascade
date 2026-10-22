@@ -12,6 +12,10 @@ use crate::{Backend, cargo, root};
 /// Tests the OpenCASCADE backend is expected to fail, one libtest path per line (`#` comments);
 /// `cargo xtask test --backend cadrum` skips them and fails on any of them that passes.
 pub const CADRUM_ALLOWLIST: &str = "tests/cadrum-allowlist.txt";
+/// Tests that crash the OpenCASCADE backend's process (an access violation inside OpenCASCADE,
+/// which no `Result` catches), in the allowlist's format: `cargo xtask test --backend cadrum`
+/// passes each as `--skip` to its binary, so the rest of that binary's tests still run.
+pub const CADRUM_SKIPLIST: &str = "tests/cadrum-skiplist.txt";
 
 /// A test executable from `cargo test --no-run`.
 struct TestBin {
@@ -26,9 +30,9 @@ struct TestBin {
 /// (a binary whose failures are all listed counts as passing), and one of them that passes fails
 /// the run until its line goes: the list only ever shrinks.
 pub fn run_backend(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, Command)>, backend: Backend) -> Result<(), String> {
-    let allow = match backend {
-        Backend::Truck => HashSet::new(),
-        Backend::Cadrum => allowlist()?,
+    let (allow, skip) = match backend {
+        Backend::Truck => (HashSet::new(), HashSet::new()),
+        Backend::Cadrum => (listed(CADRUM_ALLOWLIST)?, listed(CADRUM_SKIPLIST)?),
     };
     let bins = build(cargo_args)?;
     let start = Instant::now();
@@ -39,10 +43,14 @@ pub fn run_backend(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, C
     std::thread::scope(|scope| {
         for b in &bins {
             let tx = tx.clone();
+            let skips: Vec<String> = skip.iter().filter_map(|k| k.strip_prefix(&format!("{} :: ", b.label))).map(str::to_string).collect();
             scope.spawn(move || {
                 let t0 = Instant::now();
                 let mut c = Command::new(&b.exe);
                 c.args(test_args).current_dir(&b.dir).env("CARGO_MANIFEST_DIR", &b.dir);
+                for t in &skips {
+                    c.arg("--skip").arg(t);
+                }
                 let _ = tx.send((b.label.clone(), finish(c), t0.elapsed().as_secs_f64()));
             });
         }
@@ -65,7 +73,18 @@ pub fn run_backend(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, C
                     let (passed, failures) = outcomes(&output);
                     let unexpected: Vec<&String> = failures.iter().filter(|t| !allow.contains(&key(&label, t))).collect();
                     stale.extend(passed.iter().filter(|t| allow.contains(&key(&label, t))).map(|t| format!("{label} :: {t}")));
-                    if !allow.is_empty() && unexpected.is_empty() && !failures.is_empty() {
+                    // A process that ended without its result line crashed (an abort or an access
+                    // violation): the tests it never reached are unknown, so it fails whatever
+                    // the allowlist says.
+                    let crashed = !output.contains("test result:");
+                    if crashed {
+                        let last = output.lines().rev().find(|l| l.starts_with("test ")).unwrap_or("");
+                        println!("FAIL  {label:<44} {secs:6.1}s\n{output}");
+                        println!(
+                            "FAIL  {label}: the test process ended without a result (crashed; the last test it reported: {last:?}); a crashing test goes into {CADRUM_SKIPLIST}"
+                        );
+                        failed.push(label);
+                    } else if !allow.is_empty() && unexpected.is_empty() && !failures.is_empty() {
                         allowed += failures.len();
                         println!("ok    {label:<44} {secs:6.1}s  {} ({} allowlisted failure(s))", summary(&output), failures.len());
                     } else {
@@ -107,8 +126,8 @@ pub fn run_backend(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, C
 }
 
 /// The allowlist's entries, `<binary label> :: <test path>` each.
-fn allowlist() -> Result<HashSet<String>, String> {
-    let path = root().join(CADRUM_ALLOWLIST);
+fn listed(file: &str) -> Result<HashSet<String>, String> {
+    let path = root().join(file);
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     Ok(text.lines().map(|l| l.split('#').next().unwrap_or("").trim().to_string()).filter(|l| !l.is_empty()).collect())
 }

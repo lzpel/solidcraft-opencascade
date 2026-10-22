@@ -51,14 +51,6 @@ pub fn draft(_b: &Body, _faces: &[Vec3], _neutral: &Plane, _pull: Vec3, _angle: 
     Err(unsupported("draft"))
 }
 
-pub fn convex_polyhedron(_hs: &[HalfSpace]) -> Result<Body> {
-    Err(unsupported("a convex polyhedron"))
-}
-
-pub fn split_body(_body: &Body, _tool: &SplitTool) -> Result<Vec<Body>> {
-    Err(unsupported("split body"))
-}
-
 pub fn split_faces(_body: &Body, _faces: &[usize], _tool: &SplitTool) -> Result<Body> {
     Err(unsupported("split face"))
 }
