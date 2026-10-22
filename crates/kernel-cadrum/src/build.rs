@@ -8,7 +8,7 @@ use solidcraft_kernel_core::history::{Change, EdgeOrigin, EdgeProv, FaceOrigin, 
 
 use crate::body::{Body, dv, v3};
 use crate::sketch_profile::{self as profile, ProfileEdge};
-use crate::types::{PathSeg, RailFit, SweepControl};
+use crate::types::PathSeg;
 use crate::{FaceSource, KernelError, Result, failed, unsupported};
 
 /// Largest coordinate or size a primitive takes (mm).
@@ -305,7 +305,7 @@ fn revolved(plane: &Plane, regions: &[Region2], axis_origin: Vec2, axis_dir: Vec
 /// which end), `in_base` whether an edge's points lie in the profile's plane; the other faces
 /// are sides, matched to the profile segment their base edge runs along.
 #[allow(clippy::type_complexity)]
-fn classify(
+pub(crate) fn classify(
     body: &Body,
     plane: &Plane,
     edges: &[&ProfileEdge],
@@ -376,7 +376,7 @@ fn classify(
     })
 }
 
-fn generated(origins: Vec<FaceOrigin>) -> FaceProv {
+pub(crate) fn generated(origins: Vec<FaceOrigin>) -> FaceProv {
     FaceProv { origins, change: Change::Generated }
 }
 
@@ -402,23 +402,6 @@ pub(crate) fn attach(body: Body, faces: Vec<FaceProv>) -> Result<Body> {
     body.with_history(history, &[])
 }
 
-pub fn loft(_sections: &[(Plane, Loop2)]) -> Result<Body> {
-    Err(unsupported("loft"))
-}
-
-pub fn loft_with_rails(_sections: &[(Plane, Loop2)], _rails: &[Vec<Vec3>], _fit: RailFit) -> Result<Body> {
-    Err(unsupported("loft with guide rails"))
-}
-
-pub fn loft_regions(_sections: &[(Plane, Region2)]) -> Result<Body> {
-    Err(unsupported("loft"))
-}
-
-pub fn loft_to_point(_plane: &Plane, _lp: &Loop2, _apex: Vec3) -> Result<Body> {
-    Err(unsupported("loft to a point"))
-}
-
-/// The points along a path, segment ends and arcs divided.
 pub fn path_polyline(path: &[PathSeg]) -> Result<Vec<Vec3>> {
     let mut out = Vec::new();
     for (i, seg) in path.iter().enumerate() {
@@ -450,30 +433,10 @@ pub fn path_polyline(path: &[PathSeg]) -> Result<Vec<Vec3>> {
     Ok(out)
 }
 
-fn rotate_about(p: Vec3, center: Vec3, k: Vec3, angle: f64) -> Vec3 {
+pub(crate) fn rotate_about(p: Vec3, center: Vec3, k: Vec3, angle: f64) -> Vec3 {
     let v = p - center;
     let (s, c) = angle.sin_cos();
     center + v * c + k.cross(v) * s + k * (k.dot(v) * (1.0 - c))
-}
-
-pub fn sweep(_plane: &Plane, _region: &Region2, _path: &[PathSeg]) -> Result<Body> {
-    Err(unsupported("sweep"))
-}
-
-pub fn sweep_with(_plane: &Plane, _region: &Region2, _path: &[PathSeg], _ctl: &SweepControl) -> Result<Body> {
-    Err(unsupported("sweep"))
-}
-
-pub fn sweep_path(_plane: &Plane, _region: &Region2, _path: &[Vec3]) -> Result<Body> {
-    Err(unsupported("sweep along a polyline"))
-}
-
-pub fn sweep_path_with(_plane: &Plane, _region: &Region2, _path: &[Vec3], _ctl: &SweepControl) -> Result<Body> {
-    Err(unsupported("sweep along a polyline"))
-}
-
-pub fn sweep_helix(_plane: &Plane, _region: &Region2, _axis_origin: Vec3, _axis: Vec3, _pitch: f64, _turns: f64) -> Result<Body> {
-    Err(unsupported("helical sweep"))
 }
 
 pub fn sweep_helix_mesh(
