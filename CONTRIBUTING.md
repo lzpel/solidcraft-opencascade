@@ -20,9 +20,9 @@ Questions, ideas or want to say what you're working on? Join the [Discord](https
 This is `lzpel/solidcraft-opencascade`, a fork whose purpose is to replace the truck geometry
 kernel with OpenCASCADE through the [cadrum](https://github.com/lzpel/cadrum) crate. The work
 lands in numbered phases, one pull request each, on this fork only; nothing here is sent upstream.
-The kernel is split into `crates/kernel-core` (shared), `crates/kernel-truck` (the current
-backend) and `crates/kernel` (a façade selecting the backend by feature); `crates/kernel-cadrum`
-arrives in phase 2.
+The kernel is split into `crates/kernel-core` (shared), `crates/kernel-cadrum` (OpenCASCADE,
+the default backend), `crates/kernel-truck` (the previous backend, kept until the migration
+ends) and `crates/kernel` (a façade selecting the backend by feature).
 
 ## Get it running (about 10 minutes on a fast machine)
 
@@ -44,9 +44,10 @@ Build the desktop app with `cargo build --release -p solidcraft`, or the CLI wit
 after building). The old name appears only in the compatibility shims listed in
 [docs/compatibility.md](docs/compatibility.md); don't add new uses of it.
 
-Web: `cd apps/solidcraft-web && trunk serve --release`, then open the printed URL (`?sample`
-opens the sample part, `?webgl` forces WebGL2). Saving and opening files in the browser needs
-HTTPS or localhost, because it uses the Origin Private File System.
+Web: `sh packaging/web/build-cadrum.sh` (docker: OpenCASCADE builds for wasm only with the
+toolchain of cadrum's image), then serve `dist/web` with any static server and open it
+(`?sample` opens the sample part, `?webgl` forces WebGL2). Saving and opening files in the
+browser needs HTTPS or localhost, because it uses the Origin Private File System.
 
 Windows from Linux: `cargo xwin build --release --target x86_64-pc-windows-msvc -p solidcraft`.
 
@@ -86,10 +87,14 @@ The [architecture page](docs/architecture.md) has the layer table. The short ver
 - `crates/geom`: vectors, planes, meshes, measures.
 - `crates/sketch`: our own constraint solver, plus profile finding.
 - `crates/kernel`: the B-rep kernel boundary, a façade that re-exports one backend by cargo
-  feature (`truck` by default, `cadrum` for OpenCASCADE).
+  feature (`cadrum`, OpenCASCADE, by default; `truck` for the pure-Rust backend).
 - `crates/kernel-core`: what every backend shares: `KernelError` and `guard`, the exact face and
   edge history, face sources and paints, measures, mesh bodies, the STEP Part 21 and IGES text
   readers, threading and profiling helpers.
+- `crates/kernel-cadrum`: the OpenCASCADE backend through the [cadrum](https://github.com/lzpel/cadrum)
+  crate, the only crate allowed to touch it: booleans, blends, shell and offset, sweeps and
+  lofts, STEP and the native cache are OpenCASCADE's, behind SolidCraft's exact face and edge
+  history.
 - `crates/kernel-truck`: the truck backend. It wraps [truck](https://github.com/ricosjp/truck),
   and it's the only crate allowed to touch truck. Fillets, chamfers, shell/offset, Delete Face,
   Split Face, STEP/IGES read and write, and face provenance are our own code here. Patched

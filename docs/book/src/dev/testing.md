@@ -59,7 +59,7 @@ the fix removes the step.
 ## CI profile
 
 CI runs the tests with `--profile ci`: light optimisation, line tables, no LTO and debug
-assertions off. Some truck debug assertions fail on valid geometry; the `ci` profile disables
+assertions off. Some of the truck backend's debug assertions fail on valid geometry; the `ci` profile disables
 them while building faster than `--release`. If a test fails only in a plain debug build, say
 so in the PR.
 

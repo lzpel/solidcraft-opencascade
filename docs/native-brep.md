@@ -5,7 +5,10 @@ modelling-backend dependency. It is the body encoding of a design's model cache
 ([the container format](design-container.md#model-cache)); it is not a STEP
 replacement for external interchange. The container reader, binary codec and
 kernel adapters are separate layers. The truck adapter writes it exactly: a body
-decoded by the producer that encoded it is that body, number for number.
+decoded by the producer that encoded it is that body, number for number. The
+cadrum adapter (OpenCASCADE, the default backend) keeps the same metadata
+envelope and stores the lumps as OpenCASCADE's own BRep stream, under a producer
+tag of its own, so a cache one backend wrote is a miss for the other.
 
 ## Geometry and topology
 

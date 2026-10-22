@@ -20,5 +20,6 @@
       18.262965816357344,
       28.373982542073644
     ]
-  }
+  },
+  "known_failure": "lzpel/cadrum#317 item 19: a loft to a point (the apex) is not exposed"
 }

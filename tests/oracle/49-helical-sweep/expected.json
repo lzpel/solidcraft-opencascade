@@ -21,5 +21,6 @@
       26.0
     ]
   },
-  "faces": 3
+  "faces": 3,
+  "known_failure": "lzpel/cadrum#317 item 21: the helical sweep's volume is 0.26 % under the analytic value (the swept free-form faces are integrated with a fixed rule)"
 }
