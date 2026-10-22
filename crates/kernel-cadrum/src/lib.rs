@@ -13,6 +13,7 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
+mod blend;
 mod body;
 mod build;
 pub mod fuzz;
@@ -25,6 +26,7 @@ mod record;
 mod sketch_profile;
 mod step;
 mod stubs;
+mod sweep;
 mod tess;
 #[cfg(test)]
 mod tests;
@@ -37,11 +39,11 @@ pub use solidcraft_kernel_core::{
     iges_in::iges_to_step, numbered, p21, profile, watch,
 };
 
+pub use blend::{chamfer, fillet, fillet_each, fillet_max, fillet_max_each, fillet_radii, offset_faces, shell};
 pub use body::{Body, DisplayShare};
 pub use build::{
     box_solid, canonical_revolve_axis, cylinder, extrude, extrude_planar_regions, extrude_tapered, extrude_tapered_between, extrude_whole_sides,
-    loft, loft_regions, loft_to_point, loft_with_rails, path_polyline, revolve, revolve_whole, sphere, sweep, sweep_helix, sweep_helix_mesh,
-    sweep_path, sweep_path_with, sweep_with, torus,
+    path_polyline, revolve, revolve_whole, sphere, sweep_helix_mesh, torus,
 };
 pub use loft_blend::loft_blend;
 pub use measure::{measure, measure_mass};
@@ -60,6 +62,7 @@ pub use step::{
     step_orientation_errors, step_validate,
 };
 pub use stubs::*;
+pub use sweep::{loft, loft_regions, loft_to_point, loft_with_rails, sweep, sweep_helix, sweep_path, sweep_path_with, sweep_with};
 pub use types::*;
 
 /// Which geometry backend this is (`solidcraft_kernel::BACKEND`).
