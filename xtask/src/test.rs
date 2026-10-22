@@ -71,10 +71,11 @@ pub fn run_backend(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, C
                     } else {
                         println!("FAIL  {label:<44} {secs:6.1}s\n{output}");
                         if !unexpected.is_empty() {
-                            println!(
-                                "FAIL  {label}: not in {CADRUM_ALLOWLIST}: {}",
-                                unexpected.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")
-                            );
+                            let names = unexpected.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ");
+                            match backend {
+                                Backend::Cadrum => println!("FAIL  {label}: not in {CADRUM_ALLOWLIST}: {names}"),
+                                Backend::Truck => println!("FAIL  {label}: {names}"),
+                            }
                         }
                         failed.push(label);
                     }
@@ -86,11 +87,21 @@ pub fn run_backend(cargo_args: &[&str], test_args: &[&str], side: Vec<(String, C
     if allowed > 0 {
         println!("allowlist: {allowed} failure(s) allowed by {CADRUM_ALLOWLIST}");
     }
+    if !stale.is_empty() {
+        println!(
+            "now passing, remove from {CADRUM_ALLOWLIST}:
+{}",
+            stale.join(
+                "
+"
+            )
+        );
+    }
     if !failed.is_empty() {
         return Err(format!("failed: {}", failed.join(", ")));
     }
     if !stale.is_empty() {
-        return Err(format!("now passing, remove from {CADRUM_ALLOWLIST}:\n{}", stale.join("\n")));
+        return Err(format!("{} allowlisted test(s) now pass: remove them from {CADRUM_ALLOWLIST} (listed above)", stale.len()));
     }
     Ok(())
 }

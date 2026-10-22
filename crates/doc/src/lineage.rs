@@ -528,8 +528,12 @@ pub(crate) fn order_lumps(bodies: &mut [crate::ModelBody], origin: &Arc<crate::n
         let Some(mut keys) = keys else { continue };
         keys.sort();
         let names: Vec<String> = members.iter().filter_map(|i| bodies.get(*i).map(|b| b.name.clone())).collect();
-        for (name, (_, i)) in names.into_iter().zip(keys) {
-            if let Some(b) = bodies.get_mut(i) {
+        // The pieces take the names' places too, so the body list reads the same whichever
+        // order the kernel listed the lumps in.
+        let ordered: Vec<crate::ModelBody> = keys.iter().filter_map(|(_, i)| bodies.get(*i).cloned()).collect();
+        for ((name, slot), piece) in names.into_iter().zip(&members).zip(ordered) {
+            if let Some(b) = bodies.get_mut(*slot) {
+                *b = piece;
                 b.name = name;
             }
         }

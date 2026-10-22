@@ -1,59 +1,120 @@
 //! Booleans and transforms over cadrum solids.
 
+use std::sync::Arc;
+
 use solidcraft_geom::{Plane, Region2, Vec3};
-use solidcraft_kernel_core::history::History;
+use solidcraft_kernel_core::history::{Change, EdgeOrigin, EdgeProv, FaceOrigin, FaceProv, History};
 
 use crate::body::{Body, Inner, cadrum_handle, dv};
 use crate::types::BoolOp;
 use crate::{KernelError, Result, failed, unsupported};
 
-/// A boolean of two bodies: `None` where nothing is left. Histories and face sources arrive
-/// with phase 4; until then the result carries neither.
+/// A boolean of two bodies: `None` where nothing is left. The result carries its history over
+/// `[a, b]` and the face sources that follow from it. A union's faces on one surface are fused
+/// (OpenCASCADE's UnifySameDomain), as the truck backend joins coplanar faces.
 pub fn boolean(a: &Body, b: &Body, op: BoolOp) -> Result<Option<Body>> {
-    a.require_brep("boolean")?;
-    b.require_brep("boolean")?;
-    let (ia, ib) = (a.inner()?, b.inner()?);
+    combine(&[a, b], op)
+}
+
+/// The boolean `op` of `operands` (the first is the target; a union takes them all).
+fn combine(operands: &[&Body], op: BoolOp) -> Result<Option<Body>> {
+    for b in operands {
+        b.require_brep("boolean")?;
+    }
+    let inners: Vec<&Arc<Inner>> = operands.iter().map(|b| b.inner()).collect::<Result<_>>()?;
     let what = match op {
         BoolOp::Union => "union",
         BoolOp::Cut => "cut",
         BoolOp::Intersect => "intersection",
     };
-    let results = Inner::with2(ia, ib, what, |sa, sb| {
-        let (Some(a0), Some(b0)) = (sa.first(), sb.first()) else { return Err(KernelError::Failed("empty operand".into())) };
-        let mut out = Vec::new();
+    let size = operands.iter().map(|b| b.size()).fold(0.0, f64::max);
+    let (results, read, rec) = Inner::with_many(&inners, what, |solids| {
+        let mut out: Vec<cadrum::Solid> = Vec::new();
+        let mut pairs: Vec<[u64; 2]> = Vec::new();
+        let mut collect = |made: Vec<cadrum::Solid>| {
+            for s in made {
+                pairs.extend(s.iter_history());
+                out.push(s);
+            }
+        };
+        let first = solids.first().and_then(|s| s.first()).ok_or_else(|| KernelError::Failed("empty operand".into()))?;
         match op {
             BoolOp::Union => {
-                let mut expr = cadrum::Boolean::from(a0);
-                for s in sa.iter().skip(1).chain(sb.iter()) {
+                let mut expr = cadrum::Boolean::from(first);
+                for s in solids.iter().flat_map(|s| s.iter()).skip(1) {
                     expr = expr + s;
                 }
-                out.extend(expr.build_vec().map_err(|e| failed(what, e))?);
+                collect(expr.build_vec().map_err(|e| failed(what, e))?);
             }
             BoolOp::Cut => {
-                for s in sa {
+                for s in solids.first().map(|s| s.iter()).into_iter().flatten() {
                     let mut expr = cadrum::Boolean::from(s);
-                    for t in sb {
+                    for t in solids.iter().skip(1).flat_map(|t| t.iter()) {
                         expr = expr - t;
                     }
-                    out.extend(expr.build_vec().map_err(|e| failed(what, e))?);
+                    collect(expr.build_vec().map_err(|e| failed(what, e))?);
                 }
             }
             BoolOp::Intersect => {
-                let _ = b0;
-                for s in sa {
-                    for t in sb {
-                        out.extend((s * t).build_vec().map_err(|e| failed(what, e))?);
+                for s in solids.first().map(|s| s.iter()).into_iter().flatten() {
+                    for t in solids.iter().skip(1).flat_map(|t| t.iter()) {
+                        collect((s * t).build_vec().map_err(|e| failed(what, e))?);
                     }
                 }
             }
         }
-        Ok(out)
+        let mut cleaned: Vec<[u64; 2]> = Vec::new();
+        if op == BoolOp::Union {
+            out = out
+                .into_iter()
+                .map(|s| match s.clean() {
+                    Ok(c) => {
+                        cleaned.extend(c.iter_history());
+                        c
+                    }
+                    Err(e) => {
+                        log::debug!("union not cleaned: {e}");
+                        s
+                    }
+                })
+                .collect();
+        }
+        let read: Vec<crate::record::Operand> = inners.iter().zip(solids).map(|(inner, s)| crate::record::Operand::from_solids(inner, s)).collect();
+        Ok((out, read, crate::record::Recorded { pairs, cleaned }))
     })?;
     let results: Vec<cadrum::Solid> = results.into_iter().filter(|s| s.volume() > 0.0).collect();
     if results.is_empty() {
         return Ok(None);
     }
-    Ok(Some(Body::from_solids(results)?))
+    // The largest lump first (it keeps the body's name when a cut leaves several), equal
+    // volumes by their lowest corner: OpenCASCADE's order changes between runs, names must not.
+    let keyed: Vec<(f64, [f64; 3], cadrum::Solid)> = results
+        .into_iter()
+        .map(|s| {
+            let [lo, _] = s.bounding_box();
+            (s.volume(), [lo.x, lo.y, lo.z], s)
+        })
+        .collect();
+    let mut keyed = keyed;
+    keyed.sort_by(|a, b| {
+        let scale = a.0.abs().max(b.0.abs()).max(1e-9);
+        if (a.0 - b.0).abs() > 1e-9 * scale {
+            return b.0.total_cmp(&a.0);
+        }
+        a.1.iter().zip(&b.1).map(|(x, y)| x.total_cmp(y)).find(|o| o.is_ne()).unwrap_or(std::cmp::Ordering::Equal)
+    });
+    let results: Vec<cadrum::Solid> = keyed.into_iter().map(|(_, _, s)| s).collect();
+    let inner = Inner::snapshot(results)?;
+    let history = crate::record::history(&inner, &read, &rec, size);
+    let body = Body::from_inner(inner);
+    let body = match &history {
+        Ok(h) => {
+            let sources = h.face_sources(operands);
+            body.with_face_sources(sources.iter().any(Option::is_some).then(|| Arc::new(sources)))
+        }
+        Err(_) => body,
+    };
+    Ok(Some(crate::record::with_history_or_log(body, history, operands)))
 }
 
 /// Does every face of the body lie in a plane?
@@ -84,30 +145,40 @@ pub fn compound_disjoint_extrusions(_tools: &[Body]) -> Result<Option<Body>> {
     Ok(None)
 }
 
-/// The union of bodies that do not touch, as one body of several lumps.
+/// The union of bodies that do not touch, as one body of several lumps: every face and edge
+/// kept from its operand, in order.
 pub fn union_apart(bodies: &[Body]) -> Result<Option<Body>> {
     let mut lumps = Vec::new();
-    for b in bodies {
+    let mut faces = Vec::new();
+    let mut edge_origins = Vec::new();
+    for (k, b) in bodies.iter().enumerate() {
         b.require_brep("union")?;
         let inner = b.inner()?;
         lumps.extend(inner.with("union apart", |solids| Ok(solids.iter().map(cadrum_handle).collect::<Vec<_>>()))?);
+        faces.extend((0..inner.faces.len()).map(|face| FaceProv { origins: vec![FaceOrigin::Face { operand: k, face }], change: Change::Kept }));
+        edge_origins.extend((0..inner.edges.len()).map(|edge| EdgeOrigin::Edge { operand: k, edge }));
     }
     if lumps.is_empty() {
         return Ok(None);
     }
-    Ok(Some(Body::from_solids(lumps)?))
+    let inner = Inner::snapshot(lumps)?;
+    let edges = inner.edge_faces.iter().zip(edge_origins).map(|(between, o)| EdgeProv { faces: between.clone(), origins: vec![o] }).collect();
+    let history = History { operands: bodies.len(), faces, edges };
+    let body = Body::from_inner(inner);
+    let operands: Vec<&Body> = bodies.iter().collect();
+    let sources = history.face_sources(&operands);
+    let body = body.with_face_sources(sources.iter().any(Option::is_some).then(|| Arc::new(sources)));
+    Ok(Some(crate::record::with_history_or_log(body, Ok(history), &operands)))
 }
 
-/// The union of bodies that may touch.
+/// The union of bodies that may touch, with its history over all of them.
 pub fn join_apart(bodies: &[Body]) -> Result<Option<Body>> {
-    let mut acc: Option<Body> = None;
-    for b in bodies {
-        acc = match acc {
-            None => Some(b.clone()),
-            Some(a) => boolean(&a, b, BoolOp::Union)?,
-        };
+    let operands: Vec<&Body> = bodies.iter().collect();
+    match operands.len() {
+        0 => Ok(None),
+        1 => Ok(operands.first().map(|b| (*b).clone())),
+        _ => combine(&operands, BoolOp::Union),
     }
-    Ok(acc)
 }
 
 /// The body moved by `m` (column-major, translation in `m[3]`): rigid moves, mirrors and
@@ -204,28 +275,9 @@ pub fn transform(body: &Body, translate: Vec3, origin: Vec3, axis: Vec3, angle: 
 
 /// The body split by `plane`: the pieces on each side (one body where the plane misses it).
 pub fn split_by_plane(body: &Body, plane: &Plane) -> Result<Vec<Body>> {
-    body.require_brep("split")?;
-    let n = plane.normal();
-    if !(plane.origin.is_finite() && n.is_finite() && n.len() > 0.5) {
-        return Err(KernelError::Invalid("split plane must be finite".into()));
-    }
-    let inner = body.inner()?;
-    let (above, below) = inner.with("split by plane", |solids| {
-        let mut above = Vec::new();
-        let mut below = Vec::new();
-        for s in solids {
-            let half = cadrum::Solid::half_space(dv(plane.origin), dv(n));
-            above.extend((s * &half).build_vec().map_err(|e| failed("split", e))?);
-            below.extend((s - &half).build_vec().map_err(|e| failed("split", e))?);
-        }
-        Ok((above, below))
-    })?;
     let mut out = Vec::new();
-    for piece in [above, below] {
-        let piece: Vec<cadrum::Solid> = piece.into_iter().filter(|s| s.volume() > 0.0).collect();
-        if !piece.is_empty() {
-            out.push(Body::from_solids(piece)?);
-        }
+    for positive in [true, false] {
+        out.extend(half_space(body, plane, positive)?.0);
     }
     if out.is_empty() {
         return Err(KernelError::Failed("the split left nothing".into()));
@@ -233,22 +285,18 @@ pub fn split_by_plane(body: &Body, plane: &Plane) -> Result<Vec<Body>> {
     Ok(out)
 }
 
-/// The part of the body on `positive`'s side of `plane` (`None` when nothing is), and the body
-/// itself: as the truck backend returns it, for callers that keep the whole.
+/// The part of the body on `positive`'s side of `plane` (`None` when nothing is there), and the
+/// tool it was cut with: a half space, whose one face the part's cut face comes from (operand 1
+/// of the part's history).
 pub fn half_space(body: &Body, plane: &Plane, positive: bool) -> Result<(Option<Body>, Body)> {
     body.require_brep("half space")?;
     let n = plane.normal() * if positive { 1.0 } else { -1.0 };
-    let inner = body.inner()?;
-    let kept = inner.with("half space", |solids| {
-        let mut kept = Vec::new();
-        for s in solids {
-            let half = cadrum::Solid::half_space(dv(plane.origin), dv(n));
-            kept.extend((s * &half).build_vec().map_err(|e| failed("half space", e))?);
-        }
-        Ok(kept)
-    })?;
-    let kept: Vec<cadrum::Solid> = kept.into_iter().filter(|s| s.volume() > 0.0).collect();
-    Ok((if kept.is_empty() { None } else { Some(Body::from_solids(kept)?) }, body.clone()))
+    if !(plane.origin.is_finite() && n.is_finite() && n.len() > 0.5) {
+        return Err(KernelError::Invalid("split plane must be finite".into()));
+    }
+    let tool = Body::from_solids(vec![crate::guard("half space", || Ok(cadrum::Solid::half_space(dv(plane.origin), dv(n))))?])?;
+    let part = combine(&[body, &tool], BoolOp::Intersect)?;
+    Ok((part, tool))
 }
 
 pub fn faceted_boolean(_a: &Body, _b: &solidcraft_geom::Mesh, _op: BoolOp, _tol: f64) -> Result<Option<Body>> {

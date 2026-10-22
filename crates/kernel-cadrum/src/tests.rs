@@ -408,3 +408,89 @@ mod sweeps {
         assert!(revolve(&Plane::XY, &[rect(1.0, 1.0)], Vec2::ZERO, Vec2::ZERO, TAU).is_err());
     }
 }
+
+mod booleans {
+    use std::f64::consts::PI;
+
+    use solidcraft_geom::{Plane, Vec3};
+    use solidcraft_kernel_core::history::{Change, EdgeOrigin, FaceOrigin};
+
+    use crate::{BoolOp, FaceSource, KernelError, Result, boolean, box_solid, cylinder, half_space, measure, split_by_plane, union_apart};
+
+    #[test]
+    fn a_cut_records_kept_modified_and_tool_faces() -> Result<()> {
+        let block = box_solid(Vec3::ZERO, Vec3::new(40.0, 30.0, 20.0))?;
+        let bore = cylinder(Vec3::new(20.0, 15.0, -1.0), Vec3::Z, 5.0, 22.0)?;
+        let cut = boolean(&block, &bore, BoolOp::Cut)?.ok_or(KernelError::Failed("empty cut".into()))?;
+        let h = cut.history().ok_or(KernelError::Failed("no history".into()))?;
+        assert_eq!((h.operands, h.faces.len(), h.edges.len()), (2, 7, cut.edge_count()));
+        let kept =
+            h.faces.iter().filter(|f| f.change == Change::Kept && matches!(f.origins.as_slice(), [FaceOrigin::Face { operand: 0, .. }])).count();
+        let modified =
+            h.faces.iter().filter(|f| f.change == Change::Modified && matches!(f.origins.as_slice(), [FaceOrigin::Face { operand: 0, .. }])).count();
+        let from_tool = h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Face { operand: 1, .. }])).count();
+        assert_eq!((kept, modified, from_tool), (4, 2, 1), "{:?}", h.faces);
+        let kept_edges = h.edges.iter().filter(|e| matches!(e.origins.as_slice(), [EdgeOrigin::Edge { operand: 0, .. }])).count();
+        let meets = h.edges.iter().filter(|e| matches!(e.origins.as_slice(), [EdgeOrigin::Meet { .. }])).count();
+        assert_eq!((kept_edges, meets), (12, 2), "{:?}", h.edges);
+        let sources = cut.face_sources().ok_or(KernelError::Failed("no sources".into()))?;
+        assert_eq!(
+            sources.iter().filter(|s| matches!(s, Some(FaceSource::Box { .. }))).count(),
+            6,
+            "the block's sources follow kept and modified faces"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn a_union_fuses_faces_on_one_plane_and_merges_their_origins() -> Result<()> {
+        let a = box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 10.0))?;
+        let b = box_solid(Vec3::new(10.0, 0.0, 0.0), Vec3::new(20.0, 10.0, 10.0))?;
+        let u = boolean(&a, &b, BoolOp::Union)?.ok_or(KernelError::Failed("empty union".into()))?;
+        let m = measure(&u)?;
+        assert!((m.volume - 2000.0).abs() < 1e-6 && m.faces == 6, "{m:?}");
+        let h = u.history().ok_or(KernelError::Failed("no history".into()))?;
+        let merged = h.faces.iter().filter(|f| f.change == Change::Merged && f.origins.len() == 2).count();
+        let kept = h.faces.iter().filter(|f| f.change == Change::Kept).count();
+        assert_eq!((merged, kept), (4, 2), "{:?}", h.faces);
+        Ok(())
+    }
+
+    #[test]
+    fn bodies_apart_keep_every_face_and_split_into_lumps_with_histories() -> Result<()> {
+        let a = box_solid(Vec3::ZERO, Vec3::new(10.0, 10.0, 10.0))?;
+        let b = box_solid(Vec3::new(50.0, 0.0, 0.0), Vec3::new(60.0, 10.0, 10.0))?;
+        let apart = union_apart(&[a.clone(), b.clone()])?.ok_or(KernelError::Failed("empty".into()))?;
+        let h = apart.history().ok_or(KernelError::Failed("no history".into()))?;
+        assert_eq!((h.operands, h.faces.len()), (2, 12));
+        assert!(h.faces.iter().all(|f| f.change == Change::Kept));
+        assert_eq!(h.faces.iter().filter(|f| matches!(f.origins.as_slice(), [FaceOrigin::Face { operand: 1, .. }])).count(), 6);
+        let lumps = apart.lumps()?;
+        assert_eq!(lumps.len(), 2);
+        for lump in &lumps {
+            let lh = lump.history().ok_or(KernelError::Failed("no lump history".into()))?;
+            assert_eq!((lh.operands, lh.faces.len()), (1, 6));
+            assert!(lump.face_sources().is_some_and(|s| s.iter().all(|s| matches!(s, Some(FaceSource::Box { .. })))));
+        }
+        let joined = boolean(&a, &b, BoolOp::Union)?.ok_or(KernelError::Failed("empty".into()))?;
+        assert_eq!(joined.shell_count(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn a_half_space_cut_face_comes_from_the_tool() -> Result<()> {
+        let c = cylinder(Vec3::ZERO, Vec3::Z, 5.0, 10.0)?;
+        let plane = Plane::from_normal(Vec3::new(0.0, 0.0, 4.0), Vec3::Z).ok_or(KernelError::Failed("plane".into()))?;
+        let (upper, tool) = half_space(&c, &plane, true)?;
+        let upper = upper.ok_or(KernelError::Failed("nothing above".into()))?;
+        assert!((measure(&upper)?.volume - PI * 25.0 * 6.0).abs() < 1e-6);
+        assert_eq!(tool.face_count(), 1);
+        let h = upper.history().ok_or(KernelError::Failed("no history".into()))?;
+        assert!(h.faces.iter().any(|f| matches!(f.origins.as_slice(), [FaceOrigin::Face { operand: 1, face: 0 }])), "{:?}", h.faces);
+        let pieces = split_by_plane(&c, &plane)?;
+        assert_eq!(pieces.len(), 2);
+        let total: f64 = pieces.iter().map(|p| measure(p).map(|m| m.volume).unwrap_or(0.0)).sum();
+        assert!((total - PI * 25.0 * 10.0).abs() < 1e-6);
+        Ok(())
+    }
+}
