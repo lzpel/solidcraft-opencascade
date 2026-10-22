@@ -163,7 +163,7 @@ fn main() -> ExitCode {
             test::run_backend(&cargo_args, test_args, vec![test::doc_tests(&cargo_args, test_args)], backend)
         }
         Some("ci") => cmd_ci(backend(&rest)),
-        Some("wasm") => cmd_wasm(),
+        Some("wasm") => cmd_wasm(backend(&rest)),
         Some("web-offline") => web_offline::run(&root(), rest.first().copied()),
         Some("web-offline-test") => {
             let site = rest.iter().position(|a| *a == "--site").and_then(|i| rest.get(i + 1)).copied();
@@ -417,34 +417,75 @@ fn cmd_oracle(cli: Option<&str>, backend: Backend) -> Result<(), String> {
 
 /// Never break wasm: every layered crate (everything below the apps) and the web app must
 /// build for the browser.
-fn cmd_wasm() -> Result<(), String> {
-    let (c, n) = wasm_check()?;
-    run(c, &format!("cargo check --target wasm32-unknown-unknown ({n} crates)"))?;
-    println!("wasm: {n} crates build for wasm32-unknown-unknown");
-    Ok(())
+fn cmd_wasm(backend: Backend) -> Result<(), String> {
+    match wasm_check(backend)? {
+        Some((c, n)) => {
+            run(c, &format!("cargo check --target wasm32-unknown-unknown ({n} crates, {})", backend.name()))?;
+            println!("wasm: {n} crates build for wasm32-unknown-unknown with the {} backend", backend.name());
+            Ok(())
+        }
+        None => {
+            println!("wasm: skipped (the {} backend builds for wasm32 only inside {WASM_IMAGE}, and docker is not available here)", backend.name());
+            Ok(())
+        }
+    }
 }
 
-/// Crates that build for wasm only inside cadrum's Docker image (`ghcr.io/lzpel/cross-wasm32-unknown-unknown`,
-/// a wasi-sdk C++ toolchain for OpenCASCADE): the local check leaves them out until phase 8 wires
-/// that route.
+/// Crates that build for wasm only inside cadrum's Docker image: a wasi-sdk C++ toolchain for
+/// OpenCASCADE, which the host check cannot provide.
 const WASM_IN_DOCKER: &[&str] = &["solidcraft-kernel-cadrum"];
+/// cadrum's cross-compilation image: rust with the wasm32 target and the wasi-sdk toolchain.
+pub const WASM_IMAGE: &str = "ghcr.io/lzpel/cross-wasm32-unknown-unknown";
 
-/// The wasm check and how many crates it covers. It uses the ci profile so the host build
-/// scripts and proc macros built for clippy and the tests are reused.
-fn wasm_check() -> Result<(Command, usize), String> {
+/// The wasm check and how many crates it covers; `None` when it cannot run here. With the truck
+/// backend it is the host's `cargo check` (the ci profile, so the host build scripts and proc
+/// macros built for clippy and the tests are reused) over every layer crate but the cadrum one.
+/// With the cadrum backend it runs inside [`WASM_IMAGE`] with the repository mounted and a
+/// target directory of its own (`target/wasm-docker`), over every layer crate and the web app.
+fn wasm_check(backend: Backend) -> Result<Option<(Command, usize)>, String> {
     let crates = layers::from_metadata(&metadata()?)?;
+    let in_docker = backend == Backend::Cadrum;
     let mut set: Vec<String> = crates
         .iter()
-        .filter(|c| matches!(layers::classify(&c.name), Some(layers::Class::Layer(_))) && !WASM_IN_DOCKER.contains(&c.name.as_str()))
+        .filter(|c| matches!(layers::classify(&c.name), Some(layers::Class::Layer(_))) && (in_docker || !WASM_IN_DOCKER.contains(&c.name.as_str())))
         .map(|c| c.name.clone())
         .collect();
     set.push("solidcraft-web".into());
-    let mut c = cargo();
-    c.args(["check", "--target", "wasm32-unknown-unknown", "--profile", "ci"]);
+    if !in_docker {
+        let mut c = cargo();
+        c.args(["check", "--target", "wasm32-unknown-unknown", "--profile", "ci"]);
+        for p in &set {
+            c.args(["-p", p]);
+        }
+        return Ok(Some((c, set.len())));
+    }
+    if !docker_available() {
+        return Ok(None);
+    }
+    let mut c = Command::new("docker");
+    c.current_dir(root());
+    c.args(["run", "--rm", "-v"]).arg(format!("{}:/work", root().display())).args([
+        "-w",
+        "/work",
+        "-e",
+        "CARGO_TARGET_DIR=/work/target/wasm-docker",
+        WASM_IMAGE,
+    ]);
+    c.args(["cargo", "check", "--target", "wasm32-unknown-unknown", "--profile", "ci"]).args(backend.cargo_args());
     for p in &set {
         c.args(["-p", p]);
     }
-    Ok((c, set.len()))
+    Ok(Some((c, set.len())))
+}
+
+/// Is a docker daemon reachable?
+fn docker_available() -> bool {
+    Command::new("docker")
+        .args(["info", "--format", "{{.ServerVersion}}"])
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .is_ok_and(|s| s.success())
 }
 
 /// The quick gates first, so they fail fast; the wasm check (and doc tests) run while the test
@@ -464,14 +505,16 @@ fn cmd_ci(backend: Backend) -> Result<(), String> {
     let mut c = cargo();
     c.args(["clippy", "--workspace", "--all-targets", "--profile", "ci"]).args(backend.cargo_args()).args(["--", "-D", "warnings"]);
     run(c, "cargo clippy -D warnings")?;
-    let (wasm, n) = wasm_check()?;
     let cargo_args = backend.cargo_args();
-    test::run_backend(
-        &cargo_args,
-        &[],
-        vec![(format!("wasm32-unknown-unknown check ({n} crates)"), wasm), test::doc_tests(&cargo_args, &[])],
-        backend,
-    )?;
+    let mut side = Vec::new();
+    match wasm_check(backend)? {
+        Some((wasm, n)) => side.push((format!("wasm32-unknown-unknown check ({n} crates, {})", backend.name()), wasm)),
+        None => {
+            println!("wasm: skipped (the {} backend builds for wasm32 only inside {WASM_IMAGE}, and docker is not available here)", backend.name())
+        }
+    }
+    side.push(test::doc_tests(&cargo_args, &[]));
+    test::run_backend(&cargo_args, &[], side, backend)?;
     web_offline_test::run(&root(), None, false)?;
     eprintln!("ci: all gates passed");
     Ok(())

@@ -1,0 +1,18 @@
+# The web app with the OpenCASCADE kernel backend: cadrum's cross-compilation image (rust with
+# the wasm32 target and the wasi-sdk C++ toolchain OpenCASCADE needs) plus trunk, which fetches
+# the wasm-bindgen and wasm-opt matching the build. Build the app with the repository mounted:
+#
+#     docker build -t solidcraft-web-builder -f packaging/docker/Dockerfile.web packaging/docker
+#     docker run --rm -v "$PWD":/work -w /work/apps/solidcraft-web \
+#         -e CARGO_TARGET_DIR=/work/target/wasm-docker solidcraft-web-builder \
+#         trunk build --release --features cadrum
+#
+# (packaging/web/build-cadrum.sh does both); the output lands in dist/web as with the truck
+# backend, ready for packaging/web/package.sh and the nginx image. The truck backend's web app
+# needs no image: `trunk build --release` on the host.
+FROM ghcr.io/lzpel/cross-wasm32-unknown-unknown
+
+ARG TRUNK_VERSION=v0.21.14
+RUN curl -fsSL "https://github.com/trunk-rs/trunk/releases/download/${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" \
+    | tar -xz -C /usr/local/bin \
+    && trunk --version
