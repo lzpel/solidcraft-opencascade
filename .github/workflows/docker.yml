@@ -59,8 +59,8 @@ jobs:
           curl -fsSL "https://github.com/trunk-rs/trunk/releases/download/${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" | tar -xz -C "$HOME/.local/bin"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Build the web app
-        working-directory: apps/solidcraft-web
-        run: trunk build --release
+        # Inside cadrum's cross-compilation image: OpenCASCADE's wasm build needs its toolchain.
+        run: sh packaging/web/build-cadrum.sh
       - name: Image name
         id: image
         # Registry names are lower case; a fork's owner may not be.

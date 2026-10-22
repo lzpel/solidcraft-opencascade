@@ -296,3 +296,12 @@ calculate versions, or require a semantic-release bot to bypass `main` protectio
 
 This workflow replaces the every-push-to-main semantic-release proposal in PR #38; do not
 merge that automation alongside this release model without redesigning its triggers.
+
+## The OpenCASCADE kernel in packaged builds
+
+The default kernel backend links OpenCASCADE as a prebuilt static library that the `cadrum`
+crate's build script downloads for the target. A build that cannot reach the network (the
+Flatpak and Snap sandboxes, a vendored offline build) sets `OCCT_ROOT` to an unpacked copy of
+that prebuilt, or `CADRUM_PREBUILT_URL` to a local mirror of the tarball, before `cargo build`
+(see cadrum's README). The web app is built inside cadrum's cross-compilation image
+(`packaging/web/build-cadrum.sh`); a host `trunk build` no longer works.

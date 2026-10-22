@@ -19,8 +19,10 @@ unaccepted artwork Open; run `cargo xtask icons` to check the collection.
 Windows builds: `cargo xwin build --release --target x86_64-pc-windows-msvc -p solidcraft`.
 
 
-In the browser: `cd apps/solidcraft-web && trunk build --release --public-url ./` (WebGPU, or
-WebGL2 with `?webgl`; `?sample` opens the sample part).
+In the browser: `sh packaging/web/build-cadrum.sh` builds `dist/web` inside cadrum's Docker
+image (OpenCASCADE's wasm build needs its wasi-sdk toolchain, so `trunk build` on the host no
+longer works); serve that folder with any static server (WebGPU, or WebGL2 with `?webgl`;
+`?sample` opens the sample part).
 
 Agents can control the document open in a browser tab through `window.solidcraft.execute(...)`
 and `window.solidcraft.request(...)`; see the [browser command API](browser-api.md).

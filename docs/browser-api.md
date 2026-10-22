@@ -39,7 +39,7 @@ the browser host's limitations; this API does not grant desktop filesystem or wi
 
 ## Verify a browser build
 
-Build the app with `trunk build` in `apps/solidcraft-web`, then run from the repository root:
+Build the app with `sh packaging/web/build-cadrum.sh` (docker), then run from the repository root:
 
 ```sh
 cargo xtask web-api-test --site dist/web
