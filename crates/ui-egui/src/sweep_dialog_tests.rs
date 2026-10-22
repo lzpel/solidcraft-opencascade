@@ -20,6 +20,7 @@ fn setup(h: &mut Harness) -> u64 {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sweep options (orientation, twist, scale, rails) (lzpel/cadrum#317)"]
 fn a_new_sweep_takes_its_options_from_the_dialog() {
     let mut h = Harness::new();
     let sketch = setup(&mut h);
@@ -62,6 +63,7 @@ fn a_plain_sweep_from_the_dialog_stores_no_options() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sweep options (orientation, twist, scale, rails) (lzpel/cadrum#317)"]
 fn editing_sweeps_keeps_their_options() {
     let mut h = Harness::new();
     setup(&mut h);
@@ -104,6 +106,7 @@ fn editing_sweeps_keeps_their_options() {
 /// A rail picked in the dialog reaches the command with its sketch, the fit with it; editing the
 /// sweep brings both back and keeps them.
 #[test]
+#[ignore = "needs OpenCASCADE: sweep options (orientation, twist, scale, rails) (lzpel/cadrum#317)"]
 fn a_rail_picked_in_the_dialog_is_kept_through_an_edit() {
     let mut h = Harness::new();
     let sketch = setup(&mut h);

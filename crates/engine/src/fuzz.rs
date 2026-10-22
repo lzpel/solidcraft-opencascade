@@ -479,6 +479,7 @@ mod tests {
     /// retaining disconnected shells in one body (#2247) changes later generator picks.
     /// Redundant raw subdivisions must preserve the original analytic surface inventory.
     #[test]
+    #[ignore = "needs OpenCASCADE: chamfer on a body of several lumps (lzpel/cadrum#317)"]
     fn a_patterned_bore_preserves_the_analytic_surfaces() {
         let commands = [
             ("sketch.create", json!({"plane":"XY"})),

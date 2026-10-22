@@ -51,6 +51,7 @@ fn shelled_revolve_with_a_sphere_cut_exports() {
 /// Robustness seed 24, shrunk: a three-quarter turn of a rectangle, a chamfer of two edges, a
 /// 1.5 mm shell. The same refusal as seed 19's, reached through a chamfer.
 #[test]
+#[ignore = "needs OpenCASCADE: revolve (lzpel/cadrum#317)"]
 fn shelled_chamfered_revolve_exports() {
     let mut s = Session::default();
     run(

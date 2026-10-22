@@ -348,6 +348,7 @@ mod tests {
     /// A box edge: the faces meet exactly (G0) and square to each other (G1), so the analysis
     /// must read 0 gap and 90°, and must keep its seams as view state without an undo step.
     #[test]
+    #[ignore = "needs OpenCASCADE: continuity analysis (lzpel/cadrum#317)"]
     fn continuity_reports_a_box_edge_as_a_gap_free_right_angle() {
         let mut s = Session::default();
         boxed(&mut s, 20.0);
@@ -382,6 +383,7 @@ mod tests {
     /// A rolling-ball fillet is tangent to the faces it joins but not curvature continuous: its
     /// two seams read ~0° with the fillet's 1 / radius curvature jump against the planes.
     #[test]
+    #[ignore = "needs OpenCASCADE: continuity analysis (lzpel/cadrum#317)"]
     fn continuity_finds_the_fillet_seams_tangent_and_their_curvature_jump() {
         let mut s = Session::default();
         boxed(&mut s, 20.0);
@@ -404,6 +406,7 @@ mod tests {
     /// A slot's straight wall runs tangentially into its arc wall: the join is G1 but its
     /// curvature jumps by the arc's 1 / radius, which is exactly what a Class-A check looks for.
     #[test]
+    #[ignore = "needs OpenCASCADE: continuity analysis (lzpel/cadrum#317)"]
     fn continuity_reports_one_over_the_radius_where_a_line_meets_an_arc() {
         let mut s = Session::default();
         s.execute("sketch.create", &json!({"plane": "XY"})).unwrap();
@@ -423,6 +426,7 @@ mod tests {
 
     /// `clear` takes the shading away, and every continuity call stays view state.
     #[test]
+    #[ignore = "needs OpenCASCADE: continuity analysis (lzpel/cadrum#317)"]
     fn continuity_is_view_state_and_clears() {
         let mut s = Session::default();
         boxed(&mut s, 10.0);

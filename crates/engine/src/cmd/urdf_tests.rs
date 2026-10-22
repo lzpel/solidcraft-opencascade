@@ -405,6 +405,7 @@ fn urdf_names_are_unique_across_links_joints_and_files() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a surface extrude (lzpel/cadrum#317)"]
 fn urdf_collision_skips_open_bodies() {
     let mut s = Session::default();
     run(&mut s, "component.create", json!({"name": "Part"}));
@@ -426,6 +427,7 @@ fn urdf_collision_skips_open_bodies() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a surface extrude (lzpel/cadrum#317)"]
 fn urdf_open_only_component_is_drawn() {
     let mut s = Session::default();
     run(&mut s, "component.create", json!({"name": "Sheet"}));

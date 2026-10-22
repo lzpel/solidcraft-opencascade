@@ -753,6 +753,7 @@ mod tests {
     /// The design properties land in each format's own metadata (#1015): STEP and IGES headers,
     /// 3MF model metadata. Other tools' keys never leave the design file.
     #[test]
+    #[ignore = "needs OpenCASCADE: STEP export (lzpel/cadrum#317)"]
     fn exports_write_design_properties() {
         let (_, m) = model();
         let meta: Metadata = serde_json::from_value(serde_json::json!({

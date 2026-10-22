@@ -4062,6 +4062,7 @@ mod tests {
     /// with one edge rounded shows the round's two tangent seams (G1) and the creases (G0), and
     /// nothing in the smooth or gap colours.
     #[test]
+    #[ignore = "needs OpenCASCADE: continuity analysis (lzpel/cadrum#317)"]
     fn continuity_seams_take_their_colours_from_the_theme() {
         let mut s = solidcraft_engine::Session::default();
         s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 20})).unwrap();

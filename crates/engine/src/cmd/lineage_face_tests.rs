@@ -157,6 +157,7 @@ fn each_patterned_copy_takes_its_own_sketch() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: split face (lzpel/cadrum#317)"]
 fn a_piece_of_a_face_split_on_purpose_still_needs_a_fixed_plane() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Modified"}));

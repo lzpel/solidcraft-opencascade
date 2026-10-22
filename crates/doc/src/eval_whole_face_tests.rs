@@ -54,6 +54,7 @@ fn volume(model: &Model) -> f64 {
 /// top face. The walls only touch the prism, so the cut takes a slab over the whole body from 3
 /// below the face up: it must take the face's area times 3 and leave the plate alone.
 #[test]
+#[ignore = "needs OpenCASCADE: extrude (lzpel/cadrum#317)"]
 fn slab_cut_into_a_spline_prism() {
     let mut doc = Document::new("spline prism");
     let plate = FeatureKind::Box {

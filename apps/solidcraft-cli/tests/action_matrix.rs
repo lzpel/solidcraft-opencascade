@@ -1298,6 +1298,7 @@ fn a_fillet_or_chamfer_on_one_edge_ending_at_a_cylinder() {
 // crosses the end face. Before #1101 a 0.13 mm station on the leaf's top edge kept the
 // matrix's radius at 0.013, which never got that far.
 #[test]
+#[ignore = "needs OpenCASCADE: extrude (lzpel/cadrum#317)"]
 fn a_round_on_a_knuckle_cap_circle() {
     for (cmd, size, removed) in [("solid.fillet", "radius", (2.4, 2.8)), ("solid.chamfer", "distance", (5.6, 6.3))] {
         let mut s = load(&root().join("tests/oracle/63-hinge-knuckle/recipe.json")).unwrap();
@@ -1351,6 +1352,7 @@ fn a_small_hole_through_the_wall_of_a_plastic_rest() {
 // the hole as a cut-out of its flat pattern and the cut was refused. The sheet keeps the hole
 // and still unfolds and folds back.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_hole_square_to_a_45_degree_flange() {
     let mut s = load(&root().join("tests/oracle/70-sm-flange-45/recipe.json")).unwrap();
     let volume = |s: &Session| s.model.state().bodies.iter().map(|b| b.body.tessellate_with(0.002, true).unwrap().measure().volume).sum::<f64>();
@@ -1457,6 +1459,7 @@ fn an_oblique_through_hole_beside_a_thin_bar() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_hole_through_a_sheet_metal_base() {
     let mut c: Vec<Value> = rectangle(json!("XY"), [0., 0.], [60., 40.]).into();
     c.extend([
@@ -1469,6 +1472,7 @@ fn a_hole_through_a_sheet_metal_base() {
 /// `face.hole` on a rim of the sheet metal corpus (#560): drilled along the panel, the hole is a
 /// bore of that panel, and the part still unfolds and folds back.
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn a_hole_drilled_into_a_sheet_metal_rim() {
     // What the matrix sends: the face's point, the hole square into it.
     for (design, at, diameter) in [
@@ -1527,6 +1531,7 @@ fn press_pull_on_the_pi_case_floor() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: draft (lzpel/cadrum#317)"]
 fn sketches_after_a_draft_and_on_a_tapered_extrude() {
     reproduces(
         None,

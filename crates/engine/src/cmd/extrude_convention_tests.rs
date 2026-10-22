@@ -124,6 +124,7 @@ fn symmetric_extrude_thin_wall_uses_total_distance_and_to_object_remains_one_sid
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a surface extrude (lzpel/cadrum#317)"]
 fn surface_extrude_shared_extent_retains_its_existing_per_side_semantics() {
     let mut s = fixture(json!({}));
     run(&mut s, "surface.extrude", json!({"sketch":"Square","distance":"10 mm","direction":"symmetric","name":"Sheet","body_name":"Sheet"}));

@@ -179,6 +179,7 @@ mod tests {
 
     /// Every built-in sample builds without a failing feature or joint.
     #[test]
+    #[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
     fn samples_build_cleanly() {
         for s in super::samples() {
             let mut session = crate::Session::default();

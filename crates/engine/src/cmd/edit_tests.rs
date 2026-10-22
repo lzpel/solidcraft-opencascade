@@ -31,6 +31,7 @@ fn roll_to_takes_a_number_or_end_and_refuses_anything_else() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a G2 fillet (lzpel/cadrum#317)"]
 fn g2_fillet_survives_edit_undo_and_reopen() {
     use solidcraft_doc::{Document, FeatureKind, FilletStyle};
     let mut s = Session::default();
@@ -53,6 +54,7 @@ fn g2_fillet_survives_edit_undo_and_reopen() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a G2 fillet (lzpel/cadrum#317)"]
 fn redefining_a_fillet_as_g2_on_sloped_ends_survives_undo_and_reopen() {
     use solidcraft_doc::{Document, FeatureKind, FilletStyle};
     let mut s = Session::default();
@@ -224,6 +226,7 @@ fn redefining_a_shell_replaces_persistent_face_selection() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn redefine_rejects_sheet_exports_before_they_touch_any_files() {
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane": "XY"}));
@@ -361,6 +364,7 @@ fn redefine_maps_placement_inputs_in_the_feature_owner_frame() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a chord fillet (lzpel/cadrum#317)"]
 fn redefining_fillet_style_keeps_primary_parameter_and_downstream_references() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 20, "height": 30}));
@@ -380,6 +384,7 @@ fn redefining_fillet_style_keeps_primary_parameter_and_downstream_references() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: a variable-radius fillet (lzpel/cadrum#317)"]
 fn inserting_variable_fillet_control_preserves_parameters_at_existing_positions() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 20, "height": 30}));

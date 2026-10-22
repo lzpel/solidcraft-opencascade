@@ -255,6 +255,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "needs OpenCASCADE: delete face (lzpel/cadrum#317)"]
     fn faces_alone_are_refused_and_hostile_input_too() {
         let (mut s, _) = part();
         let b = s.model.state().bodies[0].name.clone();

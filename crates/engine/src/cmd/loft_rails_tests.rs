@@ -83,6 +83,7 @@ fn face_names(s: &mut Session, body: &str) -> Vec<String> {
 /// switching the fit to stretch is an edit (the circles then widen only toward the rail, into
 /// ellipses π · 10 · r).
 #[test]
+#[ignore = "needs OpenCASCADE: a loft with rails (lzpel/cadrum#317)"]
 fn a_rail_turns_a_loft_into_its_solid_of_revolution_and_stretching_is_an_edit() {
     let mut s = setup();
     let rail = json!([{"sketch": "Rail", "curves": ["arc"]}]);
@@ -108,6 +109,7 @@ fn a_rail_turns_a_loft_into_its_solid_of_revolution_and_stretching_is_an_edit() 
 /// A sheet lofted between the two lines with the arc rail from one end: the lines between grow
 /// about their middles, 2r long; area 2∫r dz.
 #[test]
+#[ignore = "needs OpenCASCADE: a surface loft (lzpel/cadrum#317)"]
 fn a_surface_loft_follows_its_rail() {
     let mut s = setup();
     run(

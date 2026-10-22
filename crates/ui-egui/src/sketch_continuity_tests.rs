@@ -31,6 +31,7 @@ fn the_button_shades_every_seam_pins_an_edge_and_turns_off() {
 
 /// A round's tangent seam reads G1 with its curvature jump (1 / 4 mm against the flat side).
 #[test]
+#[ignore = "needs OpenCASCADE: continuity analysis (lzpel/cadrum#317)"]
 fn a_tangent_seam_is_labelled_with_its_curvature_jump() {
     let mut h = crate::scenario::Harness::new();
     h.app.run("solid.box", json!({"length": 20, "width": 20, "height": 20})).unwrap();

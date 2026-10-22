@@ -73,6 +73,7 @@ fn shell_planar_raw_bounds_flat_identity_and_clone_remap() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: shell (lzpel/cadrum#317)"]
 fn shell_planar_anchor_rebuild_cold_geometry_and_missing_source_errors() {
     let (mut doc, base, shell) = shell_document();
     let mut model = Model::new();
@@ -325,6 +326,7 @@ fn saved_former_strip_projection_reports_lost_without_expanding_healthy_material
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: fillet (lzpel/cadrum#317)"]
 fn saved_curved_strip_projection_is_lost_after_exact_wall_coalescence() {
     use solidcraft_kernel::{FacePaint, Paint};
     use solidcraft_sketch::{LinkKind, LinkSource, Sketch};

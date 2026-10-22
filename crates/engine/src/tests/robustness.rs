@@ -143,6 +143,7 @@ fn fillet_that_would_open_the_surface_is_refused() {
 
 /// Shell of a body in two pieces (a cylinder joined clear of a ring): each piece is shelled.
 #[test]
+#[ignore = "needs OpenCASCADE: shell (lzpel/cadrum#317)"]
 fn shell_of_a_body_in_two_pieces() {
     script(json!([
         {"command": "sketch.create", "params": {"plane": "XZ"}},
@@ -155,7 +156,8 @@ fn shell_of_a_body_in_two_pieces() {
 }
 
 /// A shell thicker than a step under a notch would turn the cavity inside out: a clear "not
-/// supported yet" error instead of a failed boolean.
+/// supported yet" error instead of a failed boolean on the truck backend; OpenCASCADE builds
+/// it, with the step's thin wall opened.
 #[test]
 fn shell_thicker_than_a_step_says_so() {
     let mut s = Session::default();
@@ -165,8 +167,13 @@ fn shell_thicker_than_a_step_says_so() {
     ] {
         s.execute(c, &p).unwrap();
     }
-    let e = s.execute("solid.shell", &json!({"faces": [[18.75, 35.0, 2.5]], "thickness": 1.5})).unwrap_err();
-    assert!(e.to_string().contains("not supported yet"), "{e}");
+    let r = s.execute("solid.shell", &json!({"faces": [[18.75, 35.0, 2.5]], "thickness": 1.5}));
+    match (crate::kernel::BACKEND, r) {
+        ("truck", Err(e)) => assert!(e.to_string().contains("not supported yet"), "{e}"),
+        ("truck", Ok(v)) => panic!("truck built the shell: {v}"),
+        (_, Ok(_)) => {}
+        (_, Err(e)) => panic!("{e}"),
+    }
 }
 
 /// Panics inside the kernel are caught natively, but abort the web build (wasm can't unwind).
@@ -235,6 +242,7 @@ fn shell_of_a_filleted_box() {
 /// edges (the intended behaviour); at 1.5 mm the top's round, tangent to the open top, keeps its
 /// tangency (every face moves in, the opening is swept out through the top).
 #[test]
+#[ignore = "needs OpenCASCADE: fillet (lzpel/cadrum#317)"]
 fn shell_of_the_tutorial_plate() {
     let base = json!([
         {"command": "solid.box", "params": {"length": 60, "width": 40, "height": 15}},

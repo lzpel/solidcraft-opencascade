@@ -667,6 +667,7 @@ fn revolve_cut_of_a_half_slot_about_its_centreline_in_the_face() {
 /// #2005: changing a circular sweep from a separate body to a half-turn cut must create the
 /// internal channel, rather than failing the Boolean on coincident end caps.
 #[test]
+#[ignore = "needs OpenCASCADE: sweep options (orientation, twist, scale, rails) (lzpel/cadrum#317)"]
 fn closed_sweep_redefines_to_a_half_turn_torus_cut() {
     let s = replay(include_str!("../../../examples/regressions/closed_sweep_torus_cut.json"));
     assert_eq!(s.model.state().bodies.len(), 1);
@@ -802,6 +803,7 @@ fn unsupported_face_groups_are_atomic() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: STEP export (lzpel/cadrum#317)"]
 fn imported_rotated_face_extrusions_preserve_other_operations_and_bodies() {
     use solidcraft_geom::Vec3;
     let mut source = Session::default();
@@ -1032,6 +1034,7 @@ fn prism_edge_in_a_round_cornered_slab_end_face_joins() {
 /// The hole is open, and the cut takes the whole tool: the circle of radius 3.04 the two
 /// profiles make, from the barrel cut's floor at z 1.6 up to the plate's top at z 2.8.
 #[test]
+#[ignore = "needs OpenCASCADE: tapered extrude (draft) (lzpel/cadrum#317)"]
 fn cut_up_to_the_plate_top_face_opens_the_hole() {
     let mut script: Value = serde_json::from_str(include_str!("../../../examples/regressions/cut_up_to_face_leaves_skin.json")).unwrap();
     let s = replay_value(&script);

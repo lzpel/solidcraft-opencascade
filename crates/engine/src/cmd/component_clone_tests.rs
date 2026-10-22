@@ -184,6 +184,7 @@ fn selected_nested_pending_placement_survives_copy_and_undo() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: sewing faces (lzpel/cadrum#317)"]
 fn copied_sheet_base_targets_its_own_sketch_history() {
     let mut s = Session::default();
     let part = component(&mut s, "Sheet");
@@ -296,6 +297,7 @@ fn configured_extrude_cap_copy_keeps_independent_semantic_lineage() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: emboss on a cylinder (lzpel/cadrum#317)"]
 fn selected_second_occurrence_emboss_copy_remaps_target_and_author_paths_and_reopens() {
     let mut s = Session::default();
     let part = component(&mut s, "SleevePart");
@@ -521,6 +523,7 @@ fn frozen_bore_boundary_copy_preserves_stock_void_and_reopen() {
 }
 
 #[test]
+#[ignore = "needs OpenCASCADE: STEP export (lzpel/cadrum#317)"]
 fn frozen_r6_bore_copy_uses_current_geometry_despite_mesh_measure_bias() {
     use solidcraft_geom::Vec3;
     let mut s = Session::default();
