@@ -6,8 +6,18 @@ edition.workspace = true
 license.workspace = true
 publish = false
 
-[lints]
-workspace = true
+# The workspace lints, except unsafe_code: denied, not forbidden, so that src/main.rs can run
+# OpenCASCADE's C++ constructors (`__wasm_call_ctors`) on wasm32 with the cadrum backend: there
+# is no safe API for it. Keep the rest in sync with [workspace.lints].
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"
+neg_cmp_op_on_partial_ord = "allow"
 
 [[bin]]
 name = "solidcraft-web"

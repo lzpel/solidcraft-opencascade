@@ -78,10 +78,13 @@ pub const BACKEND: &str = "cadrum";
 /// another backend wrote is a miss, never misread.
 pub const NATIVE_PRODUCER: &str = "solidcraft-cadrum-adapter/1";
 
-/// One-time backend set-up before the first kernel call. On native targets cadrum needs
-/// nothing; in the browser OpenCASCADE's C++ constructors must run first (phase 8 wires that
-/// through the web app, which owns the one `unsafe` call it takes).
-pub fn init() {}
+/// What the backend needs before its first call. On wasm32 the OpenCASCADE runtime's C++
+/// constructors must run first: this anchors cadrum's WASI stub, and the web app, the only
+/// place with an `unsafe` allowance, calls `__wasm_call_ctors` right after (its `kernel_init`).
+pub fn init() {
+    #[cfg(target_arch = "wasm32")]
+    cadrum::__anchor_wasi_stub();
+}
 
 /// The error an operation this backend does not implement yet returns: shown as "not
 /// supported yet: … on the OpenCASCADE backend", like any feature that isn't there yet.
